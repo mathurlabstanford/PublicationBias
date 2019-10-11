@@ -1,0 +1,466 @@
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                             FNs FOR REPORTING RESULTS                               #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+################################ FNs: META-ANALYSIS CONVERSIONS ################################ 
+
+r_to_z = Vectorize( function(r) {
+  .5 * ( log(1 + r) - log(1 - r) )
+}, vectorize.args = "r" )
+
+z_to_r = Vectorize( function(z) {
+  ( exp( 2 * z ) - 1 ) / ( exp( 2 * z ) + 1 )
+}, vectorize.args = "z" )
+
+
+
+################################ FNs: FORMATTING ################################ 
+
+# round while keeping trailing zeroes
+my_round = function(x, digits) {
+  formatC( round( x, digits ), format='f', digits=digits )
+}
+
+format_CI = function( lo, hi, digits ) {
+  paste( "[", my_round( lo, digits ), ", ", my_round( hi, digits ), "]", sep="" )
+}
+
+# round down to nearest integer
+format_sval = function( sval, digits ) {
+  if( sval < 1 ) return("None")
+  else return( floor(sval) )
+}
+
+format_pval = function(p) {
+  if (p >= 0.01) return( my_round( p, 2 ) )
+  if (p < 0.01 & p > 10^-5 ) return( formatC( p, format = "e", digits = 0 ) )
+  if ( p < 10^-5 ) return("< 1e-05")
+}
+
+
+# REMOVE Z TO R OPTION - IT'S NOT CORRECT, AND IT'S NOT USED ANYWAY
+# gives CI for tau from meta-analysis fit in metafor
+tau_CI = function( meta ) {
+  t2.lb = max( 0,
+               meta$tau2 - qnorm(1 - 0.05/2) * meta$se.tau2 )
+  t2.ub = meta$tau2 + qnorm(1 - 0.05/2) * meta$se.tau2
+  tau.lb = sqrt(t2.lb)
+  tau.ub = sqrt(t2.ub)
+  
+  return( c(tau.lb, tau.ub))
+}
+
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                             FNs FOR MODEL 1 (FIXED EFFECTS)                         #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+################################ FN: FIXED-EFFECTS S-VALUE ################################ 
+
+# q: true value to which to shift mu-hat 
+# selection.tails: 2- or 1-tailed selection?
+s_value_fe = function( yi,
+                       vi,
+                       q = 0,
+                       selection.tails = 1 ) {
+  
+  # # DEBUGGING ONLY
+  # yi = d$yi
+  # vi = d$vi
+  # q = 0.1
+  # selection.tails = 1
+
+  # 2-sided p-value even if 1-tailed selection
+  pval = 2 * ( 1 - pnorm( abs(yi) / sqrt(vi) ) )
+  
+  # significance indicator
+  if ( selection.tails == 1 ) S = (pval < 0.05) & (yi > 0)
+  if ( selection.tails == 2 ) S = (pval < 0.05)
+  
+  # get FE means by significance status
+  library(dplyr)
+  
+  dat = data.frame( yi, vi, S )
+  
+  # FE mean and sum of weights stratified by S
+  strat = dat %>% group_by(S) %>%
+    summarise( nu = sum( 1 / vi ),
+               ybar = sum( yi / vi ) )
+  
+  # components by significance status
+  ybarN = strat$ybar[ strat$S == 0 ]
+  ybarS = strat$ybar[ strat$S == 1 ]
+  nuN = strat$nu[ strat$S == 0 ]
+  nuS = strat$nu[ strat$S == 1 ]
+  
+  # S-value for point estimate
+  sval.est = ( nuS * q - ybarS ) / ( ybarN - nuN * q )
+  
+  # S-value for CI (to shift it to q)
+  # match term names used in Wolfram Alpha
+  a = ybarN
+  b = ybarS
+  c = nuN
+  d = nuS
+  
+  df = length(yi) - 1
+  k = qt( 1 - (0.05/2), df = df )
+  
+  # # version directly from Wolfram
+  # termA = a^2 * d * k^2 - (2 * a * c * d * k^2 * q) +
+  #           b^2 * c * k^2 -
+  #           (2 * b * c * d * k^2 * q) +
+  #           c^2 * d * k^2 * q^2 +
+  #           c * d^2 * k^2 * q^2 -
+  #           c * d * k^4
+  
+  # manually simplied version
+  termA = k^2 * ( a^2 * d -
+                    (2 * c * d * q) * (a + b) +
+                    b^2 * c +
+                    q^2 * (c^2 * d + d^2 * c) -
+                    c * d * k^2 )
+  
+  termB = -a*b + a*d*q + b*c*q - c*d*q^2
+  
+  termC = a^2 - 2*a*c*q + c^2*q^2 - c*k^2
+  
+  sval.ci = ( -sqrt(termA) + termB ) / termC
+  if ( sval.ci < 0 ) sval.ci = ( sqrt(termA) + termB ) / termC
+  
+
+  # # sanity check by inversion
+  # # corrected CI limit
+  # eta = sval.ci
+  # termD = (eta * a + b) / (eta * c + d)
+  # termE = k * sqrt( (eta^2 * c + d) / (eta * c + d)^2 )
+  # expect_equal( termD - termE, 
+  #               q )
+  # # WORKS!!!
+
+  # worst-case bound
+  # as eta -> 0
+  library(metafor)
+  meta.bd = rma.uni( yi = yi[ S == 0 ],
+                     vi = vi[ S == 0 ],
+                     method = "FE" )
+  
+  # sanity check
+  library(testthat)
+  expect_equal( as.numeric(meta.bd$b),
+                ybarN / nuN )
+  
+  return( list(sval.est = sval.est,
+               sval.ci = sval.ci,
+               meta.bd = meta.bd ) )
+}
+
+
+# ##### Sanity Check #####
+# # these should be inverses
+# # make fake data close to null with no heterogeneity
+# p = data.frame( k = 500,
+#                 per.cluster = 1,
+#                 mu = 0, 
+#                 V = 0,
+#                 V.gam = 0,
+#                 sei.min = 1, 
+#                 sei.max = 1.5, 
+#                 eta = 8
+#                 )
+# 
+# d = sim_data(p)
+# 
+# rma.uni( yi = yi,
+#          vi = vi,
+#          data = d,
+#          method = "REML" )  # est = 0.59, ci.lb = 0.19
+# 
+# q = 0.1
+# 
+# ( svals = s_value_fe( yi = d$yi,
+#             vi = d$vi,
+#             q = q ) )
+# 
+#  
+# expect_equal( q, 
+#               correct_est_fe( yi = d$yi,
+#                 vi = d$vi, 
+#                 eta = svals$sval.est )$est.adj )
+# 
+# 
+# expect_equal( q, correct_est_fe( yi = d$yi,
+#                       vi = d$vi, 
+#                       eta = svals$sval.ci )$lo.adj )
+
+################################ FN: FIXED-EFFECTS CORRECTED ESTIMATE ################################ 
+
+# correct point estimate and CI for FE specification
+correct_est_fe = function( yi,
+                          vi,
+                           eta,
+                           selection.tails = 1 ) {
+        
+  # 2-sided p-value even if 1-tailed selection
+  pval = 2 * ( 1 - pnorm( abs(yi) / sqrt(vi) ) )
+  
+  # significance indicator
+  if ( selection.tails == 1 ) S = (pval < 0.05) & (yi > 0)
+  if ( selection.tails == 2 ) S = (pval < 0.05)
+  
+  # get FE means by significance status
+  library(dplyr)
+  
+  dat = data.frame( yi, vi, S )
+  
+  # FE mean and sum of weights stratified by S
+  strat = dat %>% group_by(S) %>%
+    summarise( nu = sum( 1 / vi ),
+               ybar = sum( yi / vi ) )
+  
+  # components by significance status
+  ybarN = strat$ybar[ strat$S == 0 ]
+  ybarS = strat$ybar[ strat$S == 1 ]
+  nuN = strat$nu[ strat$S == 0 ]
+  nuS = strat$nu[ strat$S == 1 ]
+  
+  # corrected pooled point estimate
+  est = ( eta * ybarN + ybarS ) / ( eta * nuN + nuS )
+
+  # inference
+  var = ( eta^2 * nuN + nuS ) / ( eta * nuN + nuS )^2
+  lo = est - qnorm(.975) * sqrt(var)
+  hi = est + qnorm(.975) * sqrt(var)
+  
+  return( list(est.adj = est,
+               lo.adj = lo,
+               hi.adj = hi ) )
+}
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                       FNs FOR MODELS 2-3 (ROBUST RANDOM EFFECTS)                       #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+################################ FN: CORRECTED ESTIMATES FOR A SINGLE ETA  ################################ 
+
+# the "." in front of cluster argument is to ensure that even if user has a variable in 
+#   dataset called "cluster", the PASSED cluster variable will be used, not the one in the 
+#  dataset
+correct_est_robu = function(yi,
+                            vi,
+                            pval,
+                            .cluster,
+                            eta,
+                            selection.tails = 1
+                            ) {
+
+
+  # significance indicator and weights
+  if ( selection.tails == 1 ) S = (pval < 0.05) & (yi > 0)
+  if ( selection.tails == 2 ) S = (pval < 0.05)
+  weights = rep( 1, length(pval) )
+  weights[ S == FALSE ] = eta
+  
+  # initialize a dumb (unclustered and uncorrected) version of tau^2
+  # which is only used for constructing weights
+  library(metafor)
+  meta.re = rma.uni( yi = yi,
+                    vi = vi)
+  
+  t2hat.naive = meta.re$tau2
+
+  # fit IPCW-weighted robust model
+  library(robumeta)
+  meta.robu = robu( yi ~ 1, 
+                     studynum = .cluster,
+                    data = d,
+                     userweights = weights / (vi + t2hat.naive),
+                     var.eff.size = vi,
+                     small = TRUE )
+  
+  # results
+  return( list( eta = eta,
+                est.adj = as.numeric(meta.robu$b.r),
+               lo.adj = meta.robu$reg_table$CI.L,
+               hi.adj = meta.robu$reg_table$CI.U ) )
+  
+}
+
+############################# FN: GENERATE CLUSTERED META-ANALYSIS DATA #############################
+
+# p: row of parameters dataframe containing k, mean, V, V.gam, per.cluster, eta
+sim_data = function(p, seed = NA ) {
+  
+  N = p$k * p$per.cluster
+  
+  # generate cluster random intercepts
+  if( !is.na(seed) ) set.seed(seed)
+  gam1 = rnorm( n = p$k, mean = 0, sd = sqrt( p$V.gam ) )
+  gam1i = rep( gam1, each = p$per.cluster )
+  
+  # generate individual-study random intercepts
+  if( !is.na(seed) ) set.seed(seed + 1)
+  gam2i = rnorm( n = N, mean = 0, sd = sqrt( p$V - p$V.gam ) )
+  
+  # individual study means
+  mui = p$mu + gam1i + gam2i
+  if( !is.na(seed) ) set.seed(seed + 2)
+  sei = runif( n = N, min = p$sei.min, max = p$sei.max )
+  if( !is.na(seed) ) set.seed(seed + 3)
+  yi = rnorm( n = N, mean = mui, sd = sei )
+  
+  d = data.frame( cluster = rep(1:p$k, each = p$per.cluster),
+                  Study.name = 1:N,
+                  yi = yi,
+                  sei = sei,
+                  vi = sei^2,
+                  pval = 2 * ( 1 - pnorm( abs(yi) / sei ) ) )
+  
+  # 1-tailed publication bias
+  signif = d$pval < 0.05 & d$yi > 0
+  publish = rep( 1, nrow(d) )
+  if( !is.na(seed) ) set.seed(seed + 4)
+  publish[ signif == FALSE ] = rbinom( n = sum(signif == FALSE), size = 1, prob = 1/p$eta )
+  
+  d$weight = 1
+  d$weight[ signif == 0 ] = p$eta
+  d = d[ publish == 1, ]
+  
+  return(d)
+}
+
+# ##### Sanity Check #####
+# d = sim_data( data.frame( k = 5,
+#                           per.cluster = 20,
+#                           mu = .5,
+#                           V = 1,
+#                           V.gam = .5,
+#                           sei.min = 0.01,
+#                           sei.max = 0.01,
+#                           eta = 1 ) )
+# 
+# # check out the clusters
+# # randomly choose 5 of them for visibility
+# library(ggplot2)
+# ggplot( data = d, aes(x = yi, fill = as.factor(cluster) ) ) +
+#   theme_classic() +
+#   geom_histogram()
+# # looks good
+
+
+############################# FN: SIGNIFICANCE FUNNEL PLOT #############################
+
+# d must have variables yi, vi, pval
+# if coordinate mins and maxes are NA, it won't draw background shading
+significance_funnel = function( d,
+                                xmin = NA,
+                                ymin = 0,
+                                xmax = NA,
+                                ymax = NA,
+                                plot.pooled = TRUE ) {
+  
+  # variable for positive vs. nonpositive studies
+  d$positive = rep(NA, nrow(d))
+  d$positive[ (d$yi > 0) & (d$pval < 0.05) ] = "Affirmative"
+  d$positive[ (d$yi < 0) | (d$pval >= 0.05) ] = "Non-affirmative"
+  
+  # reorder levels for plotting joy
+  d$positive = factor( d$positive, c("Non-affirmative", "Affirmative") )
+  
+  # pooled fixed-effects estimates
+  est.N = rma.uni(yi = d$yi[ d$positive == "Non-affirmative" ],
+                  vi = d$vi[ d$positive == "Non-affirmative" ],
+                  method="FE")$b
+  
+  est.all = rma.uni(yi = d$yi,
+                    vi = d$vi,
+                    method="FE")$b
+  
+  # negative sei positions them below the horizontal divider line 
+  # we'll draw
+  pooled.pts = data.frame( yi = c(est.N, est.all),
+                           sei = c(0,0) )
+  
+  
+  # polygon coordinates for the blue and orange shading
+  if ( !any( is.na( c(ymin, xmin, ymax, xmax) ) ) ) {
+    poly.blue=data.frame(yi=c(xmin, 0, ymax * qnorm(.975), xmin ),
+                         sei=c(ymin, ymin, ymax, ymax),
+                         positive = rep("Non-affirmative", 4),
+                         alpha = 0.3)
+    
+    poly.orange=data.frame(yi=c(0, ymax * qnorm(.975), xmax, xmax ),
+                           sei=c(ymin, ymax, ymax, ymin),
+                           positive = rep("Affirmative", 4),
+                           alpha = 0.3)
+  } else {
+    # remove objects if they happen to exist
+    # because will check for existence during plotting
+    suppressWarnings( rm(poly.blue) )
+    suppressWarnings( rm(poly.orange) )
+  }
+  
+  colors = c("blue", "orange")
+  
+  library(ggplot2)
+  p.funnel = ggplot( data = d, aes( x = yi,
+                                    y = sei,
+                                    color = positive ) )
+  
+  if ( exists("poly.orange") ) {
+    p.funnel = p.funnel + geom_polygon(data=poly.blue, mapping=aes(x=yi, y=sei),
+                                       fill = colors[1],
+                                       alpha = 0.2,
+                                       color = NA)
+    
+    p.funnel = p.funnel +  geom_polygon(data=poly.orange, mapping=aes(x=yi, y=sei),
+                                        fill = colors[2],
+                                        alpha = 0.2,
+                                        color = NA)
+  }
+  
+  if ( plot.pooled == TRUE ) {
+    
+    p.funnel = p.funnel + geom_point( 
+      data = pooled.pts,
+      size = 4, 
+      shape = 5,
+      fill = NA,
+      color = c(colors[1], "black")
+    ) +
+      
+      geom_point( 
+        data = pooled.pts,
+        size = 4, 
+        shape = 18,
+        color = c(colors[1], "black"),
+        alpha = .3
+      ) +
+      
+      # just for visual separation of pooled ests
+      geom_hline( yintercept = 0 )
+  }
+  
+  p.funnel = p.funnel + 
+    
+    # semi-transparent points with solid circles around them
+    geom_point( size = 3, alpha=.3) +
+    geom_point( size = 3, shape = 1) +
+    
+    scale_color_manual(values = colors) +
+    
+    xlab( bquote( hat(theta) ) ) +
+    ylab( bquote( hat(SE) ) ) +
+    
+    theme_classic() +
+    theme(legend.title=element_blank())
+  
+  plot(p.funnel)
+  return(p.funnel)
+}
+
+
