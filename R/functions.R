@@ -253,8 +253,7 @@ corrected_meta = function( yi,
 #' @param clustervar A character, factor, or numeric vector with the same length as \code{yi}. Unique values should indicate
 #' unique clusters of point estimates. By default, assumes all point estimates are independent.
 #' @param model \code{"fixed"} for fixed-effects or \code{"robust"} for robust random-effects
-#' @param eta.grid A vector of values of eta to try for the grid search. The vector should start at 1 and end at a large number, such
-#' as 200. For a more precise estimate of eta, use more closely-spaced values. This argument is only needed when \code{model = "robust"}.
+#' @param eta.grid.hi The largest value of eta that should be included in the grid search. This argument is only needed when \code{model = "robust"}.
 #' @param CI.level Confidence interval level (as proportion) for the corrected point estimate
 #' @param small Should inference allow for a small meta-analysis? We recommend using \code{TRUE} even for large meta-analyses.
 #' @import
@@ -285,10 +284,10 @@ corrected_meta = function( yi,
 #'                    model = "fixed" )
 #'
 #' # publication bias required to shift point estimate to 0
-#' svals.FE.0$svals$sval.est
+#' svals.FE.0$sval.est
 #'
 #' # and to shift CI to include 0
-#' svals.FE.0$svals$sval.ci
+#' svals.FE.0$sval.ci
 #'
 #' # now try shifting to a nonzero value (RR = 0.90)
 #' svals.FE.q = svalue( yi = dat$yi,
@@ -297,19 +296,16 @@ corrected_meta = function( yi,
 #'                      model = "fixed" )
 #'
 #' # publication bias required to shift point estimate to RR = 0.90
-#' svals.FE.q$svals$sval.est
+#' svals.FE.q$sval.est
 #'
 #' # and to shift CI to RR = 0.90
-#' svals.FE.q$svals$sval.ci
+#' svals.FE.q$sval.ci
 #'
 #' ##### Robust Clustered Specification #####
-#' # takes ~1 min to run due to grid search
-#' \dontrun{
-#'   svalue( yi = dat$yi,
-#'           vi = dat$vi,
-#'           q = 0,
-#'           model = "robust" )
-#' }
+#' svalue( yi = dat$yi,
+#'         vi = dat$vi,
+#'         q = 0,
+#'         model = "robust" )
 
 
 svalue = function( yi,
@@ -317,12 +313,32 @@ svalue = function( yi,
                     q,
                     clustervar = 1:length(yi),
                     model,
-                    eta.grid = seq(1, 200, 0.25),
+                    eta.grid.hi = 200,
                     CI.level = 0.95,
                     small = TRUE ) {
 
+  # # # ~~~ TEST ONLY
+  # # require(metafor)
+  # # dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
+  # dat = sim_data( data.frame( k = 50,
+  #                             per.cluster = 5,
+  #                             mu = -0.5,
+  #                             V = 0.25,
+  #                             V.gam = 0,
+  #                             sei.min = 0.1,
+  #                             sei.max = 1,
+  #                             eta = 2 ) )
+  # yi = dat$yi
+  # vi = dat$vi
+  # q = -.1
+  # clustervar = 1:length(yi)
+  # CI.level = 0.95
+  # small = TRUE
+  # model = "robust"
+  # # # ~~ end test
+
   # stop if eta doesn't make sense
-  if ( any(eta.grid < 1 ) ) stop( "Eta must be at least 1.")
+  if ( eta.grid.hi < 1 ) stop( "eta.grid.hi must be at least 1.")
 
   # number of point estimates
   k.studies = length(yi)
@@ -447,46 +463,89 @@ svalue = function( yi,
   ##### Robust Independent and Robust Clustered #####
   if ( model == "robust" ) {
 
-    # grid search
-    res.list = lapply( as.list(eta.grid),
-                       function(x) {
+    ##### Worst-Case Meta to See if We Should Search at All
+    # first fit worst-case meta to see if we should even attempt grid search
+    # initialize a dumb (unclustered and uncorrected) version of tau^2
+    # which is only used for constructing weights
+    meta.re = rma.uni( yi = yi,
+                       vi = vi)
+    t2hat.naive = meta.re$tau2
 
-                         cat("\n Doing grid search with eta =", x)
+    # fit model exactly as in corrected_meta
+    meta.worst =  robu( yi ~ 1,
+                       studynum = clustervar,
+                       data = dat[ A == FALSE, ],
+                       userweights = 1 / (vi + t2hat.naive),
+                       var.eff.size = vi,
+                       small = small )
 
-                         return( corrected_meta( yi = yi,
-                                                 vi = vi,
-                                                 eta = x,
-                                                 model = model,
-                                                 clustervar = clustervar,
-                                                 selection.tails = 1,
-                                                 CI.level = CI.level,
-                                                 small = small ) )
-                       } )
+    est.worst = as.numeric(meta.worst$b.r)
+    lo.worst = meta.worst$reg_table$CI.L
 
-    grid.ests = as.data.frame( do.call( "rbind", res.list ) )
+    ##### Get S-value for estimate
+    if ( est.worst > q ) {
+      sval.est = "Not possible"
+    } else {
 
-    # each column is secretly a list
-    grid.ests = as.data.frame( apply(grid.ests, 2, unlist) )
+      # define the function we need to minimize
+      # i.e., distance between corrected estimate and the target value of q
+      func = function(.eta) {
+        est.corr = corrected_meta( yi = yi,
+                                   vi = vi,
+                                   eta = .eta,
+                                   model = model,
+                                   clustervar = clustervar,
+                                   selection.tails = 1,
+                                   CI.level = CI.level,
+                                   small = small )$est
+        return( abs(est.corr - q))
+      }
 
-    # find s-value for estimate
-    ind1 = which.min( abs(grid.ests$est - q) )
-    sval.est = grid.ests$eta[ ind1 ]
+      opt = optimize( f = func,
+                      interval = c(1, eta.grid.hi),
+                      maximum = FALSE )
+      sval.est = opt$minimum
 
-    # find s-value for CI
-    ind2 = which.min( abs(grid.ests$lo - q) )
-    sval.ci = grid.ests$eta[ ind2 ]
+      # discrepancy between the corrected estimate and the s-value
+      diff = opt$objective
 
-    # warn if eta grid doesn't go high enough
-    if ( ind1 == length(eta.grid) ) {
-      sval.est = paste( ">", sval.est )
-      warning("Eta grid does not go high enough to find the S-value (or it is possible that no amount of publication bias would be sufficient). Try again with a grid that includes larger values.")
+      # if the optimal value is very close to the upper range of grid search
+      #  AND we're still not very close to the target q,
+      #  that means the optimal value was above eta.grid.hi
+      if ( abs(sval.est - eta.grid.hi) < 0.0001 & diff > 0.0001 ) sval.est = paste(">", eta.grid.hi)
     }
 
-    if ( ind2 == length(eta.grid) ) {
-      sval.ci = paste( ">", sval.ci )
-    }
+    # do something similar for CI
+    if ( lo.worst > q ) {
+      sval.ci = "Not possible"
+    } else {
+      # define the function we need to minimize
+      # i.e., distance between corrected estimate and the target value of q
+      func = function(.eta) {
+        lo.corr = corrected_meta( yi = yi,
+                                   vi = vi,
+                                   eta = .eta,
+                                   model = model,
+                                   clustervar = clustervar,
+                                   selection.tails = 1,
+                                   CI.level = CI.level,
+                                   small = small )$lo
+        return( abs(lo.corr - q))
+      }
 
-  } # end robust = TRUE
+      opt = optimize( f = func,
+                      interval = c(1, eta.grid.hi),
+                      maximum = FALSE )
+      sval.ci = opt$minimum
+
+      # discrepancy between the corrected estimate and the s-value
+      diff = opt$objective
+
+      # if the optimal value is very close to the upper range of grid search
+      #  AND we're still not very close to the target q,
+      #  that means the optimal value was above eta.grid.hi
+      if ( abs(sval.ci - eta.grid.hi) < 0.0001 & diff > 0.0001 ) sval.ci = paste(">", eta.grid.hi)
+    }
 
 
   # ##### Worst-case bound #####
@@ -504,16 +563,17 @@ svalue = function( yi,
   #                 model = model,
   #                 CI.level = CI.level,
   #                 small = small )
+  }
 
   # s-values less than 1 indicate complete robustness
   # is.numeric is in case we have a "< XXX" string instead of a number
   if ( is.numeric(sval.est) & !is.na(sval.est) & sval.est < 1) sval.est = "Not possible"
   if ( is.numeric(sval.ci) & !is.na(sval.ci) & sval.ci < 1) sval.ci = "Not possible"
 
-  return( list( svals = data.frame( sval.est,
+  return( data.frame( sval.est,
                                     sval.ci = sval.ci,
                                     k.affirmative,
-                                    k.nonaffirmative ) ) )
+                                    k.nonaffirmative ) )
 
 }
 
