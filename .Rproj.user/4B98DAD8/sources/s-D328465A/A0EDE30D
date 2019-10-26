@@ -1,0 +1,25 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1571530859127.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "A0EDE30D",
+    "lastKnownWriteTime" : 1572104349,
+    "last_content_update" : 1572104349,
+    "path" : "~/Dropbox/Personal computer/Independent studies/Sensitivity analysis for publication bias (SAPB)/Linked to OSF (SAPB)/R package PublicationBias/PublicationBias/tests/testthat/testthat.R",
+    "project_path" : "tests/testthat/testthat.R",
+    "properties" : {
+        "cursorPosition" : "223,17",
+        "scrollLine" : "0"
+    },
+    "read_only" : false,
+    "read_only_alternatives" : [
+    ],
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}
