@@ -2,10 +2,10 @@
 % Please edit documentation in R/functions.R
 \name{svalue}
 \alias{svalue}
-\title{Estimate publication bias needed to "explain away" results}
+\title{Severity of publication bias needed to "explain away" results}
 \usage{
-svalue(yi, vi, q, clustervar = 1:length(yi), model, eta.grid = seq(1,
-  200, 0.25), CI.level = 0.95, small = TRUE)
+svalue(yi, vi, q, clustervar = 1:length(yi), model, eta.grid.hi = 200,
+  CI.level = 0.95, small = TRUE)
 }
 \arguments{
 \item{yi}{A vector of point estimates to be meta-analyzed}
@@ -20,8 +20,7 @@ unique clusters of point estimates. By default, assumes all point estimates are 
 
 \item{model}{\code{"fixed"} for fixed-effects or \code{"robust"} for robust random-effects}
 
-\item{eta.grid}{A vector of values of eta to try for the grid search. The vector should start at 1 and end at a large number, such
-as 200. For a more precise estimate of eta, use more closely-spaced values. This argument is only needed when \code{model = "robust"}.}
+\item{eta.grid.hi}{The largest value of eta that should be included in the grid search. This argument is only needed when \code{model = "robust"}.}
 
 \item{CI.level}{Confidence interval level (as proportion) for the corrected point estimate}
 
@@ -52,10 +51,10 @@ svals.FE.0 = svalue( yi = dat$yi,
                    model = "fixed" )
 
 # publication bias required to shift point estimate to 0
-svals.FE.0$svals$sval.est
+svals.FE.0$sval.est
 
 # and to shift CI to include 0
-svals.FE.0$svals$sval.ci
+svals.FE.0$sval.ci
 
 # now try shifting to a nonzero value (RR = 0.90)
 svals.FE.q = svalue( yi = dat$yi,
@@ -64,20 +63,17 @@ svals.FE.q = svalue( yi = dat$yi,
                      model = "fixed" )
 
 # publication bias required to shift point estimate to RR = 0.90
-svals.FE.q$svals$sval.est
+svals.FE.q$sval.est
 
 # and to shift CI to RR = 0.90
-svals.FE.q$svals$sval.ci
+svals.FE.q$sval.ci
 
 ##### Robust Clustered Specification #####
-# takes ~1 min to run due to grid search
-\dontrun{
-  svalue( yi = dat$yi,
-          vi = dat$vi,
-          q = 0,
-          model = "robust" )
-}
+svalue( yi = dat$yi,
+        vi = dat$vi,
+        q = 0,
+        model = "robust" )
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at XXX.
+1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 }

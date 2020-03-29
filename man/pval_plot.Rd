@@ -32,5 +32,5 @@ pval_plot( yi = dat$yi,
            vi = dat$vi )
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at XXX.
+1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 }

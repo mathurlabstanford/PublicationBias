@@ -17,7 +17,7 @@ corrected_meta(yi, vi, eta, clustervar = 1:length(yi), model,
 \item{clustervar}{A character, factor, or numeric vector with the same length as yi. Unique values should indicate
 unique clusters of point estimates. By default, assumes all point estimates are independent by default.}
 
-\item{model}{"fixed" for fixed-effects or "robust" for robust random-effects}
+\item{model}{"fixed" for fixed-effects (a.k.a. "common-effects") or "robust" for robust random-effects}
 
 \item{selection.tails}{1 (for one-tailed selection, recommended for its conservatism) or 2 (for two-tailed selection)}
 
@@ -101,5 +101,5 @@ ggplot( data = res.df, aes( x = eta, y = est ) ) +
   theme_classic()
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at XXX.
+1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 }

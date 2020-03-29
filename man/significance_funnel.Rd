@@ -4,47 +4,98 @@
 \alias{significance_funnel}
 \title{Make significance funnel plot}
 \usage{
-significance_funnel(yi, vi, xmin = min(yi), ymin = min(sqrt(vi)),
-  xmax = max(yi), ymax = max(sqrt(vi)), plot.pooled = TRUE)
+significance_funnel(yi, vi, xmin = min(yi), xmax = max(yi), ymin = 0,
+  ymax = max(sqrt(vi)), xlab = "Point estimate",
+  ylab = "Estimated standard error", favor.positive = NA,
+  est.all = NA, est.N = NA, alpha.select = 0.05,
+  plot.pooled = TRUE)
 }
 \arguments{
-\item{yi}{A vector of point estimates to be meta-analyzed. The signs of the estimates should be chosen
-such that publication bias is assumed to operate in favor of positive estimates.}
+\item{yi}{A vector of point estimates to be meta-analyzed.}
 
 \item{vi}{A vector of estimated variances for the point estimates}
 
 \item{xmin}{x-axis (point estimate) lower limit for plot}
 
-\item{ymin}{y-axis (standard error) lower limit for plot}
-
 \item{xmax}{x-axis (point estimate) upper limit for plot}
+
+\item{ymin}{y-axis (standard error) lower limit for plot}
 
 \item{ymax}{y-axis (standard error) upper limit for plot}
 
-\item{plot.pooled}{Should the fixed-effects pooled estimates within all studies and within only the nonaffirmative
+\item{xlab}{Label for x-axis (point estimate)}
+
+\item{ylab}{Label for y-axis (standard error)}
+
+\item{favor.positive}{\code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.}
+
+\item{est.all}{Regular meta-analytic estimate among all studies (optional)}
+
+\item{est.N}{Worst-case meta-analytic estimate among only nonaffirmative studies (optional)}
+
+\item{alpha.select}{Alpha-level at which publication probability is assumed to change}
+
+\item{plot.pooled}{Should the pooled estimates within all studies and within only the nonaffirmative
 studies be plotted as well?}
 }
 \description{
-Creates a modified funnel plot that distinguishes between affirmative and nonaffirmative studies, helping detect the extent to which the nonaffirmative studies' point estimates are systematically smaller than
-the entire set of point estimates. By default (\code{plot.pooled = TRUE}), also plots the fixed-effects pooled point
-estimate within all studies (black diamond) and within only the nonaffirmative studies (blue diamond). The latter
-represents a corrected fixed-effects estimate under worst-case publication bias.  When the diamonds are distant or if the
-blue diamond represents a negligible effect size, then formal sensitivity analyses (via \code{PublicationBias::svalue})
-may indicate that the meta-analysis is not robust.
+Creates a modified funnel plot that distinguishes between affirmative and nonaffirmative studies, helping detect the extent to which
+the nonaffirmative studies' point estimates are systematically smaller than the entire set of point estimates. The estimate among only nonaffirmative studies (gray diamond)
+represents a corrected estimate under worst-case publication bias. If the gray diamond represents a negligible effect size or if it is much smaller than
+the pooled estimate among all studies (black diamond), this suggests that the meta-analysis may not be robust to extreme publication bias.
+Numerical sensitivity analyses (via \code{PublicationBias::svalue}) should still be carried out for more precise quantitative conclusions.
+}
+\details{
+By default (\code{plot.pooled = TRUE}), also plots the pooled point
+estimate within all studies, supplied by the user as \code{est.all} (black diamond), and within only the nonaffirmative studies, supplied
+by the user as \code{est.N} (grey diamond). The user can calculate \code{est.all} and \code{est.N} using their choice of meta-analysis model; if
+these are not supplied but \code{plot.pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effects") model.
 }
 \examples{
 
-# compute meta-analytic effect sizes
+##### Make Significance Funnel with User-Specified Pooled Estimates #####
+
+# compute meta-analytic effect sizes for an example dataset
 require(metafor)
 dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 
 # flip signs since we think publication bias operates in favor of negative effects
+# alternatively, if not flipping signs, could pass favor.positive = FALSE to
+#  significance_funnel
 dat$yi = -dat$yi
 
+# optional: regular meta-analysis of all studies (for the black diamond)
+# for flexibility, you can use any choice of meta-analysis model here
+# in this case, we'll use the robust independent specification since the point estimates
+#  seem to be from unique papers
+# thus, each study gets its own studynum
+require(robumeta)
+meta.all =  robu( yi ~ 1,
+                  studynum = 1:nrow(dat),
+                  data = dat,
+                  var.eff.size = vi,
+                  small = TRUE )
+
+# optional: calculate worst-case estimate (for the gray diamond)
+#  by analyzing only the nonaffirmative studies
+dat$pval = 2 * ( 1 - pnorm( abs( dat$yi / sqrt(dat$vi) ) ) )  # two-tailed p-value
+dat$affirm = (dat$yi > 0) & (dat$pval < 0.05)  # is study affirmative?
+meta.worst =  robu( yi ~ 1,
+                    studynum = 1:nrow( dat[ dat$affirm == TRUE, ] ),
+                    data = dat[ dat$affirm == TRUE, ],
+                    var.eff.size = vi,
+                    small = TRUE )
+
+##### Make Significance Funnel with Alpha = 0.50 and Default Pooled Estimates #####
+# change alpha to 0.50 just for illustration
+# now the pooled estimates are from the fixed-effect specification because they are
+#  not provided by the user
 significance_funnel( yi = dat$yi,
-                      vi = dat$vi,
-                      plot.pooled = TRUE )
+                     vi = dat$vi,
+                     favor.positive = TRUE,
+                     alpha.select = 0.50,
+                     plot.pooled = TRUE )
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at XXX.
+1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 }
