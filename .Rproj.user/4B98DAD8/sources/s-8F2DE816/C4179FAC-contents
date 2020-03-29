@@ -1,0 +1,653 @@
+
+############################### SET UP ############################### 
+
+# expected global variables:
+# d: dataset
+# working directories
+# q: scientific meaningful effect size threshold
+
+# need d and working directories already set as global vars
+
+library(ggplot2)
+
+setwd(general.code.dir)
+source("helper_sapb.R")
+
+overleaf.dir = "~/Dropbox/Apps/Overleaf/SAPB manu and appendix/R_objects"
+
+options(scipen=999)
+
+# initialize point estimates table
+# RE.rob will be the standard parametric model for comparison
+models = c("FE", "RE", "RE.rob", "RI.rob")
+resE = data.frame( Model = models,
+                  Est = rep(NA, length(models)),
+                  CI = rep(NA, length(models)),
+                  tau = rep(NA, length(models)),
+                  tau.CI = rep(NA, length(models)) )
+
+# initialize S-values table
+models = c("FE", "RE.rob", "RI.rob")
+resS = data.frame( Model = models,
+                   S0 = rep(NA, length(models)),
+                   S0.CI = rep(NA, length(models)),
+                   Sq = rep(NA, length(models)),
+                   Sq.CI = rep(NA, length(models)) )
+
+# initialize worst-case estimates table
+models = c("FE", "RE.rob", "RI.rob")
+resW = data.frame( Model = models,
+                   Est = rep(NA, length(models)),
+                   CI = rep(NA, length(models)) )
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                              FIT 3 UNCORRECTED MODELS                               #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
+############################### MODEL 1: FIXED-EFFECTS ############################### 
+
+library(metafor)
+( meta.FE = rma.uni( yi = d$yi, 
+                   sei = d$sei,
+                   method = "FE",
+                   knha = FALSE ) )
+
+if ( z.to.r == TRUE ) {
+  est = z_to_r(meta.FE$b)
+  lo = z_to_r(meta.FE$ci.lb)
+  hi = z_to_r(meta.FE$ci.ub)
+}
+
+# for Li example, which gets its direction reversed in analyses
+if ( take.exp.inv == TRUE ) {
+  est = exp_inv(meta.FE$b)
+  lo = exp_inv(meta.FE$ci.ub)  # reverse CI limits 
+  hi = exp_inv(meta.FE$ci.lb)
+}
+
+
+# put results in table
+resE$Est[ resE$Model == "FE" ] = my_round( est, 2 )
+resE$CI[ resE$Model == "FE" ] = format_CI( lo, hi, 2 )
+resE$tau[ resE$Model == "FE" ] = "--"
+resE$tau.CI[ resE$Model == "FE" ] = "--"
+resE
+
+############################### (SANITY CHECK MODEL: STANDARD RANDOM-EFFECTS) ############################### 
+
+# still not accounting for clustering 
+( meta.RE = rma.uni( yi = d$yi, 
+                        vi = d$vi,
+                        method = "REML",
+                        knha = TRUE ) )
+
+if ( z.to.r == TRUE ) {
+  est = z_to_r(meta.RE$b)
+  lo = z_to_r(meta.RE$ci.lb)
+  hi = z_to_r(meta.RE$ci.ub)
+}
+
+if ( take.exp.inv == TRUE ){
+  est = exp_inv(meta.RE$b)
+  lo = exp_inv(meta.RE$ci.ub)
+  hi = exp_inv(meta.RE$ci.lb)
+}
+
+
+tau.CI = tau_CI( meta.RE )
+tau.CI = format_CI( tau.CI[1], tau.CI[2], digits = 2 )
+
+# used later as naive estimate for corrected robumeta model
+t2.guess = meta.RE$se.tau2
+
+# put results in table
+resE$Est[ resE$Model == "RE" ] = my_round( est, 2 )
+resE$CI[ resE$Model == "RE" ] = format_CI( lo, hi, 2 )
+resE$tau[ resE$Model == "RE" ] = my_round( sqrt(meta.RE$tau2), 2 )
+resE$tau.CI[ resE$Model == "RE" ] = tau.CI
+resE
+
+
+############################### MODEL 2: ROBUST WITHOUT CLUSTERS ############################### 
+
+# same as below, but each study is its own cluster
+
+library(robumeta)
+( meta.RE.rob = robu( yi ~ 1, 
+                      data = d, 
+                      studynum = 1:nrow(d),
+                      var.eff.size = vi,
+                      small = TRUE ) )
+
+if ( z.to.r == TRUE ) {
+  est = z_to_r(meta.RE.rob$b.r)
+  lo = z_to_r(meta.RE.rob$reg_table$CI.L)
+  hi = z_to_r(meta.RE.rob$reg_table$CI.U)
+}
+
+if ( take.exp.inv == TRUE ){
+  est = exp_inv(meta.RE.rob$b.r)
+  lo = exp_inv(meta.RE.rob$reg_table$CI.U)
+  hi = exp_inv(meta.RE.rob$reg_table$CI.L)
+}
+
+# put results in table
+resE$Est[ resE$Model == "RE.rob" ] = my_round( est, 2 )
+resE$CI[ resE$Model == "RE.rob" ] = format_CI( lo, hi, 2 )
+resE$tau[ resE$Model == "RE.rob" ] = "--"
+resE$tau.CI[ resE$Model == "RE.rob" ] = "--"
+resE
+
+
+
+############################### MODEL 3: ROBUST WITH CLUSTERS ############################### 
+
+# account for clustering with robust estimation
+
+library(robumeta)
+( meta.RI.rob = robu( yi ~ 1, 
+             data = d, 
+             studynum = cluster,
+             var.eff.size = vi,
+             small = TRUE ) )
+
+if ( z.to.r == TRUE ) {
+  est = z_to_r(meta.RI.rob$b.r)
+  lo = z_to_r(meta.RI.rob$reg_table$CI.L)
+  hi = z_to_r(meta.RI.rob$reg_table$CI.U)
+}
+
+if ( take.exp.inv == TRUE ){
+  est = exp_inv(meta.RI.rob$b.r)
+  lo = exp_inv(meta.RI.rob$reg_table$CI.U)
+  hi = exp_inv(meta.RI.rob$reg_table$CI.L)
+}
+
+# put results in table
+resE$Est[ resE$Model == "RI.rob" ] = my_round( est, 2 )
+resE$CI[ resE$Model == "RI.rob" ] = format_CI( lo, hi, 2 )
+resE$tau[ resE$Model == "RI.rob" ] = "--"
+resE$tau.CI[ resE$Model == "RI.rob" ] = "--"
+resE
+
+
+
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+#                                GET S-VALUES FOR ALL 3                               #
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#
+
+
+############################### MODEL 1: S-VALUES FOR FE SPECIFICATION ############################### 
+
+# for point est
+S0 = s_value_fe( yi = d$yi,
+            vi = d$vi,
+            q = 0 )
+
+Sq = s_value_fe( yi = d$yi,
+                 vi = d$vi,
+                 q = q )
+
+# put results in table
+resS$S0[ resS$Model == "FE" ] = format_sval( S0$sval.est, digits = 2 )
+resS$S0.CI[ resS$Model == "FE" ] = format_sval( S0$sval.ci, digits = 2 )
+resS$Sq[ resS$Model == "FE" ] = format_sval( Sq$sval.est, digits = 2 )
+resS$Sq.CI[ resS$Model == "FE" ] = format_sval( Sq$sval.ci, digits = 2 )
+resS
+
+# worst-case meta-analysis (fixed-effects)
+meta.worst = S0$meta.bd
+
+if ( z.to.r == TRUE ) {
+  est = z_to_r(meta.worst$b)
+  lo = z_to_r(meta.worst$ci.lb)
+  hi = z_to_r(meta.worst$ci.ub)
+}
+
+if ( take.exp.inv == TRUE ) {
+  est = exp_inv(meta.worst$b)
+  lo = exp_inv(meta.worst$ci.ub)
+  hi = exp_inv(meta.worst$ci.lb)
+}
+
+resW$Est[ resW$Model == "FE" ] = my_round( est, 2 )
+resW$CI[ resW$Model == "FE" ] = format_CI( lo, hi, 2 )
+
+
+res.list = lapply( el, 
+                     function(x) {
+                       
+                       cat("\n Working on eta = ", x)
+                       
+                       return( correct_est_fe( yi = d$yi,
+                                                          vi = d$vi,
+                                                          eta = x )  )
+                     } )
+  
+  
+fe.ests = as.data.frame( do.call( "rbind", res.list ) )
+  
+fe.ests$eta = as.numeric(unlist(el))
+  
+fe.ests = as.data.frame(fe.ests)
+  
+# save results because lapply above is slow
+# because each column is secretly a list, impeding write.csv
+fe.ests = apply(fe.ests, 2, unlist)
+setwd(results.dir)
+write.csv( fe.ests, "fe_model_grid_results.csv", row.names = FALSE )
+
+
+#################### MODEL 2: S-VALUES FOR ROBUST WITHOUT CLUSTERS #################### 
+
+# robumeta
+# same as below, but each study is treated as own cluster
+
+res.list = lapply( el, 
+                   function(x) {
+                     
+                     cat("\n Working on eta = ", x)
+                     
+                     return( correct_est_robu( yi = d$yi, 
+                                               vi = d$vi,
+                                               pval = d$pval,
+                                               .cluster = 1:nrow(d),
+                                               eta = x ) )
+                   } )
+
+
+re.rob.ests = as.data.frame( do.call( "rbind", res.list ) )
+
+# save results because lapply above is slow
+# because each column is secretly a list, impeding write.csv
+re.rob.ests = as.data.frame( apply(re.rob.ests, 2, unlist) )
+
+# save results because lapply above is slow
+setwd(results.dir)
+write.csv( re.rob.ests, "re_rob_model_grid_results.csv", row.names = FALSE )
+
+
+##### Get S-values (Based on Likelihood) for Point Est and CI ##### 
+
+# S-value for point estimate
+resS$S0[ resS$Model == "RE.rob" ] = format_sval( re.rob.ests$eta[ which.min( abs(re.rob.ests$est.adj - 0) ) ], digits = 2 )
+# compare to closed-form S-value
+
+# S-value for CI
+resS$S0.CI[ resS$Model == "RE.rob" ] = format_sval( re.rob.ests$eta[ which.min( abs(re.rob.ests$lo.adj - 0) ) ], digits = 2 )
+
+resS$Sq[ resS$Model == "RE.rob" ] = format_sval( re.rob.ests$eta[ which.min( abs(re.rob.ests$est.adj - q) ) ], digits = 2 )
+# compare to closed-form S-value
+
+# S-value for CI
+resS$Sq.CI[ resS$Model == "RE.rob" ] = format_sval( re.rob.ests$eta[ which.min( abs(re.rob.ests$lo.adj - q) ) ], digits = 2 )
+resS
+
+
+##### Worst-Case Meta-Analysis ##### 
+temp = d[ d$yi < 0 | d$pval > 0.05, ]
+
+# put each study in its own cluster
+my.cluster = 1:nrow(temp)
+
+meta.worst.re.rob = robu( formula = temp$yi ~ 1,
+                          effect = temp$yi,
+                          var.eff.size = temp$vi,
+                          data = temp,
+                          studynum = my.cluster, 
+                          small = TRUE )
+
+if ( z.to.r == TRUE ) {
+  est = z_to_r(meta.worst.re.rob$b.r)
+  lo = z_to_r(meta.worst.re.rob$reg_table$CI.L)
+  hi = z_to_r(meta.worst.re.rob$reg_table$CI.U)
+}
+
+if ( take.exp.inv == TRUE) {
+  est = exp_inv(meta.worst.re.rob$b.r)
+  lo = exp_inv(meta.worst.re.rob$reg_table$CI.U)
+  hi = exp_inv(meta.worst.re.rob$reg_table$CI.L)
+}
+
+resW$Est[ resW$Model == "RE.rob" ] = my_round( est, 2 )
+resW$CI[ resW$Model == "RE.rob" ] = format_CI( lo, hi, 2 )
+resW
+
+#################### MODEL 3: S-VALUES FOR ROBUST WITH CLUSTERS #################### 
+
+# robumeta
+res.list = lapply( el, 
+                   function(x) {
+                     
+                     cat("\n Working on eta = ", x)
+                     
+                     return( correct_est_robu( yi = d$yi, 
+                                               vi = d$vi,
+                                               pval = d$pval,
+                                               .cluster = d$cluster,
+                                               eta = x ) )
+                   } )
+
+
+ri.rob.ests = as.data.frame( do.call( "rbind", res.list ) )
+
+# save results because lapply above is slow
+# because each column is secretly a list, impeding write.csv
+ri.rob.ests = as.data.frame( apply(ri.rob.ests, 2, unlist) )
+
+# save results because lapply above is slow
+setwd(results.dir)
+write.csv( ri.rob.ests, "ri_rob_model_grid_results.csv", row.names = FALSE )
+
+
+
+##### Get S-values (Based on Likelihood) for Point Est and CI ##### 
+
+# S-value for point estimate
+resS$S0[ resS$Model == "RI.rob" ] = format_sval( ri.rob.ests$eta[ which.min( abs(ri.rob.ests$est.adj - 0) ) ], digits = 2 )
+# compare to closed-form S-value
+
+# S-value for CI
+resS$S0.CI[ resS$Model == "RI.rob" ] = format_sval( ri.rob.ests$eta[ which.min( abs(ri.rob.ests$lo.adj - 0) ) ], digits = 2 )
+
+resS$Sq[ resS$Model == "RI.rob" ] = format_sval( ri.rob.ests$eta[ which.min( abs(ri.rob.ests$est.adj - q) ) ], digits = 2 )
+# compare to closed-form S-value
+
+# S-value for CI
+resS$Sq.CI[ resS$Model == "RI.rob" ] = format_sval( ri.rob.ests$eta[ which.min( abs(ri.rob.ests$lo.adj - q) ) ], digits = 2 )
+resS
+
+
+##### Worst-Case Meta-Analysis ##### 
+temp = d[ d$yi < 0 | d$pval > 0.05, ]
+
+meta.worst.ri.rob = robu( formula = temp$yi ~ 1,
+                          effect = temp$yi,
+                          var.eff.size = temp$vi,
+                          data = temp,
+                          studynum = temp$cluster, 
+                          small = TRUE )
+
+if ( z.to.r == TRUE ) {
+  est = z_to_r(meta.worst.ri.rob$b.r)
+  lo = z_to_r(meta.worst.ri.rob$reg_table$CI.L)
+  hi = z_to_r(meta.worst.ri.rob$reg_table$CI.U)
+}
+
+if ( take.exp.inv == TRUE ){
+  est = exp_inv(meta.worst.ri.rob$b.r)
+  lo = exp_inv(meta.worst.ri.rob$reg_table$CI.U)
+  hi = exp_inv(meta.worst.ri.rob$reg_table$CI.L)
+}
+
+resW$Est[ resW$Model == "RI.rob" ] = my_round( est, 2 )
+resW$CI[ resW$Model == "RI.rob" ] = format_CI( lo, hi, 2 )
+resW
+
+
+#################### SANITY CHECK: SHOULD BE SIMILAR #################### 
+
+fe.ests = as.data.frame(fe.ests)
+
+
+# when eta = 1, we should closely recover the estimates from original data
+# these should be similar to entries of resE
+fe.ests[ fe.ests$eta == 1,]; resE[ resE$Model == "FE", ]  # yes
+re.rob.ests[ re.rob.ests$eta == 1, 1:4]; resE[ resE$Model == "RE.rob", ]  # yes
+ri.rob.ests[ ri.rob.ests$eta == 1, 1:4]; resE[ resE$Model == "RI.rob", ]  # yes
+# slight differences in the last one are due to use of naive tau^2 vs. 
+#  robumeta's own version
+
+
+#################### PLOTS COMPARING 3 METHODS #################### 
+
+##### Sensitivity Plot for Point Estimate ##### 
+
+#breaks = c(1, seq(10,100,10))
+
+# simplify breaks a little compared to eta
+breaks = c(200, 150, 100, 50, 40, 30, 20, 10, 5)
+axis.font.size = 16
+axis.label.size = 20
+
+##### Fixed Effects #####
+
+if ( z.to.r == TRUE ) {
+  p.fe = ggplot( ) +
+    
+    # "q" line
+    geom_hline( yintercept = z_to_r(q), lty=2) +
+    
+    # compare to worst-case FE meta-analysis
+    geom_hline( yintercept = z_to_r(meta.worst$b), color = "red", lty = 2 ) +
+    
+    geom_ribbon( data = fe.ests, aes( x = eta, ymin = z_to_r(lo.adj), ymax = z_to_r(hi.adj)), fill = "red", alpha = .1) +
+    
+    geom_line( data = fe.ests, aes( x = eta, y = z_to_r(est.adj) ), color = "red", lwd = 1.2 ) +
+    xlab( bquote( eta ) ) +
+    
+    # ADD A PRIME HERE
+    ylab( bquote( hat(mu)^"'"[eta] ) ) +
+    
+    scale_x_continuous( limits = c(1, max(breaks)), breaks = breaks ) +
+    
+    theme_classic() +
+    
+    theme(axis.title = element_text(size=axis.label.size),
+          axis.text = element_text(size=axis.font.size) )
+}
+
+if ( take.exp.inv == TRUE ) {
+  p.fe = ggplot( ) +
+    
+    # "q" line
+    geom_hline( yintercept = exp_inv(q), lty=2) +
+    
+    # compare to worst-case FE meta-analysis
+    geom_hline( yintercept = exp_inv(meta.worst$b), color = "red", lty = 2 ) +
+    
+    geom_ribbon( data = fe.ests, aes( x = eta, ymin = exp_inv(lo.adj), ymax = exp_inv(hi.adj)), fill = "red", alpha = .1) +
+    
+    geom_line( data = fe.ests, aes( x = eta, y = exp_inv(est.adj) ), color = "red", lwd = 1.2 ) +
+    xlab( bquote( eta ) ) +
+    ylab( bquote( hat(mu)^"'"[eta] ) ) +
+    
+    scale_x_continuous( limits = c(1, max(breaks)), breaks = breaks ) +
+    
+    theme_classic() +
+    
+    theme(axis.title = element_text(size=axis.label.size),
+          axis.text = element_text(size=axis.font.size) )
+}
+
+
+if (meta.name == "anderson") p.fe = p.fe + scale_y_continuous( limits = c( 0, 0.2 ),
+                                                               breaks = seq( 0, 0.2, 0.05 ) ) 
+
+if (meta.name == "boehm") p.fe = p.fe + scale_y_continuous( limits = c( -0.2, 0.15 ),
+                                                               breaks = seq( -0.2, 0.15, 0.05 ) ) 
+
+# no rescaling needed for Li
+
+p.fe
+# LOOKS GREAT! 
+
+
+##### 2 Robust Specifications (Same Point Estimates; Different CIs) #####
+
+# for Boehm example, need to truncate the CI limits so that they don't go off
+#  the plot
+if ( meta.name == "boehm" ) {
+  re.rob.ests$lo.adj = pmax( -0.5, re.rob.ests$lo.adj)
+  re.rob.ests$hi.adj = pmin( 0.5, re.rob.ests$hi.adj)
+  
+  ri.rob.ests$lo.adj = pmax( -0.5, ri.rob.ests$lo.adj)
+  ri.rob.ests$hi.adj = pmin( 0.5, ri.rob.ests$hi.adj)
+}
+
+if ( z.to.r == TRUE ) {
+  p.rob = ggplot( ) +
+    # "q" line
+    geom_hline( yintercept = z_to_r(q), lty = 2) +
+    
+    # point ests will be the same for worst-case, so doesn't matter
+    geom_hline( yintercept = z_to_r(meta.worst.re.rob$b.r), color = "red", lty = 2 ) +
+    
+    geom_ribbon( data = re.rob.ests, aes( x = eta, ymin = z_to_r(lo.adj), ymax = z_to_r(hi.adj) ), fill = "blue", alpha = .1) +
+    
+    geom_ribbon( data = ri.rob.ests, aes( x = eta, ymin = z_to_r(lo.adj), ymax = z_to_r(hi.adj)), fill = "black", alpha = .1) +
+    
+    geom_line( data = re.rob.ests, aes( x = eta, y = z_to_r(est.adj) ), color = "blue", lwd = 1.2 ) +
+    geom_line( data = ri.rob.ests, aes( x = eta, y = z_to_r(est.adj) ), color = "black", lwd = 1.2) +
+    xlab( bquote( eta ) ) +
+    ylab( bquote( hat(mu)^"'"[eta] ) ) +
+    
+    scale_x_continuous( limits = c(1, max(breaks)), breaks = breaks ) +
+    
+    theme_classic() + 
+    
+    theme(axis.title = element_text(size=axis.label.size),
+          axis.text = element_text(size=axis.font.size) ) 
+}
+
+if ( take.exp.inv == TRUE ) {
+  p.rob = ggplot( ) +
+    # "q" line
+    geom_hline( yintercept = exp_inv(q), lty = 2) +
+    
+    # point ests will be the same for worst-case, so doesn't matter
+    geom_hline( yintercept = exp_inv(meta.worst.re.rob$b.r), color = "red", lty = 2 ) +
+    
+    geom_ribbon( data = re.rob.ests, aes( x = eta, ymin = exp_inv(lo.adj), ymax = exp_inv(hi.adj) ), fill = "blue", alpha = .1) +
+    
+    geom_ribbon( data = ri.rob.ests, aes( x = eta, ymin = exp_inv(lo.adj), ymax = exp_inv(hi.adj)), fill = "black", alpha = .1) +
+    
+    geom_line( data = re.rob.ests, aes( x = eta, y = exp_inv(est.adj) ), color = "blue", lwd = 1.2 ) +
+    geom_line( data = ri.rob.ests, aes( x = eta, y = exp_inv(est.adj) ), color = "black", lwd = 1.2) +
+    xlab( bquote( eta ) ) +
+    ylab( bquote( hat(mu)^"'"[eta] ) ) +
+    
+    scale_x_continuous( limits = c(1, max(breaks)), breaks = breaks ) +
+    
+    theme_classic() + 
+    
+    theme(axis.title = element_text(size=axis.label.size),
+          axis.text = element_text(size=axis.font.size) ) 
+}
+
+
+if (meta.name == "anderson") p.rob = p.rob + scale_y_continuous( limits = c( 0, 0.2 ),
+                                                         breaks = seq( 0, 0.2, 0.05 ) ) 
+
+if (meta.name == "boehm") p.rob = p.rob + scale_y_continuous( limits = c( -0.5, 0.5 ),
+                                                            breaks = seq( -0.5, 0.5, 0.1 ) ) 
+
+if (meta.name == "li") p.rob = p.rob + scale_y_continuous( limits = c( 0.8, 1.4 ),
+                                                      breaks = seq( 0.8, 1.4, 0.1 ) )
+
+
+p.rob
+# LOOKS GREAT! 
+
+
+#################### SIGNIFICANCE FUNNEL PLOT #################### 
+
+if ( meta.name == "boehm" ) {
+  xmin = -0.3
+  ymax = 0.3
+  xmax = 0.6
+  xlab = "Point estimate (Fisher's z)"
+}
+
+
+if ( meta.name == "anderson" ) {
+  xmin = -0.3
+  ymax = 0.3
+  xmax = 0.7
+  xlab = "Point estimate (Fisher's z)"
+}
+
+if ( meta.name == "li" ) {
+  xmin = -0.6
+  ymax = .45
+  xmax = 1.4
+  xlab = "Point estimate (log-HR; signs recoded)"
+}
+
+
+# try with new package version
+setwd("~/Dropbox/Personal computer/Independent studies/Sensitivity analysis for publication bias (SAPB)/Linked to OSF (SAPB)/R package PublicationBias/PublicationBias/R")
+source("functions.R")
+
+p.funnel = significance_funnel( yi = d$yi,
+                                vi = d$vi,
+                                xlab = xlab,
+                                favor.positive = TRUE,
+                                est.N = S0$meta.bd$beta,  # on analysis scale, not transformed to original scale
+                                est.all = meta.RI.rob$b.r,
+                                alpha = 0.05,
+                                plot.pooled = TRUE )
+
+
+
+#################### SAVE ALL THE THINGS #################### 
+
+setwd(results.dir)
+write.csv(resE, paste( meta.name, "_uncorrected_ests.csv", sep = "" ),
+          row.names = FALSE)
+write.csv(resS, paste( meta.name, "_svalues.csv", sep = "" ),
+          row.names = FALSE)
+
+# for LaTeX
+library(xtable)
+print( xtable(resE), include.rownames = FALSE, booktabs = TRUE )
+print( xtable(resS), include.rownames = FALSE, booktabs = TRUE )
+print( xtable(resW), include.rownames = FALSE, booktabs = TRUE )
+
+ggsave( filename = paste( meta.name, "_fe_plot.png", sep = "" ),
+        device = "png",
+        p.fe,
+        width = 9,
+        height = 6)
+
+ggsave( filename = paste( meta.name, "_robu_plot.png", sep = "" ),
+        device = "png",
+        p.rob,
+        width = 9,
+        height = 6)
+
+ggsave( filename = paste( meta.name, "_funnel.png", sep = "" ),
+        device = "png",
+        p.funnel,
+        width = 6,
+        height = 4)
+
+# also save straight to Overleaf
+setwd(overleaf.dir)
+ggsave( filename = paste( meta.name, "_fe_plot.png", sep = "" ),
+        device = "png",
+        p.fe,
+        width = 9,
+        height = 6)
+
+ggsave( filename = paste( meta.name, "_robu_plot.png", sep = "" ),
+        device = "png",
+        p.rob,
+        width = 9,
+        height = 6)
+
+ggsave( filename = paste( meta.name, "_funnel.png", sep = "" ),
+        device = "png",
+        p.funnel,
+        width = 6,
+        height = 4)
+
+# also useful info: how many papers contributed multiple estimates?
+t = table(d$cluster)
+sum(t>1)
+
+# how many papers?
+length(t)
+
+

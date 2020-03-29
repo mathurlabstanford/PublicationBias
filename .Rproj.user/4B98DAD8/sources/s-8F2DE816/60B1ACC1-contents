@@ -1,0 +1,471 @@
+
+# This file contains a combination of R code and Wolfram Alpha queries to
+#  double-check the simplifications and math.
+
+library(testthat)
+library(dplyr)
+library(metafor)
+library(robumeta)
+
+################################# EQUATION 2.3 (ROBUST VARIANCE SIMPLIFICATION) #################################
+
+# choose which specification to check
+spec = "independent"
+# spec = "clustered"
+
+##### Example Data to Check #####
+data.dir = "~/Dropbox/Personal computer/Independent studies/Sensitivity analysis for publication bias (SAPB)/Private data component/Anderson data"
+setwd(data.dir)
+d = read.csv("anderson_prepped.csv")
+
+# naive tau^2
+meta.RE = rma.uni( yi = yi,
+                   sei = sei,
+                   data = d,
+                   method = "REML" )
+t2.guess = meta.RE$tau2
+
+# put each study in its own cluster OR not
+if ( spec == "independent") my.cluster = 1:nrow(d)  #   ROBUST INDEPENDENT
+if ( spec == "clustered") my.cluster = rep(1:15, each =5)   # ROBUST CLUSTERED
+wts = 1 / ( t2.guess + d$vi )
+
+k = nrow(d)
+# number of clusters
+m = length(unique(my.cluster))
+
+# going to check 3 things that should all be equal:
+#  1.) matrix-style as in Hedges' (2010) Equation 6
+#  2.) my simplified form (Eq 2.3) using 1-vector for Xj and using diagonal Wj
+#  3.) robumeta
+
+##### 1. Hedges (2010), Eq. 3 and Eq. 6 #####
+
+# muhat (Eq 3)
+sumA = 0
+sumB = 0
+
+for ( m in unique(my.cluster) ) {
+  inds = which( my.cluster == m )
+  km = length(inds)
+
+  # avoid matrix vs. scalar errors
+  if (km > 1) wts.m = wts[ inds ]
+  if (km == 1) wts.m = as.matrix(wts[inds])
+
+  Wm = diag( wts.m )
+  Ym = matrix( d$yi[inds], ncol = 1 )
+  one = matrix( rep(1, km),
+                ncol = 1)
+
+  sumA = sumA + t(one) %*% Wm %*% one
+  sumB = sumB + t(one) %*% Wm %*% Ym
+}
+
+( muhat1 = (1/sumA) * sumB )
+
+  
+  
+# variance (Eq 6)
+sandwich.sum=0
+for ( m in unique(my.cluster) ) {
+    inds = which( my.cluster == m )
+    km = length(inds)
+    
+    if (km > 1) wts.m = wts[ inds ]
+    if (km == 1) wts.m = as.matrix(wts[inds])
+    
+    Wm = diag( wts.m )
+    
+    # residuals
+    Ym = matrix( d$yi[inds], ncol = 1 )
+    
+    # same entries for all studies because intercept-only model
+    muhat.m = matrix( rep(muhat1, km),
+                      ncol = 1 )
+    
+    e = Ym - muhat.m
+    one = matrix( rep(1, km),
+                  ncol = 1)
+    
+    # these two are exactly the same:
+    #sandwich.sum = sandwich.sum + t(one) %*% Wm %*% tcrossprod(e) %*% Wm %*% one
+    sandwich.sum = sandwich.sum + t(one) %*% Wm %*% e %*% t(e) %*% Wm %*% one
+  }  
+
+( var1 = (m/(m-1)) * (1/sumA) * sandwich.sum * (1/sumA) )
+
+
+
+##### 2. My Simplified Forms #####
+
+# muhat (2.2)
+( muhat2 = sum(wts * d$yi) / sum(wts) )
+
+# variance (2.3)
+# sandwich sum term is reused from the above since muhat is the same
+( var2 = (m / (m-1)) * sandwich.sum * sum(wts)^(-2) )
+
+# yes, agrees exactly with var1 for robust independent :)
+
+
+##### 2.5. My Further Simplified Form for Robust Independent Only (Eq 3.3) #####
+
+# I eliminated the summations over cluster for this one
+if ( spec == "independent" ) {
+  var2.5 = (k/(k-1)) * sum( ( ( d$yi - c(muhat1) ) * wts )^2 ) * sum(wts)^(-2)
+}
+
+
+##### 3. Robumeta #####
+
+# with robumeta
+( meta.rob = robu( yi ~ 1,
+                  data = d,
+                  studynum = my.cluster,
+                  userweights = wts,
+                  var.eff.size = vi,
+                  small = FALSE ) )
+
+( muhat3 = meta.rob$b.r )
+( var3 = meta.rob$reg_table$SE^2 )
+
+
+###### Compare #####
+
+muhat1; muhat2; muhat3
+var1; var2; var2.5; var3
+
+# recall that var2.5 is only for the independent specification
+
+# all agree exactly for both robust independent and robust cluster :D
+# note that this means that even when using small=FALSE in robumeta, 
+#  it still uses the m/(m-1) small-sample correction as described right above Hedges (2010),
+#  Eq. 7 
+
+# from here, the bias-corrected versions (my Eq. 3.2a - 3.3) follow immediately because
+#  they just use alternative user-provided weights :)
+
+################################# "MAIN RESULTS": ETA VALUES FOR FIXED-EFFECTS #################################
+
+# these are Wolfram Alpha queries
+
+# eta(muhat, q):
+solve q = (eta*a + b) / (eta*c + d) for eta
+
+# eta(muhat^lb, q):
+solve q = ( eta * a + b ) / ( eta * c + d ) - k * sqrt( (eta^2 * c + d) / (eta * c + d)^2 ) for eta
+
+
+################################# SUPPLEMENT: WEIGHTED SCORE APPROACH #################################
+
+# regular score without bias correction
+# the score itself is from Brockwell & Gordon, Equation (2) on page 830
+derivative wrt M of -0.5 * log( 2 * pi * (v + V) ) - 0.5 * ( (x - M)^2  / (v + V) )
+derivative wrt V of -0.5 * log( 2 * pi * (v + V) ) - 0.5 * ( (x - M)^2  / (v + V) )
+
+# the expressions for the ML estimators are from Viechtbauer (2005), Eq 4 and Eq 17
+
+# Jacobian entries
+d/dy d/dy -0.5 * log( 2 * pi * (v + V) ) - 0.5 * ( (x - y)^2  / (v + V) )
+d/dy d/dV -0.5 * log( 2 * pi * (v + V) ) - 0.5 * ( (x - y)^2  / (v + V) )
+d/dV d/dV -0.5 * log( 2 * pi * (v + V) ) - 0.5 * ( (x - y)^2  / (v + V) )
+
+
+
+################################# APPENDIX: LEMMA 1.1 (ONSISTENCY PROOF #################################
+
+# simulate data with huge k.star
+setwd("~/Dropbox/Personal computer/Independent studies/Sensitivity analysis for publication bias (SAPB)/Linked to OSF (SAPB)/Simulation study/Code")
+source("helper_sim_study_SAPB.R")
+
+##### Generate Data for Checking the Lemma #####
+
+k.star = 50000
+eta = 5
+pA = 1  # "baseline" probability of publishing affirmative study
+pN = pA / eta  # probability of publishing a nonaffirmative study
+
+# simulate with eta = 1 because we're going to do selection manually
+#  so that it even affects the affirmative studies
+p = data.frame( k = k.star,  # k here is really k.star in the Appendix notation
+                per.cluster = 1,
+                mu = 2,
+                V = 1,
+                V.gam = 0,
+                sei.min = .1,
+                sei.max = 1,  # had 2.5 before
+                eta = 1,
+                true.dist = "exp",
+                SE.corr = FALSE )
+
+# this is just the published ones
+d = sim_data2(p,
+              keep.all.studies = TRUE)
+
+# impose selection
+d$affirm = d$pval < 0.05 & d$yi > 0
+d$P.publish = NA
+d$P.publish[ d$affirm == TRUE ] = pA
+d$P.publish[ d$affirm == FALSE ] = pN
+d$publish = rbinom( n = nrow(d), size = 1, prob = d$P.publish )
+
+# sanity check
+d %>% group_by(affirm) %>%
+  summarise( mean(publish) )
+
+d$weight = 1
+d$weight[ d$affirm == 0 ] = eta
+
+# published studies only
+dp = d[ d$publish == TRUE, ]
+dp$eta.wt.std = dp$weight / sum(dp$weight)
+dp$wi = (1/dp$vi) / sum(1/dp$vi)
+
+# standardized inverse-variance weights
+#d$wi = (d$publish/d$vi) / sum(dp$publish/dp$vi)
+
+# unstandardized inverse-variance weights
+d$wi = 1/d$vi
+
+##### ~~~BM: TEMP: Effect of Selecting on Variance #####
+
+# dataset selected marginally for variance AND affirmative status
+prob = rep(1, nrow(d))
+vi.cutoff = median(d$vi)
+prob[ d$vi > vi.cutoff ] = 0  # set to 1 to NOT select on variance
+d$select = rbinom( n = nrow(d),
+                 size = 1,
+                 prob = prob )
+
+d %>% group_by(affirm) %>% summarise(mean(select))
+
+d %>% group_by(affirm, select) %>%
+  summarise(
+            mean(yi))
+
+d %>% group_by(affirm) %>%
+  summarise(mean(select),
+            mean(1/vi))
+
+d %>% group_by(affirm) %>%
+  summarise(mean(select/vi))
+
+# term in proof where we apply the independence assumption
+# NOT equal, which makes sense given non-independence
+# EVEN THOUGH IT DOESN'T INDUCE BIAS TO DO THIS
+mean(d$select * (1/d$vi)); mean(d$select) * mean(1/d$vi)
+
+# unbiased if selection is only on variance, not affirmative status
+d %>% filter(select == TRUE) %>%
+  #group_by(affirm, select) %>%
+  summarise(mean(yi))
+# still seems unbiased...
+# I think this is because when we select for small SE, we are indeed getting affirmatives
+#  with smaller-than-typical point estimates, BUT we also are getting a higher proportion of
+#  affirmative studies in general relative to nonaffirmatives, so cancels out
+
+# weighted estimator is unbiased if selection is only on affirmative status
+# and yet STILL seems unbiased if we select on SE as well...
+dp = d %>% filter( publish == TRUE & select == TRUE )
+dp %>% summarise( sum( weight * yi / sum(dp$weight) ) )
+
+# stats by affirmative status
+tA = d %>% group_by(affirm) %>%
+  summarise( P.Ai = n()/nrow(d),
+             mean(publish * select * (1/P.publish) * wi * yi),
+             mean(publish),
+             mean(select * wi * yi),
+             mean(select * wi) * mean(yi),
+             mean(select * wi),
+             mean(yi*wi),
+             mean(yi) )
+
+# stats for select == TRUE
+tS = d %>% filter(select == TRUE) %>%
+  summarise( mean(affirm) )
+
+# stats for select == TRUE, by affirm
+tSA = d %>% filter(select == TRUE) %>%
+    group_by(affirm) %>%
+  summarise( mean(yi * wi) )
+
+# for unbiasedness to hold, these should match
+# this is so we can use the CLT pull-out
+# YES; holds
+# "WTP" in notebook
+( initial.LHS = mean( d$publish * d$select * (1/d$P.publish) * d$wi * d$yi ) )
+( initial.RHS = mean(d$yi) * mean( d$publish * d$select * (1/d$P.publish) * d$wi ) )
+
+
+# STEP 1.1 - seems to hold
+# when conditioning on select == TRUE, we get a higher proportion of affirmatives,
+initial.LHS; mean(d$select) * ( tS$`mean(affirm)` * tSA$`mean(yi * wi)`[2] +
+                                  (1-tS$`mean(affirm)`) * tSA$`mean(yi * wi)`[1] )
+
+
+
+##### Plot by select, affirm #####
+
+# random sample for plotting joy
+d.plot = d[ sample( 1:nrow(d) )[1:200], ]
+d.plot %>% group_by(affirm, select) %>%
+  summarise( n())
+
+# bm
+# funnel
+shapes = c(1,16)
+colors = c("gray", "orange")
+library(ggplot2)
+ggplot( data = d.plot,
+        aes(x = yi,
+            y = sei,
+            color = as.factor(affirm),
+            shape = as.factor(select))) +
+
+  # # means by affirmative status among underlying population...
+  # geom_vline( xintercept = tA$`mean(yi * wi)`[1],
+  #             color = "gray",
+  #             lty = 2) +
+  # geom_vline( xintercept = tA$`mean(yi * wi)`[2],
+  #             color = "orange",
+  #             lty = 2) +
+  # # ...and among only select == TRUE
+  # geom_vline( xintercept = tSA$`mean(yi * wi)`[1],
+  #             color = "gray",
+  #             lty = 1) +
+  # geom_vline( xintercept = tSA$`mean(yi * wi)`[2],
+  #             color = "orange",
+  #             lty = 1) +
+
+  # cutoff for variance selection
+  geom_hline( yintercept = sqrt(vi.cutoff),
+              color = "red" ) +
+
+  # just-affirmative line
+  geom_abline( slope = 1/qnorm(1 - 0.05/2),
+               intercept = 0,
+               color = "gray") +
+
+  geom_point() +
+  scale_shape_manual(values = shapes) +
+  scale_color_manual( values = colors) +
+  theme_classic()
+
+# now with the z-scores instead
+
+
+
+
+
+
+### now try selecting on SE ONLY among affirmatives
+prob = rep(1, nrow(d))
+prob[ d$affirm == 0 & (d$vi > median(d$vi)) ] = 0
+d$select = rbinom( n = nrow(d),
+                   size = 1,
+                   prob = prob )
+
+d %>% group_by(affirm, select) %>%
+  summarise(
+    mean(yi))
+
+d %>% group_by(affirm) %>%
+  summarise(mean(select))
+
+
+d %>% filter(select == TRUE) %>%
+  #group_by(affirm, select) %>%
+  summarise(mean(yi))
+# yes!! now it's biased
+# also biased if you only select on SE among the nonaffirmatives
+
+# term in proof where we apply the independence assumption
+mean(d$select * (1/d$vi)); mean(d$select) * mean(1/d$vi)
+
+
+
+
+
+
+
+##### **Check Lyapunov CLT #####
+
+# taking the mean of numbers that are all either 0 (unpublished studies), 1/pA, or 1/pN
+# each term has expectation 1 because E[d$publish] = d$P.publish
+table( d$publish / d$P.publish )
+
+# **check E[Di* P(Di* = 1 | Ai*)^{-1}] = 1
+mean(d$publish / d$P.publish)
+
+# BM: look at correlation of SEs with publication indicator
+mean(d$publish)
+d %>% group_by(publish) %>%
+  summarise( mean(yi),
+             mean(vi) )
+cor.test( d$publish, (1/d$vi) )
+
+d %>% group_by(affirm) %>%
+  summarise( mean(yi),
+             mean(vi) )
+# the correlation between 1/vi and publish emerges only when mean is pretty big,
+#  so that more precise studies are almost always significant in the positive
+#  rather than negative direction
+# ** this still appears true even when E[ 1/vi | Ai ] != E[ 1/vi ]
+mean( (d$publish / d$P.publish) * (1/d$vi) ); mean(1/d$vi)
+# similar demonstration of independence:
+cor.test( (d$publish / d$P.publish), (1/d$vi) )
+
+# justification for the 1/sqrt(k) in the CLT: Berry-Esseen rate of convergence
+# https://en.wikipedia.org/wiki/Berry%E2%80%93Esseen_theorem#Non-identically_distributed_summands
+
+# as k -> infinity, this should be very close to 1 - :)
+(1/k.star) * sum( d$publish / d$P.publish )
+# this is equivalent to just using the weights among the published ones:
+(1/k.star) * sum( 1 / d$P.publish[ d$publish == TRUE] )
+
+
+##### Bookmark #####
+
+# this one is fine
+corrected_meta(yi = dp$yi,
+               vi = dp$vi,
+               eta = eta,
+               model = "fixed")
+
+# should match corrected_meta: yes
+sum( ( (dp$weight / dp$vi) / sum(dp$weight / dp$vi) ) * dp$yi )
+
+# CANNOT SPLIT UP THE WEIGHTS BECAUSE NO LONGER SUM TO 1:
+# compare to equivalent estimator among only publisheds (the one we'd actually calculate):
+sum( ( dp$weight / sum(dp$weight) ) * ( (1/dp$vi) / sum(1/dp$vi) ) * dp$yi )
+# yes, equal
+
+# this initial step seems wrong already!
+sum( d$publish * ( d$weight / sum( d$publish * d$weight) ) * d$wi * d$yi )
+
+
+# should be close (after the CLT step)
+mean( d$wi * (1/d$P.publish) * d$yi )
+
+# should also be close  (whiteboard step)
+mean( (d$yi/d$vi) / sum( d$publish * (1/d$vi) ) )
+
+
+##### Check "Taking Limits..." #####
+ratio = d$publish / d$P.publish
+
+sum( ratio * ( 1 / sum(ratio) ) * d$yi * d$inv.v.wt )
+
+
+# bm
+# ignore inverse variance weights for now
+mean(d$yi)  # latent population, so unbiased
+sum(dp$eta.wt.std * dp$yi)  # weighted properly, so also unbiased
+# :)
+
+# ignore the inverse-variance weights for now
+sum( d$publish * ( d$weight / sum(d$publish * d$weight) ) * d$yi )
+
+sum( ( d$weight / sum(d$publish * d$weight) ) *
+

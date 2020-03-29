@@ -1,0 +1,389 @@
+
+library(here)
+data.dir = here:::here("Data/Anderson data")
+setwd(data.dir)
+d = read.csv("anderson_prepped.csv")
+
+
+##### Fit Model to Original Data #####
+
+# with empirical weights
+library(robumeta)
+( meta.RI = robu( yi ~ 1, 
+                  data = d, 
+                  studynum = cluster,
+                  var.eff.size = vi, 
+                  small = FALSE ) )
+
+# now with user-defined weights (IPCW)
+d$weight = 1
+d$weight[ d$pval > 0.05 ] = 10
+( meta.RI = robu( yi ~ 1, 
+                  data = d, 
+                  studynum = cluster,
+                  userweights = weight,
+                  var.eff.size = vi,
+                  small = TRUE ) )
+
+
+
+
+################################# TRY WITH SIMULATED DATA #################################
+
+# simulate data with intense clusters
+
+mu = meta.RI$reg_table$b.r
+V = meta.RI$mod_info$tau.sq
+
+setwd("~/Dropbox/Personal computer/Independent studies/Sensitivity analysis for publication bias (SAPB)/Linked to OSF (SAPB)/Simulation study/Code")
+source("helper_sim_study_SAPB.R")
+
+###### Unique Parameters #####
+# note: total studies is k * per.cluster
+k = c(50)  # number of clusters prior to selection
+per.cluster = c(10)  # studies per cluster
+mu = 1  # RE distribution mean
+V = 1  # RE heterogeneity
+V.gam = 0.5  # variance of random intercepts (can't be > V because that's total heterogeneity!)
+sei.min = 0.5  # runif lower bound for study SEs
+sei.max = 0.5  # runif upper bound for study SEs
+eta = c(4)  # selection prob
+
+# matrix of scenario parameters
+p = expand.grid(k,
+                          per.cluster,
+                          mu,
+                          V,
+                          V.gam,
+                          sei.min,
+                          sei.max,
+                          eta )
+
+names(p) = c("k",
+                       "per.cluster",
+                       "mu",
+                       "V",
+                       "V.gam",
+                       "sei.min",
+                       "sei.max",
+                       "eta" )
+
+d = sim_data(p)
+
+
+# check out the clusters
+# randomly choose 5 of them for visibility
+rand.cl = sample(1:k)[1:5]
+library(ggplot2)
+ggplot( data = d[ d$cluster %in% rand.cl, ], aes(x = yi, fill = as.factor(cluster) ) ) +
+  theme_classic() +
+  geom_density(alpha = 0.2)
+# looks good
+
+
+# now with user-defined weights (IPCW)
+( meta.RI = robu( yi ~ 1, 
+                  data = d, 
+                  studynum = cluster,
+                  userweights = weight,
+                  var.eff.size = vi,
+                  small = TRUE ) )
+
+# compare to metafor with same user weights (non-robust)
+meta.RE = rma.uni( yi = yi, 
+                   sei = sei, 
+                   #weights = weight, 
+                   data = d, 
+                   method = "REML" )
+
+
+################################# ACTUAL SIM STUDY #################################
+
+library(foreach)
+library(doParallel)
+registerDoParallel(cores=8)
+
+sim.reps = 500
+
+rep.time = system.time({
+  
+  rs = foreach( i = 1:sim.reps,
+                .combine=rbind,
+                .errorhandling = "stop"  # this shouldn't happen
+  ) %dopar% {
+    d = sim_data(p)
+    
+    # now with user-defined weights (IPCW)
+    ( meta3 = robu( yi ~ 1, 
+                      data = d, 
+                      studynum = cluster,
+                      userweights = weight,
+                      var.eff.size = vi,
+                      small = TRUE ) )
+    
+    # metafor with same user weights (non-robust)
+    meta2 = rma.uni( yi = yi, 
+                       sei = sei, 
+                       weights = weight, 
+                       data = d, 
+                       method = "REML" )
+    
+    # naive metafor
+    meta1 = rma.uni( yi = yi, 
+                       sei = sei, 
+                       data = d, 
+                       method = "REML" )
+    
+    
+    rows =     data.frame( 
+                            Method = c( "Naive",
+                                        "WtdPlain",
+                                        "WtdRobu"),
+                            
+                              # stats for mean estimate
+                              # note that both boot CI methods use the same point estimate
+                              MuEst = c( meta1$b,
+                                         meta2$b,
+                                        meta3$b.r ),
+      
+      MuCover = c( covers( mu, meta1$ci.lb, meta1$ci.ub ),
+                   covers( mu, meta2$ci.lb, meta2$ci.ub ),
+                   covers( mu, meta3$reg_table$CI.L, meta3$reg_table$CI.U ) ),
+      
+    
+      
+            # stats for t2 estimate
+            T2Est = c( meta1$tau2,
+                       meta2$tau2,
+                       NA ),  # meta3 won't have tau^2 when given user weights
+            
+            # T2Cover = c( covers( V, t2.lo.naive, t2.hi.naive ),
+            #              covers( p$V, percCIs[[2]][1], percCIs[[2]][2] ) ),
+            # 
+            
+            # observed sample size (after selection)
+            k.obs = rep( nrow(d), 3 ),
+            
+            # number of nonsignificant studies before selection
+            n.nonsig = rep( sum(d$pval > 0.05), 3 )
+    )
+    
+  }  ### end parallelized loop
+  
+} )[3]  # end timer
+
+
+library(dplyr)
+my.vars = c("MuEst", "MuCover", "T2Est", "k.obs", "n.nonsig")
+rs %>% group_by(Method) %>% summarise_at( vars(my.vars), mean )
+
+
+
+
+################################# REPRODUCE ROBU() MANUALLY #################################
+
+##### Sanity check: Try to reproduce manually without small-sample adjustment #####
+
+k = c(5)  # number of clusters prior to selection
+per.cluster = c(15)  # studies per cluster
+mu = 1  # RE distribution mean
+V = 1  # RE heterogeneity
+V.gam = 0.5  # variance of random intercepts (can't be > V because that's total heterogeneity!)
+sei.min = 0.5  # runif lower bound for study SEs
+sei.max = 0.5  # runif upper bound for study SEs
+eta = 1  # selection prob
+
+# matrix of scenario parameters
+p = expand.grid(k,
+                per.cluster,
+                mu,
+                V,
+                V.gam,
+                sei.min,
+                sei.max,
+                eta )
+
+names(p) = c("k",
+             "per.cluster",
+             "mu",
+             "V",
+             "V.gam",
+             "sei.min",
+             "sei.max",
+             "eta" )
+
+d = sim_data(p)
+
+
+#my.cluster = 1:nrow(d)
+#my.cluster = d$cluster
+wts = d$weight / d$vi
+
+
+( meta.RI = robu( yi ~ 1, 
+                  data = d, 
+                  studynum = cluster,
+                  userweights = wts,
+                  var.eff.size = vi,
+                  small = FALSE ) )
+
+sumA = 0
+sumB = 0
+
+for ( m in unique(my.cluster) ) {
+  inds = which( my.cluster == m )
+  km = length(inds)
+  
+  # this conditional is just to have the weights in the right
+  #  type (matrix vs. vector) to keep R happy
+  if (km > 1) wts.m = wts[ inds ]
+  if (km == 1) wts.m = as.matrix(wts[inds])
+  
+  Wm = diag( wts.m )
+  Ym = matrix( d$yi[inds], ncol = 1 )
+  one = matrix( rep(1, km),
+                ncol = 1)
+  
+  sumA = sumA + t(one) %*% Wm %*% one
+  
+  sumB = sumB + t(one) %*% Wm %*% Ym
+}
+
+
+# YESSSSSSS!!!!!!! MATCHES :D
+( muhat = (1/sumA) * sumB )
+
+# sandwich term
+sandwich.sum = 0
+
+for ( m in unique(my.cluster) ) {
+  inds = which( my.cluster == m )
+  km = length(inds)
+  
+  if (km > 1) wts.m = wts[ inds ]
+  if (km == 1) wts.m = as.matrix(wts[inds])
+  
+  Wm = diag( wts.m )
+  
+  # residuals
+  Ym = matrix( d$yi[inds], ncol = 1 )
+  muhat.m = matrix( rep(muhat, km),
+                    ncol = 1 )
+  
+  e = Ym - muhat.m
+  
+  one = matrix( rep(1, km),
+                ncol = 1)
+  
+  sandwich.sum = sandwich.sum + t(one) %*% Wm %*% tcrossprod(e) %*% Wm %*% one
+  #sandwich.sum = sandwich.sum + t(one) %*% Wm %*% (e * e) %*% Wm %*% one
+  #sandwich.sum = sandwich.sum + t(one) %*% Wm %*% e %*% t(e) %*% Wm %*% one
+}
+
+# almost but not quite!
+( se = sqrt( (1/sumA) * sandwich.sum * (1/sumA) ) )
+# note that all these things are scalars
+
+n = nrow(d)
+se = se * sqrt( n / (n-1))
+
+library(testthat)
+as.numeric(meta.RI$reg_table$SE); se
+as.numeric(meta.RI$b.r); muhat
+
+
+
+
+
+################################# CHECK OUR CLUSTERED SPECIFICATION #################################
+
+
+k = c(3)  # number of clusters prior to selection
+per.cluster = c(4)  # studies per cluster
+mu = 1  # RE distribution mean
+V = 1  # RE heterogeneity
+V.gam = 0.5  # variance of random intercepts (can't be > V because that's total heterogeneity!)
+sei.min = 0.25  # runif lower bound for study SEs
+sei.max = 0.75  # runif upper bound for study SEs
+eta = 1  # selection prob
+
+# matrix of scenario parameters
+p = expand.grid(k,
+                per.cluster,
+                mu,
+                V,
+                V.gam,
+                sei.min,
+                sei.max,
+                eta )
+
+names(p) = c("k",
+             "per.cluster",
+             "mu",
+             "V",
+             "V.gam",
+             "sei.min",
+             "sei.max",
+             "eta" )
+
+d = sim_data(p)
+
+# bm
+# same data as above
+
+# question: does passing userweights mean clusters are ignored?
+# A: no, not ignored
+
+##### Version from PublicationBias #####
+# initialize a dumb (unclustered and uncorrected) version of tau^2
+# which is only used for constructing weights
+meta.re = rma.uni( yi = yi,
+                   vi = vi,
+                   data = d)
+t2hat.naive = meta.re$tau2
+
+# fit user-weighted robust model WITH clusters
+meta.robu = robu( yi ~ 1,
+                  studynum = cluster,
+                  data = d,
+                  userweights = 1 / (vi + t2hat.naive),  # use 1 for weights for comparison with standard package behavior
+                  var.eff.size = vi,
+                  #model = "HIER",
+                  small = FALSE )  # changed from PublicationBias
+# ** choice of CORR vs. HIER doesn't matter when providing userweights
+
+meta.robu$data.full$r.weights
+
+# fit user-weighted robust model WITHOUT clusters
+meta.robu = robu( yi ~ 1,
+                  studynum = 1:nrow(d),
+                  data = d,
+                  userweights = 1 / (vi + t2hat.naive),  # use 1 for weights for comparison with standard package behavior
+                  var.eff.size = vi,
+                  small = FALSE )  # changed from PublicationBias
+
+meta.robu$data.full$r.weights
+
+# the above two have different inference, which makes sense
+
+# fit clustered model without userweights
+meta.robu = robu( yi ~ 1,
+                  studynum = cluster,
+                  data = d,
+                  var.eff.size = vi,
+                  #model = "HIER",
+                  small = FALSE )  # changed from PublicationBias
+
+meta.robu$data.full$r.weights
+
+# this one is same as the first one
+
+# bm: stopped here
+
+# **check Equation 4.2a
+# matches exactly even though we're not summing over clusters :)
+wts = 1 / (d$vi + t2hat.naive)
+sum(d$yi * wts) / sum(wts); meta.robu$b.r
+
+# check Equation 4.2b
+
