@@ -283,6 +283,8 @@ corrected_meta = function( yi,
 #' @param model \code{"fixed"} for fixed-effects (a.k.a. "common effects") or \code{"robust"} for robust random-effects
 #' @param alpha.select Alpha-level at which publication probability is assumed to change
 #' @param eta.grid.hi The largest value of \code{eta} that should be included in the grid search. This argument is only needed when \code{model = "robust"}.
+#' @param favor.positive \code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.
+#' See Details.
 #' @param CI.level Confidence interval level (as a proportion) for the corrected point estimate
 #' @param small Should inference allow for a small meta-analysis? We recommend using always using \code{TRUE}.
 #' @import
@@ -309,40 +311,43 @@ corrected_meta = function( yi,
 #' @references
 #' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 #' @examples
-#' # calculate effect sizes from example dataset in metafor
-#' require(metafor)
-#' dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
+#'  # calculate effect sizes from example dataset in metafor
+#'  require(metafor)
+#'  dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 #'
-#' ##### Fixed-Effects Specification #####
-#' # S-values and worst-case meta-analysis under fixed-effects specification
-#' svals.FE.0 = svalue( yi = dat$yi,
-#'                    vi = dat$vi,
-#'                    q = 0,
-#'                    model = "fixed" )
+#'  ##### Fixed-Effects Specification #####
+#'  # S-values and worst-case meta-analysis under fixed-effects specification
+#'  svals.FE.0 = svalue( yi = dat$yi,
+#'                     vi = dat$vi,
+#'                     q = 0,
+#'                     favor.positive = FALSE,
+#'                     model = "fixed" )
 #'
-#' # publication bias required to shift point estimate to 0
-#' svals.FE.0$sval.est
+#'  # publication bias required to shift point estimate to 0
+#'  svals.FE.0$sval.est
 #'
-#' # and to shift CI to include 0
-#' svals.FE.0$sval.ci
+#'  # and to shift CI to include 0
+#'  svals.FE.0$sval.ci
 #'
-#' # now try shifting to a nonzero value (RR = 0.90)
-#' svals.FE.q = svalue( yi = dat$yi,
-#'                      vi = dat$vi,
-#'                      q = log(.9),
-#'                      model = "fixed" )
+#'  # now try shifting to a nonzero value (RR = 0.90)
+#'  svals.FE.q = svalue( yi = dat$yi,
+#'                       vi = dat$vi,
+#'                       q = log(.9),
+#'                       favor.positive = FALSE,
+#'                       model = "fixed" )
 #'
-#' # publication bias required to shift point estimate to RR = 0.90
-#' svals.FE.q$sval.est
+#'  # publication bias required to shift point estimate to RR = 0.90
+#'  svals.FE.q$sval.est
 #'
-#' # and to shift CI to RR = 0.90
-#' svals.FE.q$sval.ci
+#'  # and to shift CI to RR = 0.90
+#'  svals.FE.q$sval.ci
 #'
-#' ##### Robust Clustered Specification #####
-#' svalue( yi = dat$yi,
-#'         vi = dat$vi,
-#'         q = 0,
-#'         model = "robust" )
+#'  ##### Robust Clustered Specification #####
+#'  svalue( yi = dat$yi,
+#'          vi = dat$vi,
+#'          q = 0,
+#'          favor.positive = FALSE,
+#'          model = "robust" )
 
 
 svalue = function( yi,
@@ -390,7 +395,6 @@ svalue = function( yi,
     warning( "You indicated there are clusters, but these will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model = robust.")
   }
 
-  # check and flip if naive point estimate is negative
   # fit uncorrected model
   m0 = corrected_meta( yi = yi,
                        vi = vi,
@@ -398,6 +402,7 @@ svalue = function( yi,
                        model = model,
                        clustervar = clustervar,
                        selection.tails = 1,
+                       favor.positive = favor.positive,
                        CI.level = CI.level,
                        small = small )
 
@@ -418,16 +423,15 @@ svalue = function( yi,
   # } else {
   #   flipped = FALSE
   # }
-
   ##### Flip Estimate Signs If Needed #####
   # if favor.positive == TRUE, then we don't need to fit a naive meta-analysis or do anything
   if ( favor.positive == TRUE ) {
     # keep track of whether we flipped for reporting at the end
     flipped = FALSE
-    yif = yi
   } else {
     flipped = TRUE
-    yif = -yi
+    yi = -yi
+    q = -q
   }
 
   # 2-sided p-values for each study even if 1-tailed selection
@@ -546,6 +550,7 @@ svalue = function( yi,
                                    model = model,
                                    clustervar = clustervar,
                                    selection.tails = 1,
+                                   favor.positive = TRUE,  # always TRUE because we've already flipped signs if needed
                                    CI.level = CI.level,
                                    small = small )$est
         return( abs(est.corr - q))
@@ -578,6 +583,7 @@ svalue = function( yi,
                                   model = model,
                                   clustervar = clustervar,
                                   selection.tails = 1,
+                                  favor.positive = TRUE, # always TRUE because we've already flipped signs if needed
                                   CI.level = CI.level,
                                   small = small )$lo
         return( abs(lo.corr - q))

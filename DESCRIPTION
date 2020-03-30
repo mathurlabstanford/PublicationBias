@@ -1,10 +1,10 @@
 Package: PublicationBias
 Type: Package
 Title: Sensitivity Analysis for Publication Bias in Meta-Analyses
-Version: 1.0.0
+Version: 2.0.0
 Author: Maya B. Mathur, Tyler J. VanderWeele
 Maintainer: Maya B. Mathur <mmathur@stanford.edu>
-Description: Performs sensitivity analysis for publication bias in meta-analyses (per Mathur & VanderWeele, 2019 [<https://osf.io/s9dp6>]).
+Description: Performs sensitivity analysis for publication bias in meta-analyses (per Mathur & VanderWeele, 2020 [<https://osf.io/s9dp6>]).
     These analyses enable statements such as: "For publication bias to shift the observed point estimate to the null,
     'significant' results would need to be at least 30-fold more likely to be published than negative or 'nonsignificant'
     results." Comparable statements can be made regarding shifting to a chosen non-null value or shifting the confidence

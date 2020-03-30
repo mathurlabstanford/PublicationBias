@@ -26,6 +26,9 @@ unique clusters of point estimates. If left unspecified, assumes studies are ind
 
 \item{eta.grid.hi}{The largest value of \code{eta} that should be included in the grid search. This argument is only needed when \code{model = "robust"}.}
 
+\item{favor.positive}{\code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.
+See Details.}
+
 \item{CI.level}{Confidence interval level (as a proportion) for the corrected point estimate}
 
 \item{small}{Should inference allow for a small meta-analysis? We recommend using always using \code{TRUE}.}
@@ -52,40 +55,43 @@ If \code{favor.positive == FALSE}, such that publication bias is assumed to favo
 performing analyses. The returned number of affirmative and nonaffirmative studies will reflect the recoded signs, and accordingly the returned value \code{signs.recoded} will be \code{TRUE}.
 }
 \examples{
-# calculate effect sizes from example dataset in metafor
-require(metafor)
-dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
+ # calculate effect sizes from example dataset in metafor
+ require(metafor)
+ dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 
-##### Fixed-Effects Specification #####
-# S-values and worst-case meta-analysis under fixed-effects specification
-svals.FE.0 = svalue( yi = dat$yi,
-                   vi = dat$vi,
-                   q = 0,
-                   model = "fixed" )
+ ##### Fixed-Effects Specification #####
+ # S-values and worst-case meta-analysis under fixed-effects specification
+ svals.FE.0 = svalue( yi = dat$yi,
+                    vi = dat$vi,
+                    q = 0,
+                    favor.positive = FALSE,
+                    model = "fixed" )
 
-# publication bias required to shift point estimate to 0
-svals.FE.0$sval.est
+ # publication bias required to shift point estimate to 0
+ svals.FE.0$sval.est
 
-# and to shift CI to include 0
-svals.FE.0$sval.ci
+ # and to shift CI to include 0
+ svals.FE.0$sval.ci
 
-# now try shifting to a nonzero value (RR = 0.90)
-svals.FE.q = svalue( yi = dat$yi,
-                     vi = dat$vi,
-                     q = log(.9),
-                     model = "fixed" )
+ # now try shifting to a nonzero value (RR = 0.90)
+ svals.FE.q = svalue( yi = dat$yi,
+                      vi = dat$vi,
+                      q = log(.9),
+                      favor.positive = FALSE,
+                      model = "fixed" )
 
-# publication bias required to shift point estimate to RR = 0.90
-svals.FE.q$sval.est
+ # publication bias required to shift point estimate to RR = 0.90
+ svals.FE.q$sval.est
 
-# and to shift CI to RR = 0.90
-svals.FE.q$sval.ci
+ # and to shift CI to RR = 0.90
+ svals.FE.q$sval.ci
 
-##### Robust Clustered Specification #####
-svalue( yi = dat$yi,
-        vi = dat$vi,
-        q = 0,
-        model = "robust" )
+ ##### Robust Clustered Specification #####
+ svalue( yi = dat$yi,
+         vi = dat$vi,
+         q = 0,
+         favor.positive = FALSE,
+         model = "robust" )
 }
 \references{
 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
