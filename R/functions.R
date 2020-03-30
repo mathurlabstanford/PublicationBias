@@ -17,7 +17,7 @@
 #' @param eta The number of times more likely an affirmative study is to be published than a nonaffirmative study. See Details.
 #' @param clustervar A character, factor, or numeric vector with the same length as yi. Unique values should indicate
 #' unique clusters of point estimates. By default, assumes all point estimates are independent by default.
-#' @param model "fixed" for fixed-effects or "robust" for robust random-effects
+#' @param model "fixed" for fixed-effects (a.k.a. "common-effects") or "robust" for robust random-effects
 #' @param selection.tails 1 (for one-tailed selection, recommended for its conservatism) or 2 (for two-tailed selection)
 #' @param CI.level Confidence interval level (as proportion) for the corrected point estimate
 #' @param small Should inference allow for a small meta-analysis? We recommend always using TRUE.
@@ -35,7 +35,7 @@
 #' The selection ratio, eta, represents the number of times more likely affirmative studies (i.e., those with a "statistically significant" and positive estimate)
 #' are to be published than nonaffirmative studies (i.e., those with a "nonsignificant" or negative estimate).
 #' @references
-#' 1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at XXX.
+#' 1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 #' @examples
 #' # calculate effect sizes from example dataset in metafor
 #' require(metafor)
@@ -194,7 +194,7 @@ corrected_meta = function( yi,
       t =  abs( est / sqrt(var) )
       pval.est = 2 * ( 1 - pt( t, df = df ) )
     }
-} # end fixed = TRUE
+  } # end fixed = TRUE
 
   ##### Robust Independent and Robust Clustered #####
   if ( model == "robust" ) {
@@ -225,14 +225,14 @@ corrected_meta = function( yi,
     eta = eta
   } # end robust = TRUE
 
-    return( data.frame( est,
-                        se,
-                        lo,
-                        hi,
-                        pval = pval.est,
-                        eta = eta,
-                        k.affirmative,
-                        k.nonaffirmative ) )
+  return( data.frame( est,
+                      se,
+                      lo,
+                      hi,
+                      pval = pval.est,
+                      eta = eta,
+                      k.affirmative,
+                      k.nonaffirmative ) )
 }
 
 
@@ -240,7 +240,7 @@ corrected_meta = function( yi,
 
 ###############################
 
-#' Estimate publication bias needed to "explain away" results
+#' Severity of publication bias needed to "explain away" results
 #'
 #' Estimates the S-value, defined as the severity of publication bias (i.e., the ratio
 #' by which affirmative studies are more likely to be published than nonaffirmative studies)
@@ -270,7 +270,7 @@ corrected_meta = function( yi,
 #' than nonaffirmative studies (i.e., those with a "nonsignificant" or negative estimate) to attenuate the pooled point estimate to
 #' \code{q}.
 #' @references
-#' 1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at XXX.
+#' 1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 #' @examples
 #' # calculate effect sizes from example dataset in metafor
 #' require(metafor)
@@ -309,13 +309,13 @@ corrected_meta = function( yi,
 
 
 svalue = function( yi,
-                    vi,
-                    q,
-                    clustervar = 1:length(yi),
-                    model,
-                    eta.grid.hi = 200,
-                    CI.level = 0.95,
-                    small = TRUE ) {
+                   vi,
+                   q,
+                   clustervar = 1:length(yi),
+                   model,
+                   eta.grid.hi = 200,
+                   CI.level = 0.95,
+                   small = TRUE ) {
 
   # # # ~~~ TEST ONLY
   # # require(metafor)
@@ -354,13 +354,13 @@ svalue = function( yi,
   # check and flip if naive point estimate is negative
   # fit uncorrected model
   m0 = corrected_meta( yi = yi,
-                  vi = vi,
-                  eta = 1,
-                  model = model,
-                  clustervar = clustervar,
-                  selection.tails = 1,
-                  CI.level = CI.level,
-                  small = small )
+                       vi = vi,
+                       eta = 1,
+                       model = model,
+                       clustervar = clustervar,
+                       selection.tails = 1,
+                       CI.level = CI.level,
+                       small = small )
 
   # stop if q is on wrong side of null
   if ( m0$est > 0 & q > m0$est ) stop( paste( "The uncorrected pooled point estimate is ", round2(m0$est),
@@ -473,11 +473,11 @@ svalue = function( yi,
 
     # fit model exactly as in corrected_meta
     meta.worst =  robu( yi ~ 1,
-                       studynum = clustervar,
-                       data = dat[ A == FALSE, ],
-                       userweights = 1 / (vi + t2hat.naive),
-                       var.eff.size = vi,
-                       small = small )
+                        studynum = clustervar,
+                        data = dat[ A == FALSE, ],
+                        userweights = 1 / (vi + t2hat.naive),
+                        var.eff.size = vi,
+                        small = small )
 
     est.worst = as.numeric(meta.worst$b.r)
     lo.worst = meta.worst$reg_table$CI.L
@@ -523,13 +523,13 @@ svalue = function( yi,
       # i.e., distance between corrected estimate and the target value of q
       func = function(.eta) {
         lo.corr = corrected_meta( yi = yi,
-                                   vi = vi,
-                                   eta = .eta,
-                                   model = model,
-                                   clustervar = clustervar,
-                                   selection.tails = 1,
-                                   CI.level = CI.level,
-                                   small = small )$lo
+                                  vi = vi,
+                                  eta = .eta,
+                                  model = model,
+                                  clustervar = clustervar,
+                                  selection.tails = 1,
+                                  CI.level = CI.level,
+                                  small = small )$lo
         return( abs(lo.corr - q))
       }
 
@@ -548,21 +548,21 @@ svalue = function( yi,
     }
 
 
-  # ##### Worst-case bound #####
-  # # as eta -> infinity
-  # # not supposed to use KNHA for FE model
-  #
-  # # flip signs back to original direction if needed
-  # if ( flipped == TRUE ) {
-  #   yi = -yi
-  # }
-  #
-  # meta.bd = corrected_meta( yi = yi[ A == 0 ],
-  #                 vi = vi[ A == 0 ],
-  #                 eta = 1,
-  #                 model = model,
-  #                 CI.level = CI.level,
-  #                 small = small )
+    # ##### Worst-case bound #####
+    # # as eta -> infinity
+    # # not supposed to use KNHA for FE model
+    #
+    # # flip signs back to original direction if needed
+    # if ( flipped == TRUE ) {
+    #   yi = -yi
+    # }
+    #
+    # meta.bd = corrected_meta( yi = yi[ A == 0 ],
+    #                 vi = vi[ A == 0 ],
+    #                 eta = 1,
+    #                 model = model,
+    #                 CI.level = CI.level,
+    #                 small = small )
   }
 
   # s-values less than 1 indicate complete robustness
@@ -571,9 +571,9 @@ svalue = function( yi,
   if ( is.numeric(sval.ci) & !is.na(sval.ci) & sval.ci < 1) sval.ci = "Not possible"
 
   return( data.frame( sval.est,
-                                    sval.ci = sval.ci,
-                                    k.affirmative,
-                                    k.nonaffirmative ) )
+                      sval.ci = sval.ci,
+                      k.affirmative,
+                      k.nonaffirmative ) )
 
 }
 
@@ -583,49 +583,98 @@ svalue = function( yi,
 
 #' Make significance funnel plot
 #'
-#' Creates a modified funnel plot that distinguishes between affirmative and nonaffirmative studies, helping detect the extent to which the nonaffirmative studies' point estimates are systematically smaller than
-#' the entire set of point estimates. By default (\code{plot.pooled = TRUE}), also plots the fixed-effects pooled point
-#' estimate within all studies (black diamond) and within only the nonaffirmative studies (blue diamond). The latter
-#' represents a corrected fixed-effects estimate under worst-case publication bias.  When the diamonds are distant or if the
-#' blue diamond represents a negligible effect size, then formal sensitivity analyses (via \code{PublicationBias::svalue})
-#' may indicate that the meta-analysis is not robust.
-#' @param yi A vector of point estimates to be meta-analyzed. The signs of the estimates should be chosen
-#' such that publication bias is assumed to operate in favor of positive estimates.
+#' Creates a modified funnel plot that distinguishes between affirmative and nonaffirmative studies, helping detect the extent to which
+#' the nonaffirmative studies' point estimates are systematically smaller than the entire set of point estimates. The estimate among only nonaffirmative studies (gray diamond)
+#' represents a corrected estimate under worst-case publication bias. If the gray diamond represents a negligible effect size or if it is much smaller than
+#' the pooled estimate among all studies (black diamond), this suggests that the meta-analysis may not be robust to extreme publication bias.
+#' Numerical sensitivity analyses (via \code{PublicationBias::svalue}) should still be carried out for more precise quantitative conclusions.
+#' @param yi A vector of point estimates to be meta-analyzed.
 #' @param vi A vector of estimated variances for the point estimates
 #' @param xmin x-axis (point estimate) lower limit for plot
-#' @param ymin y-axis (standard error) lower limit for plot
 #' @param xmax x-axis (point estimate) upper limit for plot
+#' @param ymin y-axis (standard error) lower limit for plot
 #' @param ymax y-axis (standard error) upper limit for plot
-#' @param plot.pooled Should the fixed-effects pooled estimates within all studies and within only the nonaffirmative
+#' @param xlab Label for x-axis (point estimate)
+#' @param ylab Label for y-axis (standard error)
+#' @param est.all Regular meta-analytic estimate among all studies (optional)
+#' @param est.N Worst-case meta-analytic estimate among only nonaffirmative studies (optional)
+#' @param favor.positive \code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.
+#' @param alpha.select Alpha-level at which publication probability is assumed to change
+#' @param plot.pooled Should the pooled estimates within all studies and within only the nonaffirmative
 #' studies be plotted as well?
 #' @import
 #' metafor
 #' stats
 #' ggplot2
 #' graphics
+#' robumeta
+#' @details
+#' By default (\code{plot.pooled = TRUE}), also plots the pooled point
+#' estimate within all studies, supplied by the user as \code{est.all} (black diamond), and within only the nonaffirmative studies, supplied
+#' by the user as \code{est.N} (grey diamond). The user can calculate \code{est.all} and \code{est.N} using their choice of meta-analysis model; if
+#' these are not supplied but \code{plot.pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effects") model.
 #' @export
 #' @references
-#' 1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at XXX.
+#' 1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 #' @examples
 #'
-#' # compute meta-analytic effect sizes
+#' ##### Make Significance Funnel with User-Specified Pooled Estimates #####
+#'
+#' # compute meta-analytic effect sizes for an example dataset
 #' require(metafor)
 #' dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 #'
 #' # flip signs since we think publication bias operates in favor of negative effects
+#' # alternatively, if not flipping signs, could pass favor.positive = FALSE to
+#' #  significance_funnel
 #' dat$yi = -dat$yi
 #'
+#' # optional: regular meta-analysis of all studies (for the black diamond)
+#' # for flexibility, you can use any choice of meta-analysis model here
+#' # in this case, we'll use the robust independent specification since the point estimates
+#' #  seem to be from unique papers
+#' # thus, each study gets its own studynum
+#' require(robumeta)
+#' meta.all =  robu( yi ~ 1,
+#'                   studynum = 1:nrow(dat),
+#'                   data = dat,
+#'                   var.eff.size = vi,
+#'                   small = TRUE )
+#'
+#' # optional: calculate worst-case estimate (for the gray diamond)
+#' #  by analyzing only the nonaffirmative studies
+#' dat$pval = 2 * ( 1 - pnorm( abs( dat$yi / sqrt(dat$vi) ) ) )  # two-tailed p-value
+#' dat$affirm = (dat$yi > 0) & (dat$pval < 0.05)  # is study affirmative?
+#' meta.worst =  robu( yi ~ 1,
+#'                     studynum = 1:nrow( dat[ dat$affirm == TRUE, ] ),
+#'                     data = dat[ dat$affirm == TRUE, ],
+#'                     var.eff.size = vi,
+#'                     small = TRUE )
+#'
+#' ##### Make Significance Funnel with Alpha = 0.50 and Default Pooled Estimates #####
+#' # change alpha to 0.50 just for illustration
+#' # now the pooled estimates are from the fixed-effect specification because they are
+#' #  not provided by the user
 #' significance_funnel( yi = dat$yi,
-#'                       vi = dat$vi,
-#'                       plot.pooled = TRUE )
+#'                      vi = dat$vi,
+#'                      favor.positive = TRUE,
+#'                      alpha.select = 0.50,
+#'                      plot.pooled = TRUE )
+
 
 
 significance_funnel = function( yi,
                                 vi,
                                 xmin = min(yi),
-                                ymin = min( sqrt(vi) ),
                                 xmax = max(yi),
+                                ymin = 0,  # so that pooled points are shown
                                 ymax = max( sqrt(vi) ),
+                                xlab = "Point estimate",
+                                ylab = "Estimated standard error",
+                                favor.positive = NA,
+                                est.all = NA,
+                                est.N = NA,
+                                alpha.select = 0.05,
                                 plot.pooled = TRUE ) {
 
   d = data.frame(yi, vi)
@@ -634,78 +683,79 @@ significance_funnel = function( yi,
   # calculate p-values
   d$pval = 2 * ( 1 - pnorm( abs(yi) / sqrt(vi) ) )
 
-  # variable for positive vs. nonpositive studies
-  d$positive = rep(NA, nrow(d))
-  d$positive[ (d$yi > 0) & (d$pval < 0.05) ] = "Affirmative"
-  d$positive[ (d$yi < 0) | (d$pval >= 0.05) ] = "Non-affirmative"
+  # which direction of effects are favored?
+  # if we have the pooled point estimate, but not the favored direction,
+  #  assume favored direction matches sign of pooled estimate (but issue warning)
+  if ( !is.na(est.all) & is.na(favor.positive) ) {
+    favor.positive = (est.all > 0)
+    warning("favor.positive not provided, so assuming publication bias favors estimates whose sign matches est.all")
+  }
+  if ( is.na(est.all) & is.na(favor.positive) ) {
+    stop("Need to specify favor.positive")
+  }
+
+  # affirmative vs. nonaffirmative indicator
+  d$affirm = rep(NA, nrow(d))
+
+  if ( favor.positive == TRUE ) {
+    d$affirm[ (d$yi > 0) & (d$pval < alpha.select) ] = "Affirmative"
+    d$affirm[ (d$yi < 0) | (d$pval >= alpha.select) ] = "Non-affirmative"
+  }
+  if ( favor.positive == FALSE ) {
+    d$affirm[ (d$yi < 0) & (d$pval < alpha.select) ] = "Affirmative"
+    d$affirm[ (d$yi > 0) | (d$pval >= alpha.select) ] = "Non-affirmative"
+  }
 
   # reorder levels for plotting joy
-  d$positive = factor( d$positive, c("Non-affirmative", "Affirmative") )
+  d$affirm = factor( d$affirm, c("Non-affirmative", "Affirmative") )
 
   # stop if no studies in either group
-  if ( sum( d$positive == "Non-affirmative" ) == 0 ) {
+  if ( sum( d$affirm == "Non-affirmative" ) == 0 ) {
     stop("There are no non-affirmative studies. The plot would look silly.")
   }
 
-  if ( sum( d$positive == "Affirmative" ) == 0 ) {
+  if ( sum( d$affirm == "Affirmative" ) == 0 ) {
     stop("There are no affirmative studies. The plot would look silly.")
   }
 
   # pooled fixed-effects estimates
-  est.N = rma.uni(yi = d$yi[ d$positive == "Non-affirmative" ],
-                  vi = d$vi[ d$positive == "Non-affirmative" ],
-                  method="FE")$b
-
-  est.all = rma.uni(yi = d$yi,
-                    vi = d$vi,
+  # if not supplied, gets them from common-effects model
+  if ( is.na(est.N) & is.na(est.all) ) {
+    est.N = rma.uni(yi = d$yi[ d$affirm == "Non-affirmative" ],
+                    vi = d$vi[ d$affirm == "Non-affirmative" ],
                     method="FE")$b
 
-  # negative sei positions them below the horizontal divider line
+    est.all = rma.uni(yi = d$yi,
+                      vi = d$vi,
+                      method="FE")$b
+  }
+
+  # set up pooled estimates for plotting
   pooled.pts = data.frame( yi = c(est.N, est.all),
                            sei = c(0,0) )
 
   # for a given SE (y-value), return the "just significant" point estimate value (x-value)
-  just_signif_est = function( .sei ) .sei * qnorm(.975)
+  just_signif_est = function( .sei ) .sei * qnorm(1 - alpha.select/2)
 
-  # polygon coordinates for the blue and orange shading
-  # remember ymin is the min SE, etc.
-  if ( !any( is.na( c(ymin, xmin, ymax, xmax) ) ) ) {
-    poly.blue=data.frame(yi=c(xmin, just_signif_est(ymin), just_signif_est(ymax), xmin ),
-                         sei=c(ymin, ymin, ymax, ymax),
-                         positive = rep("Non-affirmative", 4),
-                         alpha = 0.3)
+  # calculate slope and intercept of the "just affirmative" line
+  # i.e., 1.96 = (just affirmative estimate) / se
+  if (favor.positive == TRUE) sl = 1/qnorm(1 - alpha.select/2)
+  if (favor.positive == FALSE) sl = -1/qnorm(1 - alpha.select/2)
+  int = 0
+  # # sanity check: should be exactly alpha.select
+  # 2 * ( 1 - pnorm( abs(1) / sl ) )
 
-    poly.orange=data.frame(yi=c(just_signif_est(ymin), xmax, xmax, just_signif_est(ymax)),
-                           sei=c(ymin, ymin, ymax, ymax ),
-                           positive = rep("Affirmative", 4),
-                           alpha = 0.3)
-  } else {
-    # remove objects if they happen to exist
-    # because will check for existence during plotting
-    suppressWarnings( rm(poly.blue) )
-    suppressWarnings( rm(poly.orange) )
-  }
 
-  colors = c("blue", "orange")
+  ##### Make the Plot #####
+  colors = c("darkgray", "orange")
 
   p.funnel = ggplot( data = d, aes( x = d$yi,
                                     y = d$sei,
-                                    color = d$positive ) )
-
-  if ( exists("poly.orange") ) {
-    p.funnel = p.funnel + geom_polygon(data=poly.blue, mapping=aes(x=poly.blue$yi, y=poly.blue$sei),
-                                       fill = colors[1],
-                                       alpha = 0.2,
-                                       color = NA)
-
-    p.funnel = p.funnel +  geom_polygon(data=poly.orange, mapping=aes(x=poly.orange$yi, y=poly.orange$sei),
-                                        fill = colors[2],
-                                        alpha = 0.2,
-                                        color = NA)
-  }
+                                    color = d$affirm ) )
 
   if ( plot.pooled == TRUE ) {
 
+    # plot the pooled points
     p.funnel = p.funnel + geom_point(
       data = pooled.pts,
       aes( x = pooled.pts$yi, y = pooled.pts$sei ),
@@ -721,11 +771,14 @@ significance_funnel = function( yi,
         size = 4,
         shape = 18,
         color = c(colors[1], "black"),
-        alpha = .3
+        alpha = 1
       ) +
 
       # just for visual separation of pooled ests
-      geom_hline( yintercept = 0 )
+      geom_hline( yintercept = 0 ) +
+
+      # diagonal "just significant" line
+      geom_abline(slope=sl,intercept = int, color = "gray")
   }
 
   p.funnel = p.funnel +
@@ -736,8 +789,11 @@ significance_funnel = function( yi,
 
     scale_color_manual(values = colors) +
 
-    xlab( bquote( hat(theta) ) ) +
-    ylab( bquote( hat(SE) ) ) +
+    xlab(xlab) +
+    ylab(ylab) +
+
+    scale_x_continuous( limits = c(xmin, xmax) ) +
+    scale_y_continuous( limits = c(ymin, ymax) ) +
 
     theme_classic() +
     theme(legend.title=element_blank())
@@ -765,7 +821,7 @@ significance_funnel = function( yi,
 #' ggplot2
 #' @export
 #' @references
-#' 1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at XXX.
+#' 1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 #' @examples
 #'
 #' # compute meta-analytic effect sizes
