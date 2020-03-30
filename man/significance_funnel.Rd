@@ -39,7 +39,7 @@ significance_funnel(yi, vi, xmin = min(yi), xmax = max(yi), ymin = 0,
 studies be plotted as well?}
 }
 \description{
-Creates a modified funnel plot that distinguishes between affirmative and nonaffirmative studies, helping detect the extent to which
+Creates a modified funnel plot that distinguishes between affirmative and nonaffirmative studies, helping to detect the extent to which
 the nonaffirmative studies' point estimates are systematically smaller than the entire set of point estimates. The estimate among only nonaffirmative studies (gray diamond)
 represents a corrected estimate under worst-case publication bias. If the gray diamond represents a negligible effect size or if it is much smaller than
 the pooled estimate among all studies (black diamond), this suggests that the meta-analysis may not be robust to extreme publication bias.
@@ -48,7 +48,7 @@ Numerical sensitivity analyses (via \code{PublicationBias::svalue}) should still
 \details{
 By default (\code{plot.pooled = TRUE}), also plots the pooled point
 estimate within all studies, supplied by the user as \code{est.all} (black diamond), and within only the nonaffirmative studies, supplied
-by the user as \code{est.N} (grey diamond). The user can calculate \code{est.all} and \code{est.N} using their choice of meta-analysis model; if
+by the user as \code{est.N} (grey diamond). The user can calculate \code{est.all} and \code{est.N} using their choice of meta-analysis model. If instead
 these are not supplied but \code{plot.pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effects") model.
 }
 \examples{
@@ -97,5 +97,5 @@ significance_funnel( yi = dat$yi,
                      plot.pooled = TRUE )
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
+1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 }

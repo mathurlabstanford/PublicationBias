@@ -5,101 +5,116 @@
 \title{Estimate publication bias-corrected meta-analysis}
 \usage{
 corrected_meta(yi, vi, eta, clustervar = 1:length(yi), model,
-  selection.tails = 1, CI.level = 0.95, small = TRUE)
+  selection.tails = 1, favor.positive, alpha.select = 0.05,
+  CI.level = 0.95, small = TRUE)
 }
 \arguments{
-\item{yi}{A vector of point estimates to be meta-analyzed}
+\item{yi}{A vector of point estimates to be meta-analyzed.}
 
 \item{vi}{A vector of estimated variances for the point estimates}
 
-\item{eta}{The number of times more likely an affirmative study is to be published than a nonaffirmative study. See Details.}
+\item{eta}{The number of times more likely an affirmative study is to be published than a nonaffirmative study; see Details}
 
 \item{clustervar}{A character, factor, or numeric vector with the same length as yi. Unique values should indicate
-unique clusters of point estimates. By default, assumes all point estimates are independent by default.}
+unique clusters of point estimates. By default, assumes all point estimates are independent.}
 
 \item{model}{"fixed" for fixed-effects (a.k.a. "common-effects") or "robust" for robust random-effects}
 
 \item{selection.tails}{1 (for one-tailed selection, recommended for its conservatism) or 2 (for two-tailed selection)}
 
-\item{CI.level}{Confidence interval level (as proportion) for the corrected point estimate}
+\item{favor.positive}{\code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.
+See Details.}
+
+\item{alpha.select}{Alpha-level at which publication probability is assumed to change}
+
+\item{CI.level}{Confidence interval level (as proportion) for the corrected point estimate. (The alpha level for inference on the corrected
+point estimate will be calculated from \code{CI.level}.)}
 
 \item{small}{Should inference allow for a small meta-analysis? We recommend always using TRUE.}
 }
+\value{
+The function returns: the corrected pooled point estimate (\code{est}) potentially with its sign recoded as indicated by \code{signs.recoded},
+inference on the bias-corrected estimate (\code{se}, \code{lo}, \code{hi}, \code{pval}), the user's
+specified \code{eta}, the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k.affirmative} and \code{k.nonaffirmative}),
+and an indicator for whether the point estimates' signs were recoded (\code{signs.recoded}).
+}
 \description{
-For a known selection ratio, eta, estimates a publication bias-corrected pooled point
-estimate and confidence interval. Model options include fixed-effects, robust independent, and robust
+For a chosen ratio of publication probabilities, \code{eta}, estimates a publication bias-corrected pooled point
+estimate and confidence interval per Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a. "common-effects"), robust independent, and robust
 clustered specifications.
 }
 \details{
-The selection ratio, eta, represents the number of times more likely affirmative studies (i.e., those with a "statistically significant" and positive estimate)
+The ratio \code{eta} represents the number of times more likely affirmative studies (i.e., those with a "statistically significant" and positive estimate)
 are to be published than nonaffirmative studies (i.e., those with a "nonsignificant" or negative estimate).
+
+If \code{favor.positive == FALSE}, such that publication bias is assumed to favor negative rather than positive estimates, the signs of \code{yi} will be reversed prior to
+performing analyses. The corrected estimate will be reported based on the recoded signs rather than the original sign convention, and accordingly the returned value \code{signs.recoded} will be \code{TRUE}.
 }
 \examples{
-# calculate effect sizes from example dataset in metafor
-require(metafor)
-dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
+ # calculate effect sizes from example dataset in metafor
+ require(metafor)
+ dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 
-# first fit fixed-effects model without any bias correction
-rma( yi, vi, data = dat, method = "FE" )
+ # first fit fixed-effects model without any bias correction
+ # since the point estimate is negative here, we'll assume publication bias favors negative
+ #  log-RRs rather than positive ones
+ rma( yi, vi, data = dat, method = "FE" )
 
-# notice this is the same as passing eta = 1 to corrected_meta, which makes sense
-corrected_meta( yi = dat$yi,
-                vi = dat$vi,
-                eta = 1,
-                model = "fixed",
-                selection.tails = 1,
-                CI.level = 0.95,
-                small = TRUE )
+ # warmup
+ # note that passing eta = 1 (no publication bias) yields the naive point estimate
+ #  from rma above, which makes sense
+ corrected_meta( yi = dat$yi,
+                 vi = dat$vi,
+                 eta = 1,
+                 model = "fixed",
+                 favor.positive = FALSE )
 
-# assume a known selection ratio of 5
-# i.e., affirmative results are 5x more likely to be published
-#  than nonaffirmative
-corrected_meta( yi = dat$yi,
-                vi = dat$vi,
-                eta = 5,
-                model = "fixed",
-                selection.tails = 1,
-                CI.level = 0.95,
-                small = TRUE )
+ # assume a known selection ratio of 5
+ # i.e., affirmative results are 5x more likely to be published
+ #  than nonaffirmative
+ corrected_meta( yi = dat$yi,
+                 vi = dat$vi,
+                 eta = 5,
+                 favor.positive = FALSE,
+                 model = "fixed" )
 
-# same selection ratio, but now account for heterogeneity
-# and clustering via robust specification
-corrected_meta( yi = dat$yi,
-                vi = dat$vi,
-                eta = 5,
-                clustervar = dat$author,
-                model = "robust",
-                selection.tails = 1,
-                CI.level = 0.95,
-                small = TRUE )
+ # same selection ratio, but now account for heterogeneity
+ # and clustering via robust specification
+ corrected_meta( yi = dat$yi,
+                 vi = dat$vi,
+                 eta = 5,
+                 favor.positive = FALSE,
+                 clustervar = dat$author,
+                 model = "robust" )
 
-##### Make sensitivity plot as in Mathur & VanderWeele (2019) #####
-# range of parameters to try (more dense at the very small ones)
-eta.list = as.list( c( 200, 150, 100, 50, 40, 30, 20, rev( seq(1,15,1) ) ) )
-res.list = lapply( eta.list, function(x) {
-                    cat("\\n Working on eta = ", x)
-                    return( corrected_meta( yi = dat$yi,
-                                            vi = dat$vi,
-                                            eta = x,
-                                            model = "robust",
-                                            clustervar = dat$author ) )
-                                        }
-                      )
+ ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
+ # range of parameters to try (more dense at the very small ones)
+ eta.list = as.list( c( 200, 150, 100, 50, 40, 30, 20, rev( seq(1,15,1) ) ) )
+ res.list = lapply( eta.list, function(x) {
+                     cat("\\n Working on eta = ", x)
+                     return( corrected_meta( yi = dat$yi,
+                                             vi = dat$vi,
+                                             eta = x,
+                                             model = "robust",
+                                             favor.positive = FALSE,
+                                             clustervar = dat$author ) )
+                                         }
+                       )
 
-# put results for each eta in a dataframe
-res.df = as.data.frame( do.call( "rbind", res.list ) )
+ # put results for each eta in a dataframe
+ res.df = as.data.frame( do.call( "rbind", res.list ) )
 
-require(ggplot2)
-ggplot( data = res.df, aes( x = eta, y = est ) ) +
+ require(ggplot2)
+ ggplot( data = res.df, aes( x = eta, y = est ) ) +
 
-  geom_ribbon( data = res.df, aes( x = eta, ymin = lo, ymax = hi ), fill = "gray" ) +
+   geom_ribbon( data = res.df, aes( x = eta, ymin = lo, ymax = hi ), fill = "gray" ) +
 
-  geom_line( lwd = 1.2 ) +
-  xlab( bquote( eta ) ) +
-  ylab( bquote( hat(mu)[eta] ) ) +
+   geom_line( lwd = 1.2 ) +
+   xlab( bquote( eta ) ) +
+   ylab( bquote( hat(mu)[eta] ) ) +
 
-  theme_classic()
+   theme_classic()
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
+1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 }

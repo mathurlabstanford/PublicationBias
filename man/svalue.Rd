@@ -4,11 +4,13 @@
 \alias{svalue}
 \title{Severity of publication bias needed to "explain away" results}
 \usage{
-svalue(yi, vi, q, clustervar = 1:length(yi), model, eta.grid.hi = 200,
+svalue(yi, vi, q, clustervar = 1:length(yi), model,
+  alpha.select = 0.05, eta.grid.hi = 200, favor.positive,
   CI.level = 0.95, small = TRUE)
 }
 \arguments{
-\item{yi}{A vector of point estimates to be meta-analyzed}
+\item{yi}{A vector of point estimates to be meta-analyzed. Their signs should be coded such that publication bias is
+assumed to favor positive, rather than negative, estimates.}
 
 \item{vi}{A vector of estimated variances for the point estimates}
 
@@ -16,15 +18,23 @@ svalue(yi, vi, q, clustervar = 1:length(yi), model, eta.grid.hi = 200,
 (e.g., if \code{yi} is on the log-RR scale, then \code{q} should be as well).}
 
 \item{clustervar}{A character, factor, or numeric vector with the same length as \code{yi}. Unique values should indicate
-unique clusters of point estimates. By default, assumes all point estimates are independent.}
+unique clusters of point estimates. If left unspecified, assumes studies are independent.}
 
-\item{model}{\code{"fixed"} for fixed-effects or \code{"robust"} for robust random-effects}
+\item{model}{\code{"fixed"} for fixed-effects (a.k.a. "common effects") or \code{"robust"} for robust random-effects}
 
-\item{eta.grid.hi}{The largest value of eta that should be included in the grid search. This argument is only needed when \code{model = "robust"}.}
+\item{alpha.select}{Alpha-level at which publication probability is assumed to change}
 
-\item{CI.level}{Confidence interval level (as proportion) for the corrected point estimate}
+\item{eta.grid.hi}{The largest value of \code{eta} that should be included in the grid search. This argument is only needed when \code{model = "robust"}.}
 
-\item{small}{Should inference allow for a small meta-analysis? We recommend using \code{TRUE} even for large meta-analyses.}
+\item{CI.level}{Confidence interval level (as a proportion) for the corrected point estimate}
+
+\item{small}{Should inference allow for a small meta-analysis? We recommend using always using \code{TRUE}.}
+}
+\value{
+The function returns: the amount of publication bias required to attenutate the pooled point estimate to \code{q} (\code{sval.est}),
+the amount of publication bias required to attenutate the confidence interval limit of the pooled point estimate to \code{q} (\code{sval.ci}),
+the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k.affirmative} and \code{k.nonaffirmative}),
+and an indicator for whether the point estimates' signs were recoded (\code{signs.recoded}).
 }
 \description{
 Estimates the S-value, defined as the severity of publication bias (i.e., the ratio
@@ -33,10 +43,13 @@ that would be required to shift the pooled point estimate or its confidence inte
 to the value \code{q}.
 }
 \details{
-For example, if the S-value for the point estimate is 30 with \code{q=0}, this indicates that affirmative studies
+To illustrate interpretation of the S-value, if the S-value for the point estimate is 30 with \code{q=0}, this indicates that affirmative studies
 (i.e., those with a "statistically significant" and positive estimate) would need to be 30-fold more likely to be published
 than nonaffirmative studies (i.e., those with a "nonsignificant" or negative estimate) to attenuate the pooled point estimate to
 \code{q}.
+
+If \code{favor.positive == FALSE}, such that publication bias is assumed to favor negative rather than positive estimates, the signs of \code{yi} will be reversed prior to
+performing analyses. The returned number of affirmative and nonaffirmative studies will reflect the recoded signs, and accordingly the returned value \code{signs.recoded} will be \code{TRUE}.
 }
 \examples{
 # calculate effect sizes from example dataset in metafor
@@ -75,5 +88,5 @@ svalue( yi = dat$yi,
         model = "robust" )
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
+1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 }
