@@ -19,7 +19,9 @@
 #' unique clusters of point estimates. By default, assumes all point estimates are independent by default.
 #' @param model "fixed" for fixed-effects (a.k.a. "common-effects") or "robust" for robust random-effects
 #' @param selection.tails 1 (for one-tailed selection, recommended for its conservatism) or 2 (for two-tailed selection)
-#' @param CI.level Confidence interval level (as proportion) for the corrected point estimate
+#' @param alpha.select Alpha-level at which publication probability is assumed to change
+#' @param CI.level Confidence interval level (as proportion) for the corrected point estimate. (Alpha for inference on the corrected
+#' point estimate will be calculated from \code{CI.level}.)
 #' @param small Should inference allow for a small meta-analysis? We recommend always using TRUE.
 #' @import
 #' metafor
@@ -109,6 +111,7 @@ corrected_meta = function( yi,
                            clustervar = 1:length(yi),
                            model,
                            selection.tails = 1,
+                           alpha.select = 0.05,
                            CI.level = 0.95,
                            small = TRUE ) {
 
@@ -118,6 +121,7 @@ corrected_meta = function( yi,
   # number of point estimates
   k = length(yi)
 
+  # calculate alpha for inference on point estimate
   alpha = 1 - CI.level
 
   # warn if clusters but user said fixed
@@ -144,8 +148,8 @@ corrected_meta = function( yi,
   pvals = 2 * ( 1 - pnorm( abs(yif) / sqrt(vi) ) )
 
   # affirmative indicator based on selection tails
-  if ( selection.tails == 1 ) A = (pvals < 0.05) & (yif > 0)
-  if ( selection.tails == 2 ) A = (pvals < 0.05)
+  if ( selection.tails == 1 ) A = (pvals < alpha.select) & (yif > 0)
+  if ( selection.tails == 2 ) A = (pvals < alpha.select)
 
   k.affirmative = sum(A)
   k.nonaffirmative = k - sum(A)
@@ -384,7 +388,7 @@ svalue = function( yi,
   pvals = 2 * ( 1 - pnorm( abs(yi) / sqrt(vi) ) )
 
   # affirmative indicator under 1-tailed selection
-  A = (pvals < 0.05) & (yi > 0)
+  A = (pvals < alpha.select) & (yi > 0)
 
   k.affirmative = sum(A)
   k.nonaffirmative = k.studies - sum(A)
@@ -816,6 +820,7 @@ significance_funnel = function( yi,
 #' @param yi A vector of point estimates to be meta-analyzed. The signs of the estimates should be chosen
 #' such that publication bias is assumed to operate in favor of positive estimates.
 #' @param vi A vector of estimated variances for the point estimates
+#' @param alpha.select Alpha-level at which publication probability is assumed to change
 #' @import
 #' stats
 #' ggplot2
@@ -824,27 +829,28 @@ significance_funnel = function( yi,
 #' 1. Mathur MB & VanderWeele TJ (2019). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
 #' @examples
 #'
-#' # compute meta-analytic effect sizes
-#' require(metafor)
-#' dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
+#'  # compute meta-analytic effect sizes
+#'  require(metafor)
+#'  dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 #'
-#' # flip signs since we think publication bias operates in favor of negative effects
-#' dat$yi = -dat$yi
+#'  # flip signs since we think publication bias operates in favor of negative effects
+#'  dat$yi = -dat$yi
 #'
-#' pval_plot( yi = dat$yi,
-#'            vi = dat$vi )
+#'  pval_plot( yi = dat$yi,
+#'             vi = dat$vi )
 
 
 pval_plot = function( yi,
-                      vi ) {
+                      vi,
+                      alpha.select = 0.05) {
 
   # calculate 1-tailed p-values
   pval = 1 - pnorm( yi / sqrt(vi) )
 
   ggplot( data = data.frame(pval = pval),
           aes( x = pval ) ) +
-    geom_vline(xintercept = 0.025, color = "red", lwd = 1.2) +
-    geom_vline(xintercept = 0.975, color = "red", lwd = 1.2) +
+    geom_vline(xintercept = alpha.select/2, color = "red", lwd = 1) +
+    geom_vline(xintercept = 1 - (alpha.select/2), color = "red", lwd = 1) +
     geom_histogram( binwidth = 0.025 ) +
     xlab("One-tailed p-value") +
     theme_classic() +
