@@ -518,23 +518,33 @@ svalue = function( yi,
   if ( model == "robust" ) {
 
     ##### Worst-Case Meta to See if We Should Search at All
-    # first fit worst-case meta to see if we should even attempt grid search
-    # initialize a dumb (unclustered and uncorrected) version of tau^2
-    # which is only used for constructing weights
-    meta.re = rma.uni( yi = yi,
-                       vi = vi)
-    t2hat.naive = meta.re$tau2
 
-    # fit model exactly as in corrected_meta
-    meta.worst =  robu( yi ~ 1,
-                        studynum = clustervar,
-                        data = dat[ A == FALSE, ],
-                        userweights = 1 / (vi + t2hat.naive),
-                        var.eff.size = vi,
-                        small = small )
+    if (k.nonaffirmative > 1){
+      # first fit worst-case meta to see if we should even attempt grid search
+      # initialize a dumb (unclustered and uncorrected) version of tau^2
+      # which is only used for constructing weights
+      meta.re = rma.uni( yi = yi,
+                         vi = vi)
+      t2hat.naive = meta.re$tau2
 
-    est.worst = as.numeric(meta.worst$b.r)
-    lo.worst = meta.worst$reg_table$CI.L
+      # fit model exactly as in corrected_meta
+      meta.worst =  robu( yi ~ 1,
+                          studynum = clustervar,
+                          data = dat[ A == FALSE, ],
+                          userweights = 1 / (vi + t2hat.naive),
+                          var.eff.size = vi,
+                          small = small )
+
+      est.worst = as.numeric(meta.worst$b.r)
+      lo.worst = meta.worst$reg_table$CI.L
+    }
+
+    # robumeta above can't handle meta-analyzing only 1 nonaffirmative study
+    if (k.nonaffirmative == 1) {
+      est.worst = dat$yi[ A == FALSE ]
+      lo.worst = dat$yi[ A == FALSE ] - qnorm(0.975) * sqrt(dat$vi[ A == FALSE ])
+    }
+
 
     ##### Get S-value for estimate
     if ( est.worst > q ) {
