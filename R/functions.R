@@ -10,14 +10,14 @@
 #' Estimate publication bias-corrected meta-analysis
 #'
 #' For a chosen ratio of publication probabilities, \code{eta}, estimates a publication bias-corrected pooled point
-#' estimate and confidence interval per Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a. "common-effects"), robust independent, and robust
+#' estimate and confidence interval per Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a. "common-effect"), robust independent, and robust
 #' clustered specifications.
 #' @param yi A vector of point estimates to be meta-analyzed.
 #' @param vi A vector of estimated variances for the point estimates
 #' @param eta The number of times more likely an affirmative study is to be published than a nonaffirmative study; see Details
 #' @param clustervar A character, factor, or numeric vector with the same length as yi. Unique values should indicate
 #' unique clusters of point estimates. By default, assumes all point estimates are independent.
-#' @param model "fixed" for fixed-effects (a.k.a. "common-effects") or "robust" for robust random-effects
+#' @param model "fixed" for fixed-effects (a.k.a. "common-effect") or "robust" for robust random-effects
 #' @param selection.tails 1 (for one-tailed selection, recommended for its conservatism) or 2 (for two-tailed selection)
 #' @param favor.positive \code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.
 #' See Details.
@@ -47,7 +47,7 @@
 #' specified \code{eta}, the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k.affirmative} and \code{k.nonaffirmative}),
 #' and an indicator for whether the point estimates' signs were recoded (\code{signs.recoded}).
 #' @references
-#' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
+#' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 #' @examples
 #'  # calculate effect sizes from example dataset in metafor
 #'  require(metafor)
@@ -280,13 +280,14 @@ corrected_meta = function( yi,
 #' (e.g., if \code{yi} is on the log-RR scale, then \code{q} should be as well).
 #' @param clustervar A character, factor, or numeric vector with the same length as \code{yi}. Unique values should indicate
 #' unique clusters of point estimates. If left unspecified, assumes studies are independent.
-#' @param model \code{"fixed"} for fixed-effects (a.k.a. "common effects") or \code{"robust"} for robust random-effects
+#' @param model \code{"fixed"} for fixed-effects (a.k.a. "common-effect") or \code{"robust"} for robust random-effects
 #' @param alpha.select Alpha-level at which publication probability is assumed to change
 #' @param eta.grid.hi The largest value of \code{eta} that should be included in the grid search. This argument is only needed when \code{model = "robust"}.
 #' @param favor.positive \code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.
 #' See Details.
 #' @param CI.level Confidence interval level (as a proportion) for the corrected point estimate
 #' @param small Should inference allow for a small meta-analysis? We recommend using always using \code{TRUE}.
+#' @param return.worst.meta Should the worst-case meta-analysis of only the nonaffirmative studies be returned?
 #' @import
 #' metafor
 #' stats
@@ -304,12 +305,14 @@ corrected_meta = function( yi,
 #' If \code{favor.positive == FALSE}, such that publication bias is assumed to favor negative rather than positive estimates, the signs of \code{yi} will be reversed prior to
 #' performing analyses. The returned number of affirmative and nonaffirmative studies will reflect the recoded signs, and accordingly the returned value \code{signs.recoded} will be \code{TRUE}.
 #' @return
-#' The function returns: the amount of publication bias required to attenutate the pooled point estimate to \code{q} (\code{sval.est}),
-#' the amount of publication bias required to attenutate the confidence interval limit of the pooled point estimate to \code{q} (\code{sval.ci}),
+#' The function returns: the amount of publication bias required to attenuate the pooled point estimate to \code{q} (\code{sval.est}),
+#' the amount of publication bias required to attenuate the confidence interval limit of the pooled point estimate to \code{q} (\code{sval.ci}),
 #' the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k.affirmative} and \code{k.nonaffirmative}),
 #' and an indicator for whether the point estimates' signs were recoded (\code{signs.recoded}).
+#'
+#' If \code{return.worst.meta = TRUE}, also returns the worst-case meta-analysis of only the nonaffirmative studies. If \code{model = "fixed"}, the worst-case meta-analysis is fit by \code{metafor::rma.uni}. If \code{model = "robust"}, it is fit by \code{robumeta::robu}. Note that in the latter case, custom inverse-variance weights are used, which are the inverse of the sum of the study's variance and a heterogeneity estimate from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020). This is done for consistency with the results of \code{corrected_meta}, which is used to determine \code{sval.est} and \code{sval.ci}. Therefore, the worst-case meta-analysis results may differ slightly from what you would obtain if you simply fit \code{robumeta::robu} on the nonaffirmative studies with the default weights.
 #' @references
-#' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
+#' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 #' @examples
 #'  # calculate effect sizes from example dataset in metafor
 #'  require(metafor)
@@ -359,26 +362,35 @@ svalue = function( yi,
                    eta.grid.hi = 200,
                    favor.positive,
                    CI.level = 0.95,
-                   small = TRUE ) {
+                   small = TRUE,
+                   return.worst.meta = FALSE ) {
 
   # # # ~~~ TEST ONLY
   # # require(metafor)
-  # # dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
-  # dat = sim_data( data.frame( k = 50,
+  # setwd("~/Dropbox/Personal computer/Independent studies/Sensitivity analysis for publication bias (SAPB)/Linked to OSF (SAPB)/Simulation study/Code")
+  # source("helper_sim_study_SAPB.R")
+  # dat = sim_data2( data.frame( k = 50,
   #                             per.cluster = 5,
   #                             mu = -0.5,
   #                             V = 0.25,
   #                             V.gam = 0,
   #                             sei.min = 0.1,
   #                             sei.max = 1,
-  #                             eta = 2 ) )
+  #                             eta = 2,
+  #                             true.dist = "norm",
+  #                             SE.corr = FALSE,
+  #                             select.SE = FALSE),
+  #                  keep.all.studies = FALSE)
   # yi = dat$yi
   # vi = dat$vi
   # q = -.1
   # clustervar = 1:length(yi)
+  # favor.positive = TRUE
   # CI.level = 0.95
+  # alpha.select = 0.05
+  # eta.grid.hi = 200
   # small = TRUE
-  # model = "robust"
+  # model = "fixed"
   # # # ~~ end test
 
   # stop if eta doesn't make sense
@@ -424,6 +436,7 @@ svalue = function( yi,
   #   flipped = FALSE
   # }
   ##### Flip Estimate Signs If Needed #####
+
   # if favor.positive == TRUE, then we don't need to fit a naive meta-analysis or do anything
   if ( favor.positive == TRUE ) {
     # keep track of whether we flipped for reporting at the end
@@ -452,6 +465,23 @@ svalue = function( yi,
 
   ##### Fixed-Effects Model #####
   if ( model == "fixed" ) {
+
+    if (k.nonaffirmative > 1){
+      # first fit worst-case meta
+      meta.worst = rma.uni( yi = yi,
+                            vi = vi,
+                            data = dat[ A == FALSE, ],
+                            method = "FE" )
+
+
+      est.worst = as.numeric(meta.worst$b)
+      lo.worst = meta.worst$ci.lb
+    }
+
+    if (k.nonaffirmative == 1) {
+      est.worst = dat$yi[ A == FALSE ]
+      lo.worst = dat$yi[ A == FALSE ] - qnorm(0.975) * sqrt(dat$vi[ A == FALSE ])
+    }
 
     # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
     strat = dat %>% group_by(A) %>%
@@ -545,7 +575,6 @@ svalue = function( yi,
       lo.worst = dat$yi[ A == FALSE ] - qnorm(0.975) * sqrt(dat$vi[ A == FALSE ])
     }
 
-
     ##### Get S-value for estimate
     if ( est.worst > q ) {
       sval.est = "Not possible"
@@ -583,6 +612,8 @@ svalue = function( yi,
     # do something similar for CI
     if ( lo.worst > q ) {
       sval.ci = "Not possible"
+
+      # ~~~ here, needs to check whether the *original* m0 CI already contains null; if so don't proceed with the below. Right now it proceeds and tries to choose the s-value that makes the lower CI limit as close as possible to 0, even though the CI already contains 0.
     } else {
       # define the function we need to minimize
       # i.e., distance between corrected estimate and the target value of q
@@ -613,22 +644,6 @@ svalue = function( yi,
       if ( abs(sval.ci - eta.grid.hi) < 0.0001 & diff > 0.0001 ) sval.ci = paste(">", eta.grid.hi)
     }
 
-
-    # ##### Worst-case bound #####
-    # # as eta -> infinity
-    # # not supposed to use KNHA for FE model
-    #
-    # # flip signs back to original direction if needed
-    # if ( flipped == TRUE ) {
-    #   yi = -yi
-    # }
-    #
-    # meta.bd = corrected_meta( yi = yi[ A == 0 ],
-    #                 vi = vi[ A == 0 ],
-    #                 eta = 1,
-    #                 model = model,
-    #                 CI.level = CI.level,
-    #                 small = small )
   }
 
   # s-values less than 1 indicate complete robustness
@@ -636,11 +651,22 @@ svalue = function( yi,
   if ( is.numeric(sval.est) & !is.na(sval.est) & sval.est < 1) sval.est = "Not possible"
   if ( is.numeric(sval.ci) & !is.na(sval.ci) & sval.ci < 1) sval.ci = "Not possible"
 
-  return( data.frame( sval.est,
-                      sval.ci = sval.ci,
-                      k.affirmative,
-                      k.nonaffirmative,
-                      signs.recoded = flipped ) )
+  # meta.worst might not exist if, for example, there is only 1 nonaffirmative study
+  if ( return.worst.meta == TRUE & exists("meta.worst") ) {
+    return( list( stats = data.frame( sval.est,
+                                      sval.ci = sval.ci,
+                                      k.affirmative,
+                                      k.nonaffirmative,
+                                      signs.recoded = flipped ),
+                  meta.worst = meta.worst ) )
+  } else {
+    return( data.frame( sval.est,
+                        sval.ci = sval.ci,
+                        k.affirmative,
+                        k.nonaffirmative,
+                        signs.recoded = flipped ) )
+  }
+
 
 }
 
@@ -679,10 +705,10 @@ svalue = function( yi,
 #' By default (\code{plot.pooled = TRUE}), also plots the pooled point
 #' estimate within all studies, supplied by the user as \code{est.all} (black diamond), and within only the nonaffirmative studies, supplied
 #' by the user as \code{est.N} (grey diamond). The user can calculate \code{est.all} and \code{est.N} using their choice of meta-analysis model. If instead
-#' these are not supplied but \code{plot.pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effects") model.
+#' these are not supplied but \code{plot.pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effect") model.
 #' @export
 #' @references
-#' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
+#' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 #' @examples
 #'
 #' ##### Make Significance Funnel with User-Specified Pooled Estimates #####
@@ -786,7 +812,7 @@ significance_funnel = function( yi,
   }
 
   # pooled fixed-effects estimates
-  # if not supplied, gets them from common-effects model
+  # if not supplied, gets them from common-effect model
   if ( is.na(est.N) & is.na(est.all) ) {
     est.N = rma.uni(yi = d$yi[ d$affirm == "Non-affirmative" ],
                     vi = d$vi[ d$affirm == "Non-affirmative" ],
@@ -889,7 +915,7 @@ significance_funnel = function( yi,
 #' ggplot2
 #' @export
 #' @references
-#' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
+#' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 #' @examples
 #'
 #'  # compute meta-analytic effect sizes

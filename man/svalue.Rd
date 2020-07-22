@@ -4,9 +4,19 @@
 \alias{svalue}
 \title{Severity of publication bias needed to "explain away" results}
 \usage{
-svalue(yi, vi, q, clustervar = 1:length(yi), model,
-  alpha.select = 0.05, eta.grid.hi = 200, favor.positive,
-  CI.level = 0.95, small = TRUE)
+svalue(
+  yi,
+  vi,
+  q,
+  clustervar = 1:length(yi),
+  model,
+  alpha.select = 0.05,
+  eta.grid.hi = 200,
+  favor.positive,
+  CI.level = 0.95,
+  small = TRUE,
+  return.worst.meta = FALSE
+)
 }
 \arguments{
 \item{yi}{A vector of point estimates to be meta-analyzed. Their signs should be coded such that publication bias is
@@ -20,7 +30,7 @@ assumed to favor positive, rather than negative, estimates.}
 \item{clustervar}{A character, factor, or numeric vector with the same length as \code{yi}. Unique values should indicate
 unique clusters of point estimates. If left unspecified, assumes studies are independent.}
 
-\item{model}{\code{"fixed"} for fixed-effects (a.k.a. "common effects") or \code{"robust"} for robust random-effects}
+\item{model}{\code{"fixed"} for fixed-effects (a.k.a. "common-effect") or \code{"robust"} for robust random-effects}
 
 \item{alpha.select}{Alpha-level at which publication probability is assumed to change}
 
@@ -32,12 +42,16 @@ See Details.}
 \item{CI.level}{Confidence interval level (as a proportion) for the corrected point estimate}
 
 \item{small}{Should inference allow for a small meta-analysis? We recommend using always using \code{TRUE}.}
+
+\item{return.worst.meta}{Should the worst-case meta-analysis of only the nonaffirmative studies be returned?}
 }
 \value{
-The function returns: the amount of publication bias required to attenutate the pooled point estimate to \code{q} (\code{sval.est}),
-the amount of publication bias required to attenutate the confidence interval limit of the pooled point estimate to \code{q} (\code{sval.ci}),
+The function returns: the amount of publication bias required to attenuate the pooled point estimate to \code{q} (\code{sval.est}),
+the amount of publication bias required to attenuate the confidence interval limit of the pooled point estimate to \code{q} (\code{sval.ci}),
 the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k.affirmative} and \code{k.nonaffirmative}),
 and an indicator for whether the point estimates' signs were recoded (\code{signs.recoded}).
+
+If \code{return.worst.meta = TRUE}, also returns the worst-case meta-analysis of only the nonaffirmative studies. If \code{model = "fixed"}, the worst-case meta-analysis is fit by \code{metafor::rma.uni}. If \code{model = "robust"}, it is fit by \code{robumeta::robu}. Note that in the latter case, custom inverse-variance weights are used, which are the inverse of the sum of the study's variance and a heterogeneity estimate from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020). This is done for consistency with the results of \code{corrected_meta}, which is used to determine \code{sval.est} and \code{sval.ci}. Therefore, the worst-case meta-analysis results may differ slightly from what you would obtain if you simply fit \code{robumeta::robu} on the nonaffirmative studies with the default weights.
 }
 \description{
 Estimates the S-value, defined as the severity of publication bias (i.e., the ratio
@@ -94,5 +108,5 @@ performing analyses. The returned number of affirmative and nonaffirmative studi
          model = "robust" )
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. Preprint available at https://osf.io/s9dp6/.
+1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 }

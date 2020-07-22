@@ -4,11 +4,21 @@
 \alias{significance_funnel}
 \title{Make significance funnel plot}
 \usage{
-significance_funnel(yi, vi, xmin = min(yi), xmax = max(yi), ymin = 0,
-  ymax = max(sqrt(vi)), xlab = "Point estimate",
-  ylab = "Estimated standard error", favor.positive = NA,
-  est.all = NA, est.N = NA, alpha.select = 0.05,
-  plot.pooled = TRUE)
+significance_funnel(
+  yi,
+  vi,
+  xmin = min(yi),
+  xmax = max(yi),
+  ymin = 0,
+  ymax = max(sqrt(vi)),
+  xlab = "Point estimate",
+  ylab = "Estimated standard error",
+  favor.positive = NA,
+  est.all = NA,
+  est.N = NA,
+  alpha.select = 0.05,
+  plot.pooled = TRUE
+)
 }
 \arguments{
 \item{yi}{A vector of point estimates to be meta-analyzed.}
@@ -49,7 +59,7 @@ Numerical sensitivity analyses (via \code{PublicationBias::svalue}) should still
 By default (\code{plot.pooled = TRUE}), also plots the pooled point
 estimate within all studies, supplied by the user as \code{est.all} (black diamond), and within only the nonaffirmative studies, supplied
 by the user as \code{est.N} (grey diamond). The user can calculate \code{est.all} and \code{est.N} using their choice of meta-analysis model. If instead
-these are not supplied but \code{plot.pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effects") model.
+these are not supplied but \code{plot.pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effect") model.
 }
 \examples{
 

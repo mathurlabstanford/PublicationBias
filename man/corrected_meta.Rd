@@ -4,9 +4,18 @@
 \alias{corrected_meta}
 \title{Estimate publication bias-corrected meta-analysis}
 \usage{
-corrected_meta(yi, vi, eta, clustervar = 1:length(yi), model,
-  selection.tails = 1, favor.positive, alpha.select = 0.05,
-  CI.level = 0.95, small = TRUE)
+corrected_meta(
+  yi,
+  vi,
+  eta,
+  clustervar = 1:length(yi),
+  model,
+  selection.tails = 1,
+  favor.positive,
+  alpha.select = 0.05,
+  CI.level = 0.95,
+  small = TRUE
+)
 }
 \arguments{
 \item{yi}{A vector of point estimates to be meta-analyzed.}
@@ -18,7 +27,7 @@ corrected_meta(yi, vi, eta, clustervar = 1:length(yi), model,
 \item{clustervar}{A character, factor, or numeric vector with the same length as yi. Unique values should indicate
 unique clusters of point estimates. By default, assumes all point estimates are independent.}
 
-\item{model}{"fixed" for fixed-effects (a.k.a. "common-effects") or "robust" for robust random-effects}
+\item{model}{"fixed" for fixed-effects (a.k.a. "common-effect") or "robust" for robust random-effects}
 
 \item{selection.tails}{1 (for one-tailed selection, recommended for its conservatism) or 2 (for two-tailed selection)}
 
@@ -40,7 +49,7 @@ and an indicator for whether the point estimates' signs were recoded (\code{sign
 }
 \description{
 For a chosen ratio of publication probabilities, \code{eta}, estimates a publication bias-corrected pooled point
-estimate and confidence interval per Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a. "common-effects"), robust independent, and robust
+estimate and confidence interval per Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a. "common-effect"), robust independent, and robust
 clustered specifications.
 }
 \details{
@@ -91,7 +100,7 @@ performing analyses. The corrected estimate will be reported based on the recode
  # range of parameters to try (more dense at the very small ones)
  eta.list = as.list( c( 200, 150, 100, 50, 40, 30, 20, rev( seq(1,15,1) ) ) )
  res.list = lapply( eta.list, function(x) {
-                     cat("\\n Working on eta = ", x)
+                     cat("\n Working on eta = ", x)
                      return( corrected_meta( yi = dat$yi,
                                              vi = dat$vi,
                                              eta = x,
