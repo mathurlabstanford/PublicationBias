@@ -576,6 +576,7 @@ svalue = function( yi,
     }
 
     ##### Get S-value for estimate
+    # bm
     if ( est.worst > q ) {
       sval.est = "Not possible"
     } else {
@@ -613,7 +614,6 @@ svalue = function( yi,
     if ( lo.worst > q ) {
       sval.ci = "Not possible"
 
-      # ~~~ here, needs to check whether the *original* m0 CI already contains null; if so don't proceed with the below. Right now it proceeds and tries to choose the s-value that makes the lower CI limit as close as possible to 0, even though the CI already contains 0.
     } else {
       # define the function we need to minimize
       # i.e., distance between corrected estimate and the target value of q
@@ -650,6 +650,13 @@ svalue = function( yi,
   # is.numeric is in case we have a "< XXX" string instead of a number
   if ( is.numeric(sval.est) & !is.na(sval.est) & sval.est < 1) sval.est = "Not possible"
   if ( is.numeric(sval.ci) & !is.na(sval.ci) & sval.ci < 1) sval.ci = "Not possible"
+
+  # m0 was fit BEFORE flipping signs
+  # but q has now been flipped in the latter case in "or" statement below
+  if ( (m0$est > 0 & m0$lo < q) | (m0$est < 0 & m0$hi > -q) ) {
+    sval.ci = "--"
+    message("sval.ci is not applicable because the naive confidence interval already contains q")
+  }
 
   # meta.worst might not exist if, for example, there is only 1 nonaffirmative study
   if ( return.worst.meta == TRUE & exists("meta.worst") ) {

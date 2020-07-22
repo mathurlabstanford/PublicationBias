@@ -1,7 +1,7 @@
 Package: PublicationBias
 Type: Package
 Title: Sensitivity Analysis for Publication Bias in Meta-Analyses
-Version: 2.1.0
+Version: 2.2.0
 Author: Maya B. Mathur, Tyler J. VanderWeele
 Maintainer: Maya B. Mathur <mmathur@stanford.edu>
 Description: Performs sensitivity analysis for publication bias in meta-analyses (per Mathur & VanderWeele, 2020 [<https://osf.io/s9dp6>]).

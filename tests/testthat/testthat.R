@@ -70,7 +70,8 @@ test_that("corrected_meta #1", {
                              model = "fixed",
                              selection.tails = 1,
                              CI.level = 0.95,
-                             small = FALSE )
+                             small = FALSE,
+                           favor.positive = FALSE )
 
   expect_equal( FE.adj$est, as.numeric(FE.plain$b), tol = 0.001 )
   expect_equal( FE.adj$se, as.numeric(FE.plain$se), tol = 0.001 )
@@ -80,7 +81,7 @@ test_that("corrected_meta #1", {
 
   ##### Recover Regular Robust Indepenent Model With Eta = 1 #####
   for ( .small in c(TRUE, FALSE) ) {
-    dat$clustervar = 1:length(dat$yi)
+    clustervar = 1:length(dat$yi)
 
     meta.re = rma.uni( yi = dat$yi,
                        vi = dat$vi)
@@ -100,7 +101,8 @@ test_that("corrected_meta #1", {
                              model = "robust",
                              selection.tails = 1,
                              CI.level = 0.95,
-                             small = .small )
+                             small = .small,
+                             favor.positive = FALSE)
 
     expect_equal( RI.adj$est, as.numeric( as.numeric(RI.robust$b.r) ), tol = 0.001 )
     expect_equal( RI.adj$se, as.numeric( RI.robust$reg_table$SE ), tol = 0.001 )
@@ -112,7 +114,7 @@ test_that("corrected_meta #1", {
 
   ##### Recover Regular Robust Clustered Model With Eta = 1 #####
   for ( .small in c(TRUE, FALSE) ) {
-    dat$clustervar = dat$author
+    clustervar = dat$author
 
     meta.re = rma.uni( yi = dat$yi,
                        vi = dat$vi)
@@ -133,7 +135,8 @@ test_that("corrected_meta #1", {
                              clustervar = clustervar,
                              selection.tails = 1,
                              CI.level = 0.95,
-                             small = .small )
+                             small = .small,
+                             favor.positive = FALSE)
 
     expect_equal( RI.adj$est, as.numeric( as.numeric(RI.robust$b.r) ), tol = 0.001 )
     expect_equal( RI.adj$se, as.numeric( RI.robust$reg_table$SE ), tol = 0.001 )
@@ -158,22 +161,25 @@ test_that("svalue #1", {
                       q = 0,
                       model = "fixed",
                       CI.level = 0.95,
-                      small = .small )$svals
+                      small = .small,
+                      favor.positive = FALSE )
 
       # CI upper limit should be exactly 0 when eta = sval.ci
       meta = corrected_meta( yi = dat$yi,
                              vi = dat$vi,
-                             eta = as.numeric(svals["sval.ci"]),
+                             eta = as.numeric(svals$sval.ci),
                              model = "fixed",
                              selection.tails = 1,
                              CI.level = 0.95,
-                             small = .small )
+                             small = .small,
+                             favor.positive = FALSE )
 
       expect_equal( meta$hi, 0 )
 
     }
   }
 } )
+
 
 
 
@@ -221,6 +227,7 @@ test_that("svalue #1", {
 
 
 # does it reject bad choices of q?
+# i.e., the point estimate is already closer to the null than q
 test_that( "svalue #3", {
   dat = escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 
@@ -229,7 +236,8 @@ test_that( "svalue #3", {
           q = -3,
           model = "fixed",
           CI.level = 0.95,
-          small = FALSE ) )
+          small = FALSE,
+          favor.positive = FALSE) )
 
   # reverse signs
   expect_error( svalue( yi = -dat$yi,
@@ -237,8 +245,55 @@ test_that( "svalue #3", {
                         q = .8,
                         model = "fixed",
                         CI.level = 0.95,
-                        small = FALSE ) )
+                        small = FALSE,
+                        favor.positive = FALSE) )
 } )
+
+
+# does it produce appropriate warnings when q is already inside the CI?
+test_that("svalue #3.5", {
+  dat = escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
+
+  # fixed case
+  # naive: -0.4302852 [-0.5096613, -0.3509091]
+  # should give message about sval.ci not applying
+  expect_message( svalue( yi = dat$yi,
+                          vi = dat$vi,
+                          q = -0.4,  # closer to null than naive estimate, but within CI (from being in browser and looking at m0)
+                          model = "fixed",
+                          CI.level = 0.95,
+                          small = FALSE,
+                          favor.positive = FALSE) )
+
+  # should run without message/error
+  svalue( yi = dat$yi,
+          vi = dat$vi,
+          q = -0.3,  # closer to null than naive estimate, but within CI (from being in browser and looking at m0)
+          model = "fixed",
+          CI.level = 0.95,
+          small = FALSE,
+          favor.positive = FALSE)
+
+  # robust case and flipped signs
+  # naive: 0.7145323 [0.3241296, 1.104935]
+  expect_message( svalue( yi = -dat$yi,
+                          vi = dat$vi,
+                          q = 0.6,  # closer to null than naive estimate, but within CI
+                          model = "robust",
+                          CI.level = 0.95,
+                          small = FALSE,
+                          favor.positive = TRUE) )
+
+  # should run without message or error
+  svalue( yi = -dat$yi,
+                          vi = dat$vi,
+                          q = 0.3,  # closer to null than naive estimate, but within CI
+                          model = "robust",
+                          CI.level = 0.95,
+                          small = FALSE,
+                          favor.positive = TRUE)
+})
+
 
 
 # does svalue give correct results when the s-value is greater than the highest
@@ -262,7 +317,8 @@ test_that( "svalue #4", {
           model = "robust",
           eta.grid = seq(1,10,1),
           CI.level = 0.95,
-          small = FALSE )
+          small = FALSE,
+          favor.positive = FALSE)
 
 
 } )
@@ -286,7 +342,8 @@ test_that( "significance_funnel #1", {
 
   # also see if significance_funnel works
   expect_error( significance_funnel( yi = d$yi,
-                       vi = d$vi ) )
+                       vi = d$vi,
+                       favor.positive = FALSE) )
 } )
 
 
