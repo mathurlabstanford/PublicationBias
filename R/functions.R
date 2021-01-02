@@ -576,7 +576,6 @@ svalue = function( yi,
     }
 
     ##### Get S-value for estimate
-    # bm
     if ( est.worst > q ) {
       sval.est = "Not possible"
     } else {
@@ -654,6 +653,8 @@ svalue = function( yi,
   # m0 was fit BEFORE flipping signs
   # but q has now been flipped in the latter case in "or" statement below
   if ( (m0$est > 0 & m0$lo < q) | (m0$est < 0 & m0$hi > -q) ) {
+    # important: Shiny website assumes that this exact string ("--") for CI can be interpreted as
+    #  the naive CI's already containing q
     sval.ci = "--"
     message("sval.ci is not applicable because the naive confidence interval already contains q")
   }
