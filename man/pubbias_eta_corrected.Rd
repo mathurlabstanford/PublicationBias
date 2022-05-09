@@ -35,28 +35,37 @@ corrected_meta(
 \arguments{
 \item{yi}{A vector of point estimates to be meta-analyzed.}
 
-\item{vi}{A vector of estimated variances for the point estimates}
+\item{vi}{A vector of estimated variances for the point estimates.}
 
-\item{sei}{A vector of estimated standard errors for the point estimates (only relevant when not using vi)}
+\item{sei}{A vector of estimated standard errors for the point estimates
+(only relevant when not using \code{vi}).}
 
-\item{eta}{The number of times more likely an affirmative study is to be published than a nonaffirmative study; see Details}
+\item{eta}{The number of times more likely an affirmative study is to be
+published than a nonaffirmative study; see Details.}
 
-\item{clustervar}{A character, factor, or numeric vector with the same length as yi. Unique values should indicate
-unique clusters of point estimates. By default, assumes all point estimates are independent.}
+\item{clustervar}{A character, factor, or numeric vector with the same length
+as yi. Unique values should indicate unique clusters of point estimates. By
+default, assumes all point estimates are independent.}
 
-\item{model}{"fixed" for fixed-effects (a.k.a. "common-effect") or "robust" for robust random-effects}
+\item{model}{"fixed" for fixed-effects (a.k.a. "common-effect") or "robust"
+for robust random-effects.}
 
-\item{selection_tails}{1 (for one-tailed selection, recommended for its conservatism) or 2 (for two-tailed selection)}
+\item{selection_tails}{1 (for one-tailed selection, recommended for its
+conservatism) or 2 (for two-tailed selection).}
 
-\item{favor_positive}{\code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.
-See Details.}
+\item{favor_positive}{\code{TRUE} if publication bias is assumed to favor
+positive estimates; \code{FALSE} if assumed to favor negative estimates;
+see Details.}
 
-\item{alpha_select}{Alpha-level at which publication probability is assumed to change}
+\item{alpha_select}{Alpha-level at which publication probability is assumed
+to change.}
 
-\item{ci_level}{Confidence interval level (as proportion) for the corrected point estimate. (The alpha level for inference on the corrected
-point estimate will be calculated from \code{ci_level}.)}
+\item{ci_level}{Confidence interval level (as proportion) for the corrected
+point estimate. (The alpha level for inference on the corrected point
+estimate will be calculated from \code{ci_level}.)}
 
-\item{small}{Should inference allow for a small meta-analysis? We recommend always using TRUE.}
+\item{small}{Should inference allow for a small meta-analysis? We recommend
+always using \code{TRUE}.}
 
 \item{selection.tails}{(deprecated) see selection_tails}
 
@@ -67,36 +76,47 @@ point estimate will be calculated from \code{ci_level}.)}
 \item{CI.level}{(deprecated) see ci_level}
 }
 \value{
-The function returns: the corrected pooled point estimate (\code{est}) potentially with its sign recoded as indicated by \code{signs.recoded},
-inference on the bias-corrected estimate (\code{se}, \code{lo}, \code{hi}, \code{pval}), the user's
-specified \code{eta}, the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k_affirmative} and \code{k_nonaffirmative}),
-and an indicator for whether the point estimates' signs were recoded (\code{signs.recoded}).
+A list with three elements, \code{values}, \code{stats} and
+  \code{fit}. Stats is a list that contains the bias-corrected pooled point
+  estimate (\code{estimate}) and inference on the bias-corrected estimate
+  (\code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}). Values is a
+  list that contains the user's specified \code{eta}, the number of
+  affirmative and nonaffirmative studies (\code{k_affirmative} and
+  \code{k_nonaffirmative}), and a dataframe combining \code{yi}, \code{vi},
+  \code{clustervar}.
 }
 \description{
-For a chosen ratio of publication probabilities, \code{eta}, estimates a publication bias-corrected pooled point
-estimate and confidence interval per Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a. "common-effect"), robust independent, and robust
-clustered specifications.
+For a chosen ratio of publication probabilities, \code{eta}, estimates a
+publication bias-corrected pooled point estimate and confidence interval per
+Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a.
+"common-effect"), robust independent, and robust clustered specifications.
 }
 \details{
-The ratio \code{eta} represents the number of times more likely affirmative studies (i.e., those with a "statistically significant" and positive estimate)
-are to be published than nonaffirmative studies (i.e., those with a "nonsignificant" or negative estimate).
+The ratio \code{eta} represents the number of times more likely
+  affirmative studies (i.e., those with a "statistically significant" and
+  positive estimate) are to be published than nonaffirmative studies (i.e.,
+  those with a "nonsignificant" or negative estimate).
 
-If \code{favor_positive == FALSE}, such that publication bias is assumed to favor negative rather than positive estimates, the signs of \code{yi} will be reversed prior to
-performing analyses. The corrected estimate will be reported based on the recoded signs rather than the original sign convention, and accordingly the returned value \code{signs.recoded} will be \code{TRUE}.
+  If \code{favor_positive == FALSE}, such that publication bias is assumed to
+  favor negative rather than positive estimates, the signs of \code{yi} will
+  be reversed prior to performing analyses. The corrected estimate will be
+  reported based on the recoded signs rather than the original sign
+  convention.
 }
 \examples{
  # calculate effect sizes from example dataset in metafor
  require(metafor)
- dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
+ dat = metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
+                       di = cneg, data = dat.bcg)
 
  # first fit fixed-effects model without any bias correction
- # since the point estimate is negative here, we'll assume publication bias favors negative
- #  log-RRs rather than positive ones
+ # since the point estimate is negative here, we'll assume publication bias
+ # favors negative log-RRs rather than positive ones
  metafor::rma( yi, vi, data = dat, method = "FE" )
 
  # warmup
- # note that passing eta = 1 (no publication bias) yields the naive point estimate
- #  from rma above, which makes sense
+ # note that passing eta = 1 (no publication bias) yields the naive point
+ # estimate from rma above, which makes sense
  pubbias_eta_corrected( yi = dat$yi,
                         vi = dat$vi,
                         eta = 1,
@@ -104,16 +124,16 @@ performing analyses. The corrected estimate will be reported based on the recode
                         favor_positive = FALSE )
 
  # assume a known selection ratio of 5
- # i.e., affirmative results are 5x more likely to be published
- #  than nonaffirmative
+ # i.e., affirmative results are 5x more likely to be published than
+ # nonaffirmative ones
  pubbias_eta_corrected( yi = dat$yi,
                         vi = dat$vi,
                         eta = 5,
                         favor_positive = FALSE,
                         model = "fixed" )
 
- # same selection ratio, but now account for heterogeneity
- # and clustering via robust specification
+ # same selection ratio, but now account for heterogeneity and clustering via
+ # robust specification
  pubbias_eta_corrected( yi = dat$yi,
                         vi = dat$vi,
                         eta = 5,
@@ -141,5 +161,7 @@ performing analyses. The corrected estimate will be reported based on the recode
    theme_classic()
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
+  publication bias in meta-analyses. \emph{Journal of the Royal Statistical
+  Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 }

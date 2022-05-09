@@ -12,7 +12,6 @@ Description: Performs sensitivity analysis for publication bias in meta-analyses
     a standard meta-analysis of only the negative and "nonsignificant" studies.
 License: GPL-2
 Encoding: UTF-8
-Imports: metafor, stats, dplyr, robumeta, ggplot2, Rdpack, rlang
-RdMacros: Rdpack
+Imports: metafor, stats, dplyr, robumeta, ggplot2, rlang
 LazyData: true
 RoxygenNote: 7.1.2

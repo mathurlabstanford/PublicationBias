@@ -35,33 +35,44 @@ svalue(
 )
 }
 \arguments{
-\item{yi}{A vector of point estimates to be meta-analyzed. Their signs should be coded such that publication bias is
-assumed to favor positive, rather than negative, estimates.}
+\item{yi}{A vector of point estimates to be meta-analyzed. Their signs should
+be coded such that publication bias is assumed to favor positive, rather
+than negative, estimates.}
 
-\item{vi}{A vector of estimated variances for the point estimates}
+\item{vi}{A vector of estimated variances for the point estimates.}
 
-\item{sei}{A vector of estimated standard errors for the point estimates (only relevant when not using vi)}
+\item{sei}{A vector of estimated standard errors for the point estimates
+(only relevant when not using \code{vi}).}
 
-\item{q}{The attenuated value to which to shift the point estimate or CI. Should be specified on the same scale as \code{yi}
-(e.g., if \code{yi} is on the log-RR scale, then \code{q} should be as well).}
+\item{q}{The attenuated value to which to shift the point estimate or CI.
+Should be specified on the same scale as \code{yi} (e.g., if \code{yi} is
+on the log-RR scale, then \code{q} should be as well).}
 
-\item{clustervar}{A character, factor, or numeric vector with the same length as \code{yi}. Unique values should indicate
-unique clusters of point estimates. If left unspecified, assumes studies are independent.}
+\item{clustervar}{A character, factor, or numeric vector with the same length
+as \code{yi}. Unique values should indicate unique clusters of point
+estimates. If left unspecified, assumes studies are independent.}
 
-\item{model}{\code{"fixed"} for fixed-effects (a.k.a. "common-effect") or \code{"robust"} for robust random-effects}
+\item{model}{\code{"fixed"} for fixed-effects (a.k.a. "common-effect") or
+\code{"robust"} for robust random-effects.}
 
-\item{alpha_select}{Alpha-level at which publication probability is assumed to change}
+\item{alpha_select}{Alpha-level at which publication probability is assumed
+to change.}
 
-\item{eta_grid_hi}{The largest value of \code{eta} that should be included in the grid search. This argument is only needed when \code{model = "robust"}.}
+\item{eta_grid_hi}{The largest value of \code{eta} that should be included in
+the grid search. This argument is only needed when \code{model = "robust"}.}
 
-\item{favor_positive}{\code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.
+\item{favor_positive}{\code{TRUE} if publication bias is assumed to favor
+positive estimates; \code{FALSE} if assumed to favor negative estimates.
 See Details.}
 
-\item{ci_level}{Confidence interval level (as a proportion) for the corrected point estimate}
+\item{ci_level}{Confidence interval level (as a proportion) for the corrected
+point estimate.}
 
-\item{small}{Should inference allow for a small meta-analysis? We recommend using always using \code{TRUE}.}
+\item{small}{Should inference allow for a small meta-analysis? We recommend
+using always using \code{TRUE}.}
 
-\item{return_worst_meta}{Should the worst-case meta-analysis of only the nonaffirmative studies be returned?}
+\item{return_worst_meta}{Should the worst-case meta-analysis of only the
+nonaffirmative studies be returned?}
 
 \item{alpha.select}{(deprecated) see alpha_select}
 
@@ -74,32 +85,53 @@ See Details.}
 \item{return.worst.meta}{(deprecated) see return_worst_meta}
 }
 \value{
-The function returns: the amount of publication bias required to attenuate the pooled point estimate to \code{q} (\code{sval_est}),
-the amount of publication bias required to attenuate the confidence interval limit of the pooled point estimate to \code{q} (\code{sval_ci}),
-the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k_affirmative} and \code{k_nonaffirmative}),
-and an indicator for whether the point estimates' signs were recoded (\code{signs_recoded}).
+The function returns: the amount of publication bias required to
+  attenuate the pooled point estimate to \code{q} (\code{sval_est}), the
+  amount of publication bias required to attenuate the confidence interval
+  limit of the pooled point estimate to \code{q} (\code{sval_ci}), the number
+  of affirmative and nonaffirmative studies after any needed recoding of
+  signs (\code{k_affirmative} and \code{k_nonaffirmative}), and an indicator
+  for whether the point estimates' signs were recoded (\code{signs_recoded}).
 
-If \code{return_worst_meta = TRUE}, also returns the worst-case meta-analysis of only the nonaffirmative studies. If \code{model = "fixed"}, the worst-case meta-analysis is fit by \code{metafor::rma.uni}. If \code{model = "robust"}, it is fit by \code{robumeta::robu}. Note that in the latter case, custom inverse-variance weights are used, which are the inverse of the sum of the study's variance and a heterogeneity estimate from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020). This is done for consistency with the results of \code{pubbias_eta_corrected}, which is used to determine \code{sval_est} and \code{sval_ci}. Therefore, the worst-case meta-analysis results may differ slightly from what you would obtain if you simply fit \code{robumeta::robu} on the nonaffirmative studies with the default weights.
+  If \code{return_worst_meta = TRUE}, also returns the worst-case
+  meta-analysis of only the nonaffirmative studies. If \code{model =
+  "fixed"}, the worst-case meta-analysis is fit by \code{metafor::rma.uni}.
+  If \code{model = "robust"}, it is fit by \code{robumeta::robu}. Note that
+  in the latter case, custom inverse-variance weights are used, which are the
+  inverse of the sum of the study's variance and a heterogeneity estimate
+  from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020).
+  This is done for consistency with the results of
+  \code{pubbias_eta_corrected}, which is used to determine \code{sval_est}
+  and \code{sval_ci}. Therefore, the worst-case meta-analysis results may
+  differ slightly from what you would obtain if you simply fit
+  \code{robumeta::robu} on the nonaffirmative studies with the default
+  weights.
 }
 \description{
-Estimates the S-value, defined as the severity of publication bias (i.e., the ratio
-by which affirmative studies are more likely to be published than nonaffirmative studies)
-that would be required to shift the pooled point estimate or its confidence interval limit
-to the value \code{q}.
+Estimates the S-value, defined as the severity of publication bias (i.e., the
+ratio by which affirmative studies are more likely to be published than
+nonaffirmative studies) that would be required to shift the pooled point
+estimate or its confidence interval limit to the value \code{q}.
 }
 \details{
-To illustrate interpretation of the S-value, if the S-value for the point estimate is 30 with \code{q=0}, this indicates that affirmative studies
-(i.e., those with a "statistically significant" and positive estimate) would need to be 30-fold more likely to be published
-than nonaffirmative studies (i.e., those with a "nonsignificant" or negative estimate) to attenuate the pooled point estimate to
-\code{q}.
+To illustrate interpretation of the S-value, if the S-value for the
+  point estimate is 30 with \code{q=0}, this indicates that affirmative
+  studies (i.e., those with a "statistically significant" and positive
+  estimate) would need to be 30-fold more likely to be published than
+  nonaffirmative studies (i.e., those with a "nonsignificant" or negative
+  estimate) to attenuate the pooled point estimate to \code{q}.
 
-If \code{favor_positive == FALSE}, such that publication bias is assumed to favor negative rather than positive estimates, the signs of \code{yi} will be reversed prior to
-performing analyses. The returned number of affirmative and nonaffirmative studies will reflect the recoded signs, and accordingly the returned value \code{signs_recoded} will be \code{TRUE}.
+  If \code{favor_positive == FALSE}, such that publication bias is assumed to
+  favor negative rather than positive estimates, the signs of \code{yi} will
+  be reversed prior to performing analyses. The returned number of
+  affirmative and nonaffirmative studies will reflect the recoded signs, and
+  accordingly the returned value \code{signs_recoded} will be \code{TRUE}.
 }
 \examples{
  # calculate effect sizes from example dataset in metafor
  require(metafor)
- dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
+ dat = metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
+                       di = cneg, data = dat.bcg)
 
  ##### Fixed-Effects Specification #####
  # S-values and worst-case meta-analysis under fixed-effects specification
@@ -136,5 +168,7 @@ performing analyses. The returned number of affirmative and nonaffirmative studi
                  model = "robust" )
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
+  publication bias in meta-analyses. \emph{Journal of the Royal Statistical
+  Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 }

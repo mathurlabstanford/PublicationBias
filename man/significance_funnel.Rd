@@ -24,76 +24,90 @@ significance_funnel(
 \arguments{
 \item{yi}{A vector of point estimates to be meta-analyzed.}
 
-\item{vi}{A vector of estimated variances for the point estimates}
+\item{vi}{A vector of estimated variances for the point estimates.}
 
-\item{sei}{A vector of estimated standard errors for the point estimates (only relevant when not using vi)}
+\item{sei}{A vector of estimated standard errors for the point estimates
+(only relevant when not using code{vi}).}
 
-\item{xmin}{x-axis (point estimate) lower limit for plot}
+\item{xmin}{x-axis (point estimate) lower limit for plot.}
 
-\item{xmax}{x-axis (point estimate) upper limit for plot}
+\item{xmax}{x-axis (point estimate) upper limit for plot.}
 
-\item{ymin}{y-axis (standard error) lower limit for plot}
+\item{ymin}{y-axis (standard error) lower limit for plot.}
 
-\item{ymax}{y-axis (standard error) upper limit for plot}
+\item{ymax}{y-axis (standard error) upper limit for plot.}
 
-\item{xlab}{Label for x-axis (point estimate)}
+\item{xlab}{Label for x-axis (point estimate).}
 
-\item{ylab}{Label for y-axis (standard error)}
+\item{ylab}{Label for y-axis (standard error).}
 
-\item{favor_positive}{\code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.}
+\item{favor_positive}{\code{TRUE} if publication bias is assumed to favor
+positive estimates; \code{FALSE} if assumed to favor negative estimates.}
 
-\item{est_all}{Regular meta-analytic estimate among all studies (optional)}
+\item{est_all}{Regular meta-analytic estimate among all studies (optional).}
 
-\item{est_N}{Worst-case meta-analytic estimate among only nonaffirmative studies (optional)}
+\item{est_N}{Worst-case meta-analytic estimate among only nonaffirmative
+studies (optional).}
 
-\item{alpha_select}{Alpha-level at which publication probability is assumed to change}
+\item{alpha_select}{Alpha-level at which publication probability is assumed
+to change.}
 
-\item{plot_pooled}{Should the pooled estimates within all studies and within only the nonaffirmative
-studies be plotted as well?}
+\item{plot_pooled}{Should the pooled estimates within all studies and within
+only the nonaffirmative studies be plotted as well?}
 }
 \description{
-Creates a modified funnel plot that distinguishes between affirmative and nonaffirmative studies, helping to detect the extent to which
-the nonaffirmative studies' point estimates are systematically smaller than the entire set of point estimates. The estimate among only nonaffirmative studies (gray diamond)
-represents a corrected estimate under worst-case publication bias. If the gray diamond represents a negligible effect size or if it is much smaller than
-the pooled estimate among all studies (black diamond), this suggests that the meta-analysis may not be robust to extreme publication bias.
-Numerical sensitivity analyses (via \code{PublicationBias::pubbias_svalue}) should still be carried out for more precise quantitative conclusions.
+Creates a modified funnel plot that distinguishes between affirmative and
+nonaffirmative studies, helping to detect the extent to which the
+nonaffirmative studies' point estimates are systematically smaller than the
+entire set of point estimates. The estimate among only nonaffirmative studies
+(gray diamond) represents a corrected estimate under worst-case publication
+bias. If the gray diamond represents a negligible effect size or if it is
+much smaller than the pooled estimate among all studies (black diamond), this
+suggests that the meta-analysis may not be robust to extreme publication
+bias. Numerical sensitivity analyses (via
+\code{PublicationBias::pubbias_svalue}) should still be carried out for more
+precise quantitative conclusions.
 }
 \details{
 By default (\code{plot_pooled = TRUE}), also plots the pooled point
-estimate within all studies, supplied by the user as \code{est_all} (black diamond), and within only the nonaffirmative studies, supplied
-by the user as \code{est_N} (grey diamond). The user can calculate \code{est_all} and \code{est_N} using their choice of meta-analysis model. If instead
-these are not supplied but \code{plot_pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effect") model.
+  estimate within all studies, supplied by the user as \code{est_all} (black
+  diamond), and within only the nonaffirmative studies, supplied by the user
+  as \code{est_N} (grey diamond). The user can calculate \code{est_all} and
+  \code{est_N} using their choice of meta-analysis model. If instead these
+  are not supplied but \code{plot_pooled = TRUE}, these pooled estimates will
+  be automatically calculated using a fixed-effects (a.k.a. "common-effect")
+  model.
 }
 \examples{
-
 ##### Make Significance Funnel with User-Specified Pooled Estimates #####
 
 # compute meta-analytic effect sizes for an example dataset
 require(metafor)
-dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
+dat = metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
+                      di = cneg, data = dat.bcg)
 
-# flip signs since we think publication bias operates in favor of negative effects
-# alternatively, if not flipping signs, could pass favor_positive = FALSE to
-#  significance_funnel
+# flip signs since we think publication bias operates in favor of negative
+# effects alternatively, if not flipping signs, could pass
+# favor_positive = FALSE to significance_funnel
 dat$yi = -dat$yi
 
 # optional: regular meta-analysis of all studies (for the black diamond)
 # for flexibility, you can use any choice of meta-analysis model here
-# in this case, we'll use the robust independent specification since the point estimates
-#  seem to be from unique papers
+# in this case, we'll use the robust independent specification since the
+# point estimates seem to be from unique papers
 # thus, each study gets its own studynum
 require(robumeta)
-meta.all =  robumeta::robu( yi ~ 1,
+meta_all =  robumeta::robu( yi ~ 1,
                             studynum = 1:nrow(dat),
                             data = dat,
                             var.eff.size = vi,
                             small = TRUE )
 
-# optional: calculate worst-case estimate (for the gray diamond)
-#  by analyzing only the nonaffirmative studies
+# optional: calculate worst-case estimate (for the gray diamond) by analyzing
+# only the nonaffirmative studies
 dat$pval = 2 * ( 1 - pnorm( abs( dat$yi / sqrt(dat$vi) ) ) )  # two-tailed p-value
 dat$affirm = (dat$yi > 0) & (dat$pval < 0.05)  # is study affirmative?
-meta.worst =  robumeta::robu( yi ~ 1,
+meta_worst =  robumeta::robu( yi ~ 1,
                               studynum = 1:nrow( dat[ dat$affirm == TRUE, ] ),
                               data = dat[ dat$affirm == TRUE, ],
                               var.eff.size = vi,
@@ -101,8 +115,8 @@ meta.worst =  robumeta::robu( yi ~ 1,
 
 ##### Make Significance Funnel with Alpha = 0.50 and Default Pooled Estimates #####
 # change alpha to 0.50 just for illustration
-# now the pooled estimates are from the fixed-effect specification because they are
-#  not provided by the user
+# now the pooled estimates are from the fixed-effect specification because
+# they are not provided by the user
 significance_funnel( yi = dat$yi,
                      vi = dat$vi,
                      favor_positive = TRUE,
@@ -110,5 +124,7 @@ significance_funnel( yi = dat$yi,
                      plot_pooled = TRUE )
 }
 \references{
-1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
+  publication bias in meta-analyses. \emph{Journal of the Royal Statistical
+  Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 }
