@@ -7,6 +7,7 @@
 significance_funnel(
   yi,
   vi,
+  sei,
   xmin = min(yi),
   xmax = max(yi),
   ymin = 0,
@@ -24,6 +25,8 @@ significance_funnel(
 \item{yi}{A vector of point estimates to be meta-analyzed.}
 
 \item{vi}{A vector of estimated variances for the point estimates}
+
+\item{sei}{A vector of estimated standard errors for the point estimates (only relevant when not using vi)}
 
 \item{xmin}{x-axis (point estimate) lower limit for plot}
 

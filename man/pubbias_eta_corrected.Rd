@@ -8,6 +8,7 @@
 pubbias_eta_corrected(
   yi,
   vi,
+  sei,
   eta,
   clustervar = 1:length(yi),
   model,
@@ -27,7 +28,7 @@ corrected_meta(
   selection.tails = 1,
   favor.positive,
   alpha.select = 0.05,
-  ci.level = 0.95,
+  CI.level = 0.95,
   small = TRUE
 )
 }
@@ -35,6 +36,8 @@ corrected_meta(
 \item{yi}{A vector of point estimates to be meta-analyzed.}
 
 \item{vi}{A vector of estimated variances for the point estimates}
+
+\item{sei}{A vector of estimated standard errors for the point estimates (only relevant when not using vi)}
 
 \item{eta}{The number of times more likely an affirmative study is to be published than a nonaffirmative study; see Details}
 
@@ -61,7 +64,7 @@ point estimate will be calculated from \code{ci_level}.)}
 
 \item{alpha.select}{(deprecated) see alpha_select}
 
-\item{ci.level}{(deprecated) see ci_level}
+\item{CI.level}{(deprecated) see ci_level}
 }
 \value{
 The function returns: the corrected pooled point estimate (\code{est}) potentially with its sign recoded as indicated by \code{signs.recoded},
@@ -104,10 +107,10 @@ performing analyses. The corrected estimate will be reported based on the recode
  # i.e., affirmative results are 5x more likely to be published
  #  than nonaffirmative
  pubbias_eta_corrected( yi = dat$yi,
-                 vi = dat$vi,
-                 eta = 5,
-                 favor_positive = FALSE,
-                 model = "fixed" )
+                        vi = dat$vi,
+                        eta = 5,
+                        favor_positive = FALSE,
+                        model = "fixed" )
 
  # same selection ratio, but now account for heterogeneity
  # and clustering via robust specification

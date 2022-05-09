@@ -4,13 +4,15 @@
 \alias{pval_plot}
 \title{Plot one-tailed p-values}
 \usage{
-pval_plot(yi, vi, alpha_select = 0.05)
+pval_plot(yi, vi, sei, alpha_select = 0.05)
 }
 \arguments{
 \item{yi}{A vector of point estimates to be meta-analyzed. The signs of the estimates should be chosen
 such that publication bias is assumed to operate in favor of positive estimates.}
 
 \item{vi}{A vector of estimated variances for the point estimates}
+
+\item{sei}{A vector of estimated standard errors for the point estimates (only relevant when not using vi)}
 
 \item{alpha_select}{Alpha-level at which publication probability is assumed to change}
 }

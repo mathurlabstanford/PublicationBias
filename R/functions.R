@@ -14,6 +14,7 @@
 #' clustered specifications.
 #' @param yi A vector of point estimates to be meta-analyzed.
 #' @param vi A vector of estimated variances for the point estimates
+#' @param sei A vector of estimated standard errors for the point estimates (only relevant when not using vi)
 #' @param eta The number of times more likely an affirmative study is to be published than a nonaffirmative study; see Details
 #' @param clustervar A character, factor, or numeric vector with the same length as yi. Unique values should indicate
 #' unique clusters of point estimates. By default, assumes all point estimates are independent.
@@ -71,10 +72,10 @@
 #'  # i.e., affirmative results are 5x more likely to be published
 #'  #  than nonaffirmative
 #'  pubbias_eta_corrected( yi = dat$yi,
-#'                  vi = dat$vi,
-#'                  eta = 5,
-#'                  favor_positive = FALSE,
-#'                  model = "fixed" )
+#'                         vi = dat$vi,
+#'                         eta = 5,
+#'                         favor_positive = FALSE,
+#'                         model = "fixed" )
 #'
 #'  # same selection ratio, but now account for heterogeneity
 #'  # and clustering via robust specification
@@ -116,6 +117,7 @@
 
 pubbias_eta_corrected = function( yi,
                                   vi,
+                                  sei,
                                   eta,
                                   clustervar = 1:length(yi),
                                   model,
@@ -127,6 +129,14 @@ pubbias_eta_corrected = function( yi,
 
   # stop if eta doesn't make sense
   if ( eta < 1 ) stop( "Eta must be at least 1.")
+
+  # resolve vi and sei
+  if (missing(vi)) {
+    if (missing(sei)) {
+      stop("Must specify 'vi' or 'sei' argument.")
+    }
+    vi <- sei ^ 2
+  }
 
   # number of point estimates
   k = length(yi)
@@ -304,6 +314,7 @@ corrected_meta <- function( yi,
 #' @param yi A vector of point estimates to be meta-analyzed. Their signs should be coded such that publication bias is
 #' assumed to favor positive, rather than negative, estimates.
 #' @param vi A vector of estimated variances for the point estimates
+#' @param sei A vector of estimated standard errors for the point estimates (only relevant when not using vi)
 #' @param q The attenuated value to which to shift the point estimate or CI. Should be specified on the same scale as \code{yi}
 #' (e.g., if \code{yi} is on the log-RR scale, then \code{q} should be as well).
 #' @param clustervar A character, factor, or numeric vector with the same length as \code{yi}. Unique values should indicate
@@ -383,6 +394,7 @@ corrected_meta <- function( yi,
 
 pubbias_svalue = function( yi,
                            vi,
+                           sei,
                            q,
                            clustervar = 1:length(yi),
                            model,
@@ -424,6 +436,14 @@ pubbias_svalue = function( yi,
   # stop if eta doesn't make sense
   if ( eta_grid_hi < 1 ) stop( "eta_grid_hi must be at least 1.")
 
+  # resolve vi and sei
+  if (missing(vi)) {
+    if (missing(sei)) {
+      stop("Must specify 'vi' or 'sei' argument.")
+    }
+    vi <- sei ^ 2
+  }
+
   # number of point estimates
   k.studies = length(yi)
 
@@ -438,6 +458,7 @@ pubbias_svalue = function( yi,
   # fit uncorrected model
   m0 = pubbias_eta_corrected( yi = yi,
                               vi = vi,
+                              sei = sei,
                               eta = 1,
                               model = model,
                               clustervar = clustervar,
@@ -613,6 +634,7 @@ pubbias_svalue = function( yi,
       func = function(.eta) {
         est.corr = pubbias_eta_corrected( yi = yi,
                                           vi = vi,
+                                          sei = sei,
                                           eta = .eta,
                                           model = model,
                                           clustervar = clustervar,
@@ -647,6 +669,7 @@ pubbias_svalue = function( yi,
       func = function(.eta) {
         lo.corr = pubbias_eta_corrected( yi = yi,
                                          vi = vi,
+                                         sei = sei,
                                          eta = .eta,
                                          model = model,
                                          clustervar = clustervar,
@@ -752,6 +775,7 @@ svalue <- function( yi,
 #' Numerical sensitivity analyses (via \code{PublicationBias::pubbias_svalue}) should still be carried out for more precise quantitative conclusions.
 #' @param yi A vector of point estimates to be meta-analyzed.
 #' @param vi A vector of estimated variances for the point estimates
+#' @param sei A vector of estimated standard errors for the point estimates (only relevant when not using vi)
 #' @param xmin x-axis (point estimate) lower limit for plot
 #' @param xmax x-axis (point estimate) upper limit for plot
 #' @param ymin y-axis (standard error) lower limit for plot
@@ -827,6 +851,7 @@ svalue <- function( yi,
 
 significance_funnel = function( yi,
                                 vi,
+                                sei,
                                 xmin = min(yi),
                                 xmax = max(yi),
                                 ymin = 0,  # so that pooled points are shown
@@ -838,6 +863,14 @@ significance_funnel = function( yi,
                                 est_N = NA,
                                 alpha_select = 0.05,
                                 plot_pooled = TRUE ) {
+
+  # resolve vi and sei
+  if (missing(vi)) {
+    if (missing(sei)) {
+      stop("Must specify 'vi' or 'sei' argument.")
+    }
+    vi <- sei ^ 2
+  }
 
   d = data.frame(yi, vi)
   d$sei = sqrt(vi)
@@ -978,6 +1011,7 @@ significance_funnel = function( yi,
 #' @param yi A vector of point estimates to be meta-analyzed. The signs of the estimates should be chosen
 #' such that publication bias is assumed to operate in favor of positive estimates.
 #' @param vi A vector of estimated variances for the point estimates
+#' @param sei A vector of estimated standard errors for the point estimates (only relevant when not using vi)
 #' @param alpha_select Alpha-level at which publication probability is assumed to change
 #' @import
 #' stats
@@ -1000,7 +1034,16 @@ significance_funnel = function( yi,
 
 pval_plot = function( yi,
                       vi,
+                      sei,
                       alpha_select = 0.05) {
+
+  # resolve vi and sei
+  if (missing(vi)) {
+    if (missing(sei)) {
+      stop("Must specify 'vi' or 'sei' argument.")
+    }
+    vi <- sei ^ 2
+  }
 
   # calculate 1-tailed p-values
   pval = 1 - pnorm( yi / sqrt(vi) )

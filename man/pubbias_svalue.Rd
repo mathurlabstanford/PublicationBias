@@ -8,6 +8,7 @@
 pubbias_svalue(
   yi,
   vi,
+  sei,
   q,
   clustervar = 1:length(yi),
   model,
@@ -28,7 +29,7 @@ svalue(
   alpha.select = 0.05,
   eta.grid.hi = 200,
   favor.positive,
-  ci.level = 0.95,
+  CI.level = 0.95,
   small = TRUE,
   return.worst.meta = FALSE
 )
@@ -38,6 +39,8 @@ svalue(
 assumed to favor positive, rather than negative, estimates.}
 
 \item{vi}{A vector of estimated variances for the point estimates}
+
+\item{sei}{A vector of estimated standard errors for the point estimates (only relevant when not using vi)}
 
 \item{q}{The attenuated value to which to shift the point estimate or CI. Should be specified on the same scale as \code{yi}
 (e.g., if \code{yi} is on the log-RR scale, then \code{q} should be as well).}
@@ -66,7 +69,7 @@ See Details.}
 
 \item{favor.positive}{(deprecated) see favor_positive}
 
-\item{ci.level}{(deprecated) see ci_level}
+\item{CI.level}{(deprecated) see ci_level}
 
 \item{return.worst.meta}{(deprecated) see return_worst_meta}
 }
