@@ -148,29 +148,7 @@ pubbias_eta_corrected = function( yi,
 
   ##### Flip Estimate Signs If Needed #####
   # if favor_positive == TRUE, then we don't need to fit a naive meta-analysis or do anything
-  if ( favor_positive == TRUE ) {
-    # keep track of whether we flipped for reporting at the end
-    flipped = FALSE
-    yif = yi
-  } else {
-    flipped = TRUE
-    yif = -yi
-  }
-
-  # OLD VERSION: decides whether to flip signs based on naive meta-analysis
-  # # check and flip if naive point estimate is negative
-  # # do standard meta
-  # m0 = rma.uni(yi, vi)
-  #
-  # # reverse signs if needed to have pooled point estimate > 0
-  # if ( m0$b < 0 ) {
-  #   # keep track so that we can flip back at the end
-  #   flipped = TRUE
-  #   yif = -yi
-  # } else {
-  #   flipped = FALSE
-  #   yif = yi
-  # }
+  if ( favor_positive ) yif = yi else yif = -yi
 
   # 2-sided p-values for each study even if 1-tailed selection
   pvals = 2 * ( 1 - pnorm( abs(yif) / sqrt(vi) ) )
@@ -257,11 +235,17 @@ pubbias_eta_corrected = function( yi,
     eta = eta
   } # end robust = TRUE
 
+  data = dat %>% dplyr::rename(affirm = .data$A)
   values = list(eta = eta,
+                model = model,
+                selection_tails = selection_tails,
+                favor_positive = favor_positive,
+                alpha_select = alpha_select,
+                ci_level = ci_level,
+                small = small,
                 k = k,
                 k_affirmative = k_affirmative,
-                k_nonaffirmative = k_nonaffirmative,
-                data = dplyr::rename(dat, affirm = .data$A))
+                k_nonaffirmative = k_nonaffirmative)
 
   stats = list(estimate = est,
                se = se,
@@ -274,7 +258,9 @@ pubbias_eta_corrected = function( yi,
     fit$robust = meta_robu
   }
 
-  return(list(values = values, stats = stats, fit = fit))
+  results <- list(data = data, values = values, stats = stats, fit = fit)
+  class(results) <- "metabias"
+  return(results)
 
 }
 

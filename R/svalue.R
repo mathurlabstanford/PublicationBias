@@ -161,32 +161,19 @@ pubbias_svalue = function( yi,
                               small = small )
 
   est0 = m0$stats$estimate
-  # stop if q is on wrong side of null
   q_error = function(dir) {
-    sprintf( "The uncorrected pooled point estimate is %.2f.
-              q must be %s than this value (i.e., closer to zero).",
+    sprintf( "The uncorrected pooled point estimate is %.2f. q must be %s than this value (i.e., closer to zero).",
              est0, dir)
   }
+  # stop if q is on wrong side of null
   if ( est0 > 0 & q > est0 ) stop( q_error("less") )
   if ( est0 < 0 & q < est0 ) stop( q_error("greater") )
 
-  # # reverse signs if needed to have pooled point estimate > 0
-  # if ( m0$est < 0 ) {
-  #   # keep track so that we can flip back at the end
-  #   flipped = TRUE
-  #   yi = -yi
-  #   q = -q
-  # } else {
-  #   flipped = FALSE
-  # }
+
   ##### Flip Estimate Signs If Needed #####
 
   # if favor_positive == TRUE, then we don't need to fit a naive meta-analysis or do anything
-  if ( favor_positive == TRUE ) {
-    # keep track of whether we flipped for reporting at the end
-    flipped = FALSE
-  } else {
-    flipped = TRUE
+  if ( !favor_positive ) {
     yi = -yi
     q = -q
   }
@@ -405,6 +392,8 @@ pubbias_svalue = function( yi,
     message("sval_ci is not applicable because the naive confidence interval already contains q")
   }
 
+  data = dat %>% dplyr::rename(affirm = .data$A)
+
   values = list(
     q = q,
     model = model,
@@ -415,20 +404,21 @@ pubbias_svalue = function( yi,
     small = small,
     k = k_studies,
     k_affirmative = k_affirmative,
-    k_nonaffirmative = k_nonaffirmative,
-    data = dplyr::rename(dat, affirm = .data$A)
+    k_nonaffirmative = k_nonaffirmative
   )
 
   stats = list( sval_est = sval_est,
                 sval_ci = sval_ci )
 
   fit = list()
-  # meta_worst might not exist if, for example, there is only 1 nonaffirmative study
+  # meta_worst might not exist, e.g. if there is only 1 nonaffirmative study
   if ( return_worst_meta & exists("meta_worst") ) {
     fit$meta_worst = meta_worst
   }
 
-  return(list(values = values, stats = stats, fit = fit))
+  results <- list(data = data, values = values, stats = stats, fit = fit)
+  class(results) <- "metabias"
+  return(results)
 
 }
 
