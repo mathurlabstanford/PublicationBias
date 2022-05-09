@@ -13,11 +13,11 @@ significance_funnel(
   ymax = max(sqrt(vi)),
   xlab = "Point estimate",
   ylab = "Estimated standard error",
-  favor.positive = NA,
-  est.all = NA,
-  est.N = NA,
-  alpha.select = 0.05,
-  plot.pooled = TRUE
+  favor_positive = NA,
+  est_all = NA,
+  est_N = NA,
+  alpha_select = 0.05,
+  plot_pooled = TRUE
 )
 }
 \arguments{
@@ -37,15 +37,15 @@ significance_funnel(
 
 \item{ylab}{Label for y-axis (standard error)}
 
-\item{favor.positive}{\code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.}
+\item{favor_positive}{\code{TRUE} if publication bias is assumed to favor positive estimates; \code{FALSE} if assumed to favor negative estimates.}
 
-\item{est.all}{Regular meta-analytic estimate among all studies (optional)}
+\item{est_all}{Regular meta-analytic estimate among all studies (optional)}
 
-\item{est.N}{Worst-case meta-analytic estimate among only nonaffirmative studies (optional)}
+\item{est_N}{Worst-case meta-analytic estimate among only nonaffirmative studies (optional)}
 
-\item{alpha.select}{Alpha-level at which publication probability is assumed to change}
+\item{alpha_select}{Alpha-level at which publication probability is assumed to change}
 
-\item{plot.pooled}{Should the pooled estimates within all studies and within only the nonaffirmative
+\item{plot_pooled}{Should the pooled estimates within all studies and within only the nonaffirmative
 studies be plotted as well?}
 }
 \description{
@@ -53,13 +53,13 @@ Creates a modified funnel plot that distinguishes between affirmative and nonaff
 the nonaffirmative studies' point estimates are systematically smaller than the entire set of point estimates. The estimate among only nonaffirmative studies (gray diamond)
 represents a corrected estimate under worst-case publication bias. If the gray diamond represents a negligible effect size or if it is much smaller than
 the pooled estimate among all studies (black diamond), this suggests that the meta-analysis may not be robust to extreme publication bias.
-Numerical sensitivity analyses (via \code{PublicationBias::svalue}) should still be carried out for more precise quantitative conclusions.
+Numerical sensitivity analyses (via \code{PublicationBias::pubbias_svalue}) should still be carried out for more precise quantitative conclusions.
 }
 \details{
-By default (\code{plot.pooled = TRUE}), also plots the pooled point
-estimate within all studies, supplied by the user as \code{est.all} (black diamond), and within only the nonaffirmative studies, supplied
-by the user as \code{est.N} (grey diamond). The user can calculate \code{est.all} and \code{est.N} using their choice of meta-analysis model. If instead
-these are not supplied but \code{plot.pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effect") model.
+By default (\code{plot_pooled = TRUE}), also plots the pooled point
+estimate within all studies, supplied by the user as \code{est_all} (black diamond), and within only the nonaffirmative studies, supplied
+by the user as \code{est_N} (grey diamond). The user can calculate \code{est_all} and \code{est_N} using their choice of meta-analysis model. If instead
+these are not supplied but \code{plot_pooled = TRUE}, these pooled estimates will be automatically calculated using a fixed-effects (a.k.a. "common-effect") model.
 }
 \examples{
 
@@ -70,7 +70,7 @@ require(metafor)
 dat = metafor::escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 
 # flip signs since we think publication bias operates in favor of negative effects
-# alternatively, if not flipping signs, could pass favor.positive = FALSE to
+# alternatively, if not flipping signs, could pass favor_positive = FALSE to
 #  significance_funnel
 dat$yi = -dat$yi
 
@@ -102,9 +102,9 @@ meta.worst =  robu( yi ~ 1,
 #  not provided by the user
 significance_funnel( yi = dat$yi,
                      vi = dat$vi,
-                     favor.positive = TRUE,
-                     alpha.select = 0.50,
-                     plot.pooled = TRUE )
+                     favor_positive = TRUE,
+                     alpha_select = 0.50,
+                     plot_pooled = TRUE )
 }
 \references{
 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.

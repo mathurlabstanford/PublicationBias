@@ -1,8 +1,8 @@
 Package: PublicationBias
 Type: Package
 Title: Sensitivity Analysis for Publication Bias in Meta-Analyses
-Version: 2.2.0
-Author: Maya B. Mathur, Tyler J. VanderWeele
+Version: 2.2.0.9000
+Author: Maya B. Mathur, Tyler J. VanderWeele, Mika Braginsky
 Maintainer: Maya B. Mathur <mmathur@stanford.edu>
 Description: Performs sensitivity analysis for publication bias in meta-analyses (per Mathur & VanderWeele, 2020 [<https://osf.io/s9dp6>]).
     These analyses enable statements such as: "For publication bias to shift the observed point estimate to the null,
@@ -15,4 +15,4 @@ Encoding: UTF-8
 Imports: metafor, stats, dplyr, robumeta, ggplot2, Rdpack, MetaUtility
 RdMacros: Rdpack
 LazyData: true
-RoxygenNote: 7.1.1
+RoxygenNote: 7.1.2
