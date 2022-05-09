@@ -53,9 +53,9 @@ sim_data = function(p) {
 #                           eta = 1 ) )
 
 
-# does corrected_meta agree with regular meta-analysis fns when there
+# does pubbias_eta_corrected agree with regular meta-analysis fns when there
 #  is no selection?
-test_that("corrected_meta #1", {
+test_that("pubbias_eta_corrected #1", {
 
   ##### Recover Regular FE model With Eta = 1 #####
   # when using z-based inference and eta = 1,
@@ -64,20 +64,20 @@ test_that("corrected_meta #1", {
   FE.plain = rma( yi, vi, data = dat, method = "FE" )
   # should match corrected with eta = 1
 
-  FE.adj = corrected_meta( yi = dat$yi,
+  FE.adj = pubbias_eta_corrected( yi = dat$yi,
                              vi = dat$vi,
                              eta = 1,
                              model = "fixed",
-                             selection.tails = 1,
-                             CI.level = 0.95,
+                             selection_tails = 1,
+                             ci_level = 0.95,
                              small = FALSE,
-                           favor.positive = FALSE )
+                           favor_positive = FALSE )$stats
 
-  expect_equal( FE.adj$est, as.numeric(FE.plain$b), tol = 0.001 )
+  expect_equal( FE.adj$estimate, as.numeric(FE.plain$b), tol = 0.001 )
   expect_equal( FE.adj$se, as.numeric(FE.plain$se), tol = 0.001 )
-  expect_equal( FE.adj$lo, as.numeric(FE.plain$ci.lb), tol = 0.001 )
-  expect_equal( FE.adj$hi, as.numeric(FE.plain$ci.ub), tol = 0.001 )
-  expect_equal( FE.adj$pval, as.numeric(FE.plain$pval), tol = 0.001 )
+  expect_equal( FE.adj$ci_lower, as.numeric(FE.plain$ci.lb), tol = 0.001 )
+  expect_equal( FE.adj$ci_upper, as.numeric(FE.plain$ci.ub), tol = 0.001 )
+  expect_equal( FE.adj$p_value, as.numeric(FE.plain$pval), tol = 0.001 )
 
   ##### Recover Regular Robust Indepenent Model With Eta = 1 #####
   for ( .small in c(TRUE, FALSE) ) {
@@ -95,20 +95,20 @@ test_that("corrected_meta #1", {
                       small = .small )
 
 
-    RI.adj = corrected_meta( yi = dat$yi,
+    RI.adj = pubbias_eta_corrected( yi = dat$yi,
                              vi = dat$vi,
                              eta = 1,
                              model = "robust",
-                             selection.tails = 1,
-                             CI.level = 0.95,
+                             selection_tails = 1,
+                             ci_level = 0.95,
                              small = .small,
-                             favor.positive = FALSE)
+                             favor_positive = FALSE)$stats
 
-    expect_equal( RI.adj$est, as.numeric( as.numeric(RI.robust$b.r) ), tol = 0.001 )
+    expect_equal( RI.adj$estimate, as.numeric( as.numeric(RI.robust$b.r) ), tol = 0.001 )
     expect_equal( RI.adj$se, as.numeric( RI.robust$reg_table$SE ), tol = 0.001 )
-    expect_equal( RI.adj$lo, as.numeric( RI.robust$reg_table$CI.L ), tol = 0.001 )
-    expect_equal( RI.adj$hi, as.numeric( RI.robust$reg_table$CI.U ), tol = 0.001 )
-    expect_equal( RI.adj$pval, as.numeric( RI.robust$reg_table$prob ), tol = 0.001 )
+    expect_equal( RI.adj$ci_lower, as.numeric( RI.robust$reg_table$CI.L ), tol = 0.001 )
+    expect_equal( RI.adj$ci_upper, as.numeric( RI.robust$reg_table$CI.U ), tol = 0.001 )
+    expect_equal( RI.adj$p_value, as.numeric( RI.robust$reg_table$prob ), tol = 0.001 )
   }
 
 
@@ -128,53 +128,53 @@ test_that("corrected_meta #1", {
                       small = .small )
 
 
-    RI.adj = corrected_meta( yi = dat$yi,
+    RI.adj = pubbias_eta_corrected( yi = dat$yi,
                              vi = dat$vi,
                              eta = 1,
                              model = "robust",
                              clustervar = clustervar,
-                             selection.tails = 1,
-                             CI.level = 0.95,
+                             selection_tails = 1,
+                             ci_level = 0.95,
                              small = .small,
-                             favor.positive = FALSE)
+                             favor_positive = FALSE)$stats
 
-    expect_equal( RI.adj$est, as.numeric( as.numeric(RI.robust$b.r) ), tol = 0.001 )
+    expect_equal( RI.adj$estimate, as.numeric( as.numeric(RI.robust$b.r) ), tol = 0.001 )
     expect_equal( RI.adj$se, as.numeric( RI.robust$reg_table$SE ), tol = 0.001 )
-    expect_equal( RI.adj$lo, as.numeric( RI.robust$reg_table$CI.L ), tol = 0.001 )
-    expect_equal( RI.adj$hi, as.numeric( RI.robust$reg_table$CI.U ), tol = 0.001 )
-    expect_equal( RI.adj$pval, as.numeric( RI.robust$reg_table$prob ), tol = 0.001 )
+    expect_equal( RI.adj$ci_lower, as.numeric( RI.robust$reg_table$CI.L ), tol = 0.001 )
+    expect_equal( RI.adj$ci_upper, as.numeric( RI.robust$reg_table$CI.U ), tol = 0.001 )
+    expect_equal( RI.adj$p_value, as.numeric( RI.robust$reg_table$prob ), tol = 0.001 )
   }
 
 })
 
 
-# do svalue and corrected_meta agree?
-test_that("svalue #1", {
+# do pubbias_svalue and pubbias_eta_corrected agree?
+test_that("pubbias_svalue #1", {
 
   dat = escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 
-  for ( .CI.level in c(.8, .95) ) {
+  for ( .ci_level in c(.8, .95) ) {
     for ( .small in c(TRUE, FALSE) ) {
 
-      svals = svalue( yi = dat$yi,
+      svals = pubbias_svalue( yi = dat$yi,
                       vi = dat$vi,
                       q = 0,
                       model = "fixed",
-                      CI.level = 0.95,
+                      ci_level = 0.95,
                       small = .small,
-                      favor.positive = FALSE )
+                      favor_positive = FALSE )
 
-      # CI upper limit should be exactly 0 when eta = sval.ci
-      meta = corrected_meta( yi = dat$yi,
+      # CI upper limit should be exactly 0 when eta = sval_ci
+      meta = pubbias_eta_corrected( yi = dat$yi,
                              vi = dat$vi,
-                             eta = as.numeric(svals$sval.ci),
+                             eta = as.numeric(svals$stats$sval_ci),
                              model = "fixed",
-                             selection.tails = 1,
-                             CI.level = 0.95,
+                             selection_tails = 1,
+                             ci_level = 0.95,
                              small = .small,
-                             favor.positive = FALSE )
+                             favor_positive = FALSE )$stats
 
-      expect_equal( meta$hi, 0 )
+      expect_equal( meta$ci_upper, 0 )
 
     }
   }
@@ -184,18 +184,18 @@ test_that("svalue #1", {
 
 
 # # is worst-case meta correct for both 1-tailed and 2-tailed selection?
-# test_that("svalue #2", {
+# test_that("pubbias_svalue #2", {
 #
 #   dat = escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 #   # doctor one data point so that 2-tailed will be different from 1-tailed
 #   dat$yi[2] = -dat$yi[2]
 #
 #   # first get worst-case meta-analysis using package
-#   m2 = svalue( yi = dat$yi,
+#   m2 = pubbias_svalue( yi = dat$yi,
 #                vi = dat$vi,
 #                q = 0,
 #                model = "fixed",
-#                CI.level = 0.95,
+#                ci_level = 0.95,
 #                small = FALSE )$meta.bd
 #
 #   # flip signs
@@ -228,77 +228,77 @@ test_that("svalue #1", {
 
 # does it reject bad choices of q?
 # i.e., the point estimate is already closer to the null than q
-test_that( "svalue #3", {
+test_that( "pubbias_svalue #3", {
   dat = escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 
-  expect_error( svalue( yi = dat$yi,
+  expect_error( pubbias_svalue( yi = dat$yi,
           vi = dat$vi,
           q = -3,
           model = "fixed",
-          CI.level = 0.95,
+          ci_level = 0.95,
           small = FALSE,
-          favor.positive = FALSE) )
+          favor_positive = FALSE) )
 
   # reverse signs
-  expect_error( svalue( yi = -dat$yi,
+  expect_error( pubbias_svalue( yi = -dat$yi,
                         vi = dat$vi,
                         q = .8,
                         model = "fixed",
-                        CI.level = 0.95,
+                        ci_level = 0.95,
                         small = FALSE,
-                        favor.positive = FALSE) )
+                        favor_positive = FALSE) )
 } )
 
 
 # does it produce appropriate warnings when q is already inside the CI?
-test_that("svalue #3.5", {
+test_that("pubbias_svalue #3.5", {
   dat = escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
 
   # fixed case
   # naive: -0.4302852 [-0.5096613, -0.3509091]
   # should give message about sval.ci not applying
-  expect_message( svalue( yi = dat$yi,
+  expect_message( pubbias_svalue( yi = dat$yi,
                           vi = dat$vi,
                           q = -0.4,  # closer to null than naive estimate, but within CI (from being in browser and looking at m0)
                           model = "fixed",
-                          CI.level = 0.95,
+                          ci_level = 0.95,
                           small = FALSE,
-                          favor.positive = FALSE) )
+                          favor_positive = FALSE) )
 
   # should run without message/error
-  svalue( yi = dat$yi,
+  pubbias_svalue( yi = dat$yi,
           vi = dat$vi,
           q = -0.3,  # closer to null than naive estimate, but within CI (from being in browser and looking at m0)
           model = "fixed",
-          CI.level = 0.95,
+          ci_level = 0.95,
           small = FALSE,
-          favor.positive = FALSE)
+          favor_positive = FALSE)
 
   # robust case and flipped signs
   # naive: 0.7145323 [0.3241296, 1.104935]
-  expect_message( svalue( yi = -dat$yi,
+  expect_message( pubbias_svalue( yi = -dat$yi,
                           vi = dat$vi,
                           q = 0.6,  # closer to null than naive estimate, but within CI
                           model = "robust",
-                          CI.level = 0.95,
+                          ci_level = 0.95,
                           small = FALSE,
-                          favor.positive = TRUE) )
+                          favor_positive = TRUE) )
 
   # should run without message or error
-  svalue( yi = -dat$yi,
+  pubbias_svalue( yi = -dat$yi,
                           vi = dat$vi,
                           q = 0.3,  # closer to null than naive estimate, but within CI
                           model = "robust",
-                          CI.level = 0.95,
+                          ci_level = 0.95,
                           small = FALSE,
-                          favor.positive = TRUE)
+                          favor_positive = TRUE)
 })
 
 
 
-# does svalue give correct results when the s-value is greater than the highest
+# does pubbias_svalue give correct results when the s-value is greater than the highest
 #  value in eta grid?
-test_that( "svalue #4", {
+test_that( "pubbias_svalue #4", {
 
   eta = 3
 
@@ -311,14 +311,15 @@ test_that( "svalue #4", {
                             sei.max = 1,
                             eta = eta ) )
 
-  svals = svalue( yi = d$yi,
+  svals = pubbias_svalue( yi = d$yi,
           vi = d$vi,
           q = 0,
           model = "robust",
-          eta.grid = seq(1,10,1),
-          CI.level = 0.95,
+          # eta_grid_hi = 10,
+          # eta_grid = seq(1,10,1),
+          ci_level = 0.95,
           small = FALSE,
-          favor.positive = FALSE)
+          favor_positive = FALSE)
 
 
 } )
@@ -343,7 +344,7 @@ test_that( "significance_funnel #1", {
   # also see if significance_funnel works
   expect_error( significance_funnel( yi = d$yi,
                        vi = d$vi,
-                       favor.positive = FALSE) )
+                       favor_positive = FALSE) )
 } )
 
 
@@ -381,13 +382,13 @@ test_that( "significance_funnel #1", {
 #                      vi = d$vi )
 #
 # ### fixed effects
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         q = 0,
 #         model = "fixed",
 #         small = TRUE)
 #
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         q = r_to_z(0.1),
 #         model = "fixed",
@@ -395,24 +396,24 @@ test_that( "significance_funnel #1", {
 #
 #
 # ### robust independent
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         q = 0,
 #         model = "robust" )
 #
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         q = r_to_z(0.1),
 #         model = "robust" )
 #
 # ### robust clusters
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         clustervar = d$study,
 #         q = 0,
 #         model = "robust" )
 #
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         clustervar = d$study,
 #         q = r_to_z(0.1),
@@ -430,14 +431,14 @@ test_that( "significance_funnel #1", {
 #                      vi = d$vi )
 #
 # ### fixed effects
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         q = 0,
 #         model = "fixed",
 #         small = TRUE)
 # # matches :)
 #
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         q = r_to_z(0.1),
 #         model = "fixed",
@@ -445,36 +446,36 @@ test_that( "significance_funnel #1", {
 #
 #
 # ### robust independent
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         q = 0,
 #         model = "robust" )
 #
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         q = r_to_z(0.1),
 #         model = "robust" )
 # # should move CI to 0.10
-# corrected_meta( yi = d$yi,
+# pubbias_eta_corrected( yi = d$yi,
 #                 vi = d$vi,
 #                 eta = 5.25,
 #                 model = "robust" )
 # # yes :)
 #
 # ### robust clusters
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         clustervar = d$cluster,
 #         q = 0,
 #         model = "robust" )
 #
-# svalue( yi = d$yi,
+# pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
 #         clustervar = d$cluster,
 #         q = r_to_z(0.1),
 #         model = "robust" )
 # # should move CI to 0.10
-# corrected_meta( yi = d$yi,
+# pubbias_eta_corrected( yi = d$yi,
 #                 vi = d$vi,
 #                 eta = 3.5,
 #                 model = "robust",

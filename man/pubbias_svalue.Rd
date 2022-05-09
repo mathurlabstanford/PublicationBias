@@ -74,12 +74,12 @@ See Details.}
 \item{return.worst.meta}{(deprecated) see return_worst_meta}
 }
 \value{
-The function returns: the amount of publication bias required to attenuate the pooled point estimate to \code{q} (\code{sval.est}),
-the amount of publication bias required to attenuate the confidence interval limit of the pooled point estimate to \code{q} (\code{sval.ci}),
-the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k.affirmative} and \code{k.nonaffirmative}),
-and an indicator for whether the point estimates' signs were recoded (\code{signs.recoded}).
+The function returns: the amount of publication bias required to attenuate the pooled point estimate to \code{q} (\code{sval_est}),
+the amount of publication bias required to attenuate the confidence interval limit of the pooled point estimate to \code{q} (\code{sval_ci}),
+the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k_affirmative} and \code{k_nonaffirmative}),
+and an indicator for whether the point estimates' signs were recoded (\code{signs_recoded}).
 
-If \code{return_worst_meta = TRUE}, also returns the worst-case meta-analysis of only the nonaffirmative studies. If \code{model = "fixed"}, the worst-case meta-analysis is fit by \code{metafor::rma.uni}. If \code{model = "robust"}, it is fit by \code{robumeta::robu}. Note that in the latter case, custom inverse-variance weights are used, which are the inverse of the sum of the study's variance and a heterogeneity estimate from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020). This is done for consistency with the results of \code{pubbias_eta_corrected}, which is used to determine \code{sval.est} and \code{sval.ci}. Therefore, the worst-case meta-analysis results may differ slightly from what you would obtain if you simply fit \code{robumeta::robu} on the nonaffirmative studies with the default weights.
+If \code{return_worst_meta = TRUE}, also returns the worst-case meta-analysis of only the nonaffirmative studies. If \code{model = "fixed"}, the worst-case meta-analysis is fit by \code{metafor::rma.uni}. If \code{model = "robust"}, it is fit by \code{robumeta::robu}. Note that in the latter case, custom inverse-variance weights are used, which are the inverse of the sum of the study's variance and a heterogeneity estimate from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020). This is done for consistency with the results of \code{pubbias_eta_corrected}, which is used to determine \code{sval_est} and \code{sval_ci}. Therefore, the worst-case meta-analysis results may differ slightly from what you would obtain if you simply fit \code{robumeta::robu} on the nonaffirmative studies with the default weights.
 }
 \description{
 Estimates the S-value, defined as the severity of publication bias (i.e., the ratio
@@ -94,7 +94,7 @@ than nonaffirmative studies (i.e., those with a "nonsignificant" or negative est
 \code{q}.
 
 If \code{favor_positive == FALSE}, such that publication bias is assumed to favor negative rather than positive estimates, the signs of \code{yi} will be reversed prior to
-performing analyses. The returned number of affirmative and nonaffirmative studies will reflect the recoded signs, and accordingly the returned value \code{signs.recoded} will be \code{TRUE}.
+performing analyses. The returned number of affirmative and nonaffirmative studies will reflect the recoded signs, and accordingly the returned value \code{signs_recoded} will be \code{TRUE}.
 }
 \examples{
  # calculate effect sizes from example dataset in metafor
@@ -103,30 +103,30 @@ performing analyses. The returned number of affirmative and nonaffirmative studi
 
  ##### Fixed-Effects Specification #####
  # S-values and worst-case meta-analysis under fixed-effects specification
- svals.FE.0 = pubbias_svalue( yi = dat$yi,
-                              vi = dat$vi,
-                              q = 0,
-                              favor_positive = FALSE,
-                              model = "fixed" )
+ svals_fixed_0 = pubbias_svalue( yi = dat$yi,
+                                 vi = dat$vi,
+                                 q = 0,
+                                 favor_positive = FALSE,
+                                 model = "fixed" )
 
  # publication bias required to shift point estimate to 0
- svals.FE.0$sval.est
+ svals_fixed_0$stats$sval_est
 
  # and to shift CI to include 0
- svals.FE.0$sval.ci
+ svals_fixed_0$stats$sval_ci
 
  # now try shifting to a nonzero value (RR = 0.90)
- svals.FE.q = pubbias_svalue( yi = dat$yi,
-                              vi = dat$vi,
-                              q = log(.9),
-                              favor_positive = FALSE,
-                              model = "fixed" )
+ svals_fixed_q = pubbias_svalue( yi = dat$yi,
+                                 vi = dat$vi,
+                                 q = log(.9),
+                                 favor_positive = FALSE,
+                                 model = "fixed" )
 
  # publication bias required to shift point estimate to RR = 0.90
- svals.FE.q$sval.est
+ svals_fixed_q$stats$sval_est
 
  # and to shift CI to RR = 0.90
- svals.FE.q$sval.ci
+ svals_fixed_q$stats$sval_ci
 
  ##### Robust Clustered Specification #####
  pubbias_svalue( yi = dat$yi,

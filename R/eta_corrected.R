@@ -36,7 +36,7 @@
 #' @return
 #' The function returns: the corrected pooled point estimate (\code{est}) potentially with its sign recoded as indicated by \code{signs.recoded},
 #' inference on the bias-corrected estimate (\code{se}, \code{lo}, \code{hi}, \code{pval}), the user's
-#' specified \code{eta}, the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k.affirmative} and \code{k.nonaffirmative}),
+#' specified \code{eta}, the number of affirmative and nonaffirmative studies after any needed recoding of signs (\code{k_affirmative} and \code{k_nonaffirmative}),
 #' and an indicator for whether the point estimates' signs were recoded (\code{signs.recoded}).
 #' @references
 #' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
@@ -79,30 +79,21 @@
 #'
 #'  ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
 #'  # range of parameters to try (more dense at the very small ones)
-#'  eta.list = as.list( c( 200, 150, 100, 50, 40, 30, 20, rev( seq(1,15,1) ) ) )
-#'  res.list = lapply( eta.list, function(x) {
-#'                      cat("\n Working on eta = ", x)
-#'                      return( pubbias_eta_corrected( yi = dat$yi,
-#'                                                     vi = dat$vi,
-#'                                                     eta = x,
-#'                                                     model = "robust",
-#'                                                     favor_positive = FALSE,
-#'                                                     clustervar = dat$author ) )
-#'                                          }
-#'                        )
+#'  etas = c( 200, 150, 100, 50, 40, 30, 20, seq(15, 1) )
 #'
-#'  # put results for each eta in a dataframe
-#'  res.df = as.data.frame( do.call( "rbind", res.list ) )
+#'  # compute estimate for each value of eta
+#'  estimates = lapply(etas, function(e) {
+#'    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, eta = e, model = "robust",
+#'                           clustervar = dat$author, favor_positive = FALSE )$stats
+#'  })
+#'  estimates = dplyr::bind_rows(estimates)
+#'  estimates$eta = etas
 #'
 #'  require(ggplot2)
-#'  ggplot( data = res.df, aes( x = eta, y = est ) ) +
-#'
-#'    geom_ribbon( data = res.df, aes( x = eta, ymin = lo, ymax = hi ), fill = "gray" ) +
-#'
+#'  ggplot( estimates, aes( x = eta, y = estimate ) ) +
+#'    geom_ribbon( aes( ymin = ci_lower, ymax = ci_upper ), fill = "gray" ) +
 #'    geom_line( lwd = 1.2 ) +
-#'    xlab( bquote( eta ) ) +
-#'    ylab( bquote( hat(mu)[eta] ) ) +
-#'
+#'    labs( x = bquote( eta ), y = bquote( hat(mu)[eta] ) ) +
 #'    theme_classic()
 
 pubbias_eta_corrected = function( yi,
@@ -173,10 +164,10 @@ pubbias_eta_corrected = function( yi,
   if ( selection_tails == 1 ) A = (pvals < alpha_select) & (yif > 0)
   if ( selection_tails == 2 ) A = (pvals < alpha_select)
 
-  k.affirmative = sum(A)
-  k.nonaffirmative = k - sum(A)
+  k_affirmative = sum(A)
+  k_nonaffirmative = k - sum(A)
 
-  if ( k.affirmative == 0 | k.nonaffirmative == 0 ) {
+  if ( k_affirmative == 0 | k_nonaffirmative == 0 ) {
     stop( "There are zero affirmative studies or zero nonaffirmative studies. Model estimation cannot proceed.")
   }
 
@@ -209,7 +200,7 @@ pubbias_eta_corrected = function( yi,
       lo = est - qnorm( 1 - (alpha/2) ) * sqrt(var)
       hi = est + qnorm( 1 - (alpha/2) ) * sqrt(var)
       z =  abs( est / sqrt(var) )
-      pval.est = 2 * ( 1 - pnorm( z ) )
+      pval_est = 2 * ( 1 - pnorm( z ) )
     }
 
     # t-based inference
@@ -218,7 +209,7 @@ pubbias_eta_corrected = function( yi,
       lo = est - qt( 1 - (alpha/2), df = df ) * sqrt(var)
       hi = est + qt( 1 - (alpha/2), df = df ) * sqrt(var)
       t =  abs( est / sqrt(var) )
-      pval.est = 2 * ( 1 - pt( t, df = df ) )
+      pval_est = 2 * ( 1 - pt( t, df = df ) )
     }
   } # end fixed = TRUE
 
@@ -231,35 +222,45 @@ pubbias_eta_corrected = function( yi,
 
     # initialize a dumb (unclustered and uncorrected) version of tau^2
     # which is only used for constructing weights
-    meta.re = rma.uni( yi = yi,
+    meta_re = rma.uni( yi = yi,
                        vi = vi)
-    t2hat.naive = meta.re$tau2
+    t2hat_naive = meta_re$tau2
 
     # fit weighted robust model
-    meta.robu = robu( yi ~ 1,
+    meta_robu = robu( yi ~ 1,
                       studynum = clustervar,
                       data = dat,
-                      userweights = weights / (vi + t2hat.naive),
+                      userweights = weights / (vi + t2hat_naive),
                       var.eff.size = vi,
                       small = small )
 
-    est = as.numeric(meta.robu$b.r)
-    se = meta.robu$reg_table$SE
-    lo = meta.robu$reg_table$CI.L
-    hi = meta.robu$reg_table$CI.U
-    pval.est = meta.robu$reg_table$prob
+    est = as.numeric(meta_robu$b.r)
+    se = meta_robu$reg_table$SE
+    lo = meta_robu$reg_table$CI.L
+    hi = meta_robu$reg_table$CI.U
+    pval_est = meta_robu$reg_table$prob
     eta = eta
   } # end robust = TRUE
 
-  return( data.frame( est,
-                      se,
-                      lo,
-                      hi,
-                      pval = pval.est,
-                      eta = eta,
-                      k.affirmative,
-                      k.nonaffirmative,
-                      signs.recoded = flipped ) )
+  values = list(eta = eta,
+                k = k,
+                k_affirmative = k_affirmative,
+                k_nonaffirmative = k_nonaffirmative,
+                data = dplyr::rename(dat, affirm = .data$A))
+
+  stats = list(estimate = est,
+               se = se,
+               ci_lower = lo,
+               ci_upper = hi,
+               p_value = pval_est)
+
+  fit = list()
+  if ( exists("meta_robu") ) {
+    fit$robust = meta_robu
+  }
+
+  return(list(values = values, stats = stats, fit = fit))
+
 }
 
 
