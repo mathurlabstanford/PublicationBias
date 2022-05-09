@@ -83,21 +83,21 @@ dat$yi = -dat$yi
 #  seem to be from unique papers
 # thus, each study gets its own studynum
 require(robumeta)
-meta.all =  robu( yi ~ 1,
-                  studynum = 1:nrow(dat),
-                  data = dat,
-                  var.eff.size = vi,
-                  small = TRUE )
+meta.all =  robumeta::robu( yi ~ 1,
+                            studynum = 1:nrow(dat),
+                            data = dat,
+                            var.eff.size = vi,
+                            small = TRUE )
 
 # optional: calculate worst-case estimate (for the gray diamond)
 #  by analyzing only the nonaffirmative studies
 dat$pval = 2 * ( 1 - pnorm( abs( dat$yi / sqrt(dat$vi) ) ) )  # two-tailed p-value
 dat$affirm = (dat$yi > 0) & (dat$pval < 0.05)  # is study affirmative?
-meta.worst =  robu( yi ~ 1,
-                    studynum = 1:nrow( dat[ dat$affirm == TRUE, ] ),
-                    data = dat[ dat$affirm == TRUE, ],
-                    var.eff.size = vi,
-                    small = TRUE )
+meta.worst =  robumeta::robu( yi ~ 1,
+                              studynum = 1:nrow( dat[ dat$affirm == TRUE, ] ),
+                              data = dat[ dat$affirm == TRUE, ],
+                              var.eff.size = vi,
+                              small = TRUE )
 
 ##### Make Significance Funnel with Alpha = 0.50 and Default Pooled Estimates #####
 # change alpha to 0.50 just for illustration

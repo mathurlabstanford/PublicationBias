@@ -17,15 +17,6 @@
 #' @param ci_level Confidence interval level (as proportion) for the corrected point estimate. (The alpha level for inference on the corrected
 #' point estimate will be calculated from \code{ci_level}.)
 #' @param small Should inference allow for a small meta-analysis? We recommend always using TRUE.
-#' @import
-#' metafor
-#' stats
-#' robumeta
-#' ggplot2
-#' graphics
-#' MetaUtility
-#' @importFrom
-#' dplyr %>% group_by summarise
 #' @export
 #' @details
 #' The ratio \code{eta} represents the number of times more likely affirmative studies (i.e., those with a "statistically significant" and positive estimate)
@@ -48,7 +39,7 @@
 #'  # first fit fixed-effects model without any bias correction
 #'  # since the point estimate is negative here, we'll assume publication bias favors negative
 #'  #  log-RRs rather than positive ones
-#'  rma( yi, vi, data = dat, method = "FE" )
+#'  metafor::rma( yi, vi, data = dat, method = "FE" )
 #'
 #'  # warmup
 #'  # note that passing eta = 1 (no publication bias) yields the naive point estimate
@@ -178,9 +169,9 @@ pubbias_eta_corrected = function( yi,
   if ( model == "fixed" ) {
 
     # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
-    strat = dat %>% group_by(A) %>%
-      summarise( nu = sum( 1 / vi ),
-                 ybar = sum( yi / vi ) )
+    strat = dat %>% dplyr::group_by(A) %>%
+      dplyr::summarise( nu = sum( 1 / vi ),
+                        ybar = sum( yi / vi ) )
 
     # components of bias-corrected estimate by affirmative status
     ybarN = strat$ybar[ strat$A == 0 ]
@@ -222,17 +213,17 @@ pubbias_eta_corrected = function( yi,
 
     # initialize a dumb (unclustered and uncorrected) version of tau^2
     # which is only used for constructing weights
-    meta_re = rma.uni( yi = yi,
-                       vi = vi)
+    meta_re = metafor::rma.uni( yi = yi,
+                                vi = vi)
     t2hat_naive = meta_re$tau2
 
     # fit weighted robust model
-    meta_robu = robu( yi ~ 1,
-                      studynum = clustervar,
-                      data = dat,
-                      userweights = weights / (vi + t2hat_naive),
-                      var.eff.size = vi,
-                      small = small )
+    meta_robu = robumeta::robu( yi ~ 1,
+                                studynum = clustervar,
+                                data = dat,
+                                userweights = weights / (vi + t2hat_naive),
+                                var.eff.size = vi,
+                                small = small )
 
     est = as.numeric(meta_robu$b.r)
     se = meta_robu$reg_table$SE

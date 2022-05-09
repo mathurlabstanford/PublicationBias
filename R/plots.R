@@ -20,12 +20,6 @@
 #' @param alpha_select Alpha-level at which publication probability is assumed to change
 #' @param plot_pooled Should the pooled estimates within all studies and within only the nonaffirmative
 #' studies be plotted as well?
-#' @import
-#' metafor
-#' stats
-#' ggplot2
-#' graphics
-#' robumeta
 #' @details
 #' By default (\code{plot_pooled = TRUE}), also plots the pooled point
 #' estimate within all studies, supplied by the user as \code{est_all} (black diamond), and within only the nonaffirmative studies, supplied
@@ -53,21 +47,21 @@
 #' #  seem to be from unique papers
 #' # thus, each study gets its own studynum
 #' require(robumeta)
-#' meta.all =  robu( yi ~ 1,
-#'                   studynum = 1:nrow(dat),
-#'                   data = dat,
-#'                   var.eff.size = vi,
-#'                   small = TRUE )
+#' meta.all =  robumeta::robu( yi ~ 1,
+#'                             studynum = 1:nrow(dat),
+#'                             data = dat,
+#'                             var.eff.size = vi,
+#'                             small = TRUE )
 #'
 #' # optional: calculate worst-case estimate (for the gray diamond)
 #' #  by analyzing only the nonaffirmative studies
 #' dat$pval = 2 * ( 1 - pnorm( abs( dat$yi / sqrt(dat$vi) ) ) )  # two-tailed p-value
 #' dat$affirm = (dat$yi > 0) & (dat$pval < 0.05)  # is study affirmative?
-#' meta.worst =  robu( yi ~ 1,
-#'                     studynum = 1:nrow( dat[ dat$affirm == TRUE, ] ),
-#'                     data = dat[ dat$affirm == TRUE, ],
-#'                     var.eff.size = vi,
-#'                     small = TRUE )
+#' meta.worst =  robumeta::robu( yi ~ 1,
+#'                               studynum = 1:nrow( dat[ dat$affirm == TRUE, ] ),
+#'                               data = dat[ dat$affirm == TRUE, ],
+#'                               var.eff.size = vi,
+#'                               small = TRUE )
 #'
 #' ##### Make Significance Funnel with Alpha = 0.50 and Default Pooled Estimates #####
 #' # change alpha to 0.50 just for illustration
@@ -146,13 +140,13 @@ significance_funnel = function( yi,
   # pooled fixed-effects estimates
   # if not supplied, gets them from common-effect model
   if ( is.na(est_N) & is.na(est_all) ) {
-    est_N = rma.uni(yi = d$yi[ d$affirm == "Non-affirmative" ],
-                    vi = d$vi[ d$affirm == "Non-affirmative" ],
-                    method="FE")$b
+    est_N = metafor::rma.uni(yi = d$yi[ d$affirm == "Non-affirmative" ],
+                             vi = d$vi[ d$affirm == "Non-affirmative" ],
+                             method="FE")$b
 
-    est_all = rma.uni(yi = d$yi,
-                      vi = d$vi,
-                      method="FE")$b
+    est_all = metafor::rma.uni(yi = d$yi,
+                               vi = d$vi,
+                               method="FE")$b
   }
 
   # set up pooled estimates for plotting
@@ -174,16 +168,16 @@ significance_funnel = function( yi,
   ##### Make the Plot #####
   colors = c("darkgray", "orange")
 
-  p.funnel = ggplot( data = d, aes( x = d$yi,
-                                    y = d$sei,
-                                    color = d$affirm ) )
+  p.funnel = ggplot( data = d, aes( x = .data$yi,
+                                    y = .data$sei,
+                                    color = .data$affirm ) )
 
   if ( plot_pooled == TRUE ) {
 
     # plot the pooled points
     p.funnel = p.funnel + geom_point(
       data = pooled.pts,
-      aes( x = pooled.pts$yi, y = pooled.pts$sei ),
+      aes( x = .data$yi, y = .data$sei ),
       size = 4,
       shape = 5,
       fill = NA,
@@ -192,7 +186,7 @@ significance_funnel = function( yi,
 
       geom_point(
         data = pooled.pts,
-        aes( x = pooled.pts$yi, y = pooled.pts$sei ),
+        aes( x = .data$yi, y = .data$sei ),
         size = 4,
         shape = 18,
         color = c(colors[1], "black"),
@@ -241,9 +235,6 @@ significance_funnel = function( yi,
 #' @param vi A vector of estimated variances for the point estimates
 #' @param sei A vector of estimated standard errors for the point estimates (only relevant when not using vi)
 #' @param alpha_select Alpha-level at which publication probability is assumed to change
-#' @import
-#' stats
-#' ggplot2
 #' @export
 #' @references
 #' 1. Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for publication bias in meta-analyses. \emph{Journal of the Royal Statistical Society, Series C.} Preprint available at https://osf.io/s9dp6/.
@@ -276,7 +267,7 @@ pval_plot = function( yi,
   pval = 1 - pnorm( yi / sqrt(vi) )
 
   ggplot( data = data.frame(pval = pval),
-          aes( x = pval ) ) +
+          aes( x = .data$pval ) ) +
     geom_vline(xintercept = alpha_select/2, color = "red", lwd = 1) +
     geom_vline(xintercept = 1 - (alpha_select/2), color = "red", lwd = 1) +
     geom_histogram( binwidth = 0.025 ) +

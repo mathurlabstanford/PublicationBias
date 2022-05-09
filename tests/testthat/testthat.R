@@ -1,5 +1,4 @@
 library(testthat)
-#library(MetaUtility)
 library(devtools)
 library(metafor)
 
@@ -315,7 +314,7 @@ test_that( "pubbias_svalue #4", {
           vi = d$vi,
           q = 0,
           model = "robust",
-          # eta_grid_hi = 10,
+          eta_grid_hi = 10,
           # eta_grid = seq(1,10,1),
           ci_level = 0.95,
           small = FALSE,

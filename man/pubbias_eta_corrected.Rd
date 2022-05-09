@@ -92,7 +92,7 @@ performing analyses. The corrected estimate will be reported based on the recode
  # first fit fixed-effects model without any bias correction
  # since the point estimate is negative here, we'll assume publication bias favors negative
  #  log-RRs rather than positive ones
- rma( yi, vi, data = dat, method = "FE" )
+ metafor::rma( yi, vi, data = dat, method = "FE" )
 
  # warmup
  # note that passing eta = 1 (no publication bias) yields the naive point estimate

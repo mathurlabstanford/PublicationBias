@@ -20,15 +20,6 @@
 #' @param ci_level Confidence interval level (as a proportion) for the corrected point estimate
 #' @param small Should inference allow for a small meta-analysis? We recommend using always using \code{TRUE}.
 #' @param return_worst_meta Should the worst-case meta-analysis of only the nonaffirmative studies be returned?
-#' @import
-#' metafor
-#' stats
-#' robumeta
-#' ggplot2
-#' @importFrom
-#' dplyr %>% group_by summarise
-#' @importFrom
-#' rlang .data
 #' @export
 #' @details
 #' To illustrate interpretation of the S-value, if the S-value for the point estimate is 30 with \code{q=0}, this indicates that affirmative studies
@@ -185,10 +176,10 @@ pubbias_svalue = function( yi,
 
     if (k_nonaffirmative > 1){
       # first fit worst-case meta
-      meta_worst = rma.uni( yi = yi,
-                            vi = vi,
-                            data = dat[ A == FALSE, ],
-                            method = "FE" )
+      meta_worst = metafor::rma.uni( yi = yi,
+                                     vi = vi,
+                                     data = dat[ A == FALSE, ],
+                                     method = "FE" )
 
 
       est_worst = as.numeric(meta_worst$b)
@@ -201,9 +192,9 @@ pubbias_svalue = function( yi,
     }
 
     # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
-    strat = dat %>% group_by(A) %>%
-      summarise( nu = sum( 1 / vi ),
-                 ybar = sum( yi / vi ) )
+    strat = dat %>% dplyr::group_by(A) %>%
+      dplyr::summarise( nu = sum( 1 / vi ),
+                        ybar = sum( yi / vi ) )
 
     # components of bias-corrected estimate by affirmative status
     ybarN = strat$ybar[ strat$A == 0 ]
@@ -270,17 +261,17 @@ pubbias_svalue = function( yi,
       # first fit worst-case meta to see if we should even attempt grid search
       # initialize a dumb (unclustered and uncorrected) version of tau^2
       # which is only used for constructing weights
-      meta_re = rma.uni( yi = yi,
-                         vi = vi)
+      meta_re = metafor::rma.uni( yi = yi,
+                                  vi = vi)
       t2hat_naive = meta_re$tau2
 
       # fit model exactly as in pubbias_eta_corrected
-      meta_worst =  robu( yi ~ 1,
-                          studynum = clustervar,
-                          data = dat[ A == FALSE, ],
-                          userweights = 1 / (vi + t2hat_naive),
-                          var.eff.size = vi,
-                          small = small )
+      meta_worst =  robumeta::robu( yi ~ 1,
+                                    studynum = clustervar,
+                                    data = dat[ A == FALSE, ],
+                                    userweights = 1 / (vi + t2hat_naive),
+                                    var.eff.size = vi,
+                                    small = small )
 
       est_worst = as.numeric(meta_worst$b.r)
       lo_worst = meta_worst$reg_table$CI.L
