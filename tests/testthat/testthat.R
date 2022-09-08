@@ -7,38 +7,40 @@ library(metafor)
 
 # # p: row of parameters dataframe
 sim_data <- function(p) {
+  withr::with_seed(42, {
 
-  N = p$k * p$per.cluster
+    N = p$k * p$per.cluster
 
-  # generate cluster random intercepts
-  gam1 = rnorm( n = p$k, mean = 0, sd = sqrt( p$V.gam ) )
-  gam1i = rep( gam1, each = p$per.cluster )
+    # generate cluster random intercepts
+    gam1 = rnorm( n = p$k, mean = 0, sd = sqrt( p$V.gam ) )
+    gam1i = rep( gam1, each = p$per.cluster )
 
-  # generate individual-study random intercepts
-  gam2i = rnorm( n = N, mean = 0, sd = sqrt( p$V - p$V.gam ) )
+    # generate individual-study random intercepts
+    gam2i = rnorm( n = N, mean = 0, sd = sqrt( p$V - p$V.gam ) )
 
-  # individual study means
-  mui = p$mu + gam1i + gam2i
-  sei = runif( n = N, min = p$sei.min, max = p$sei.max )
-  yi = rnorm( n = N, mean = mui, sd = sei )
+    # individual study means
+    mui = p$mu + gam1i + gam2i
+    sei = runif( n = N, min = p$sei.min, max = p$sei.max )
+    yi = rnorm( n = N, mean = mui, sd = sei )
 
-  d = data.frame( cluster = rep(1:p$k, each = p$per.cluster),
-                  Study.name = 1:N,
-                  yi = yi,
-                  sei = sei,
-                  vi = sei^2,
-                  pval = 2 * ( 1 - pnorm( abs(yi) / sei ) ) )
+    d = data.frame( cluster = rep(1:p$k, each = p$per.cluster),
+                    Study.name = 1:N,
+                    yi = yi,
+                    sei = sei,
+                    vi = sei^2,
+                    pval = 2 * ( 1 - pnorm( abs(yi) / sei ) ) )
 
-  # 1-tailed publication bias
-  signif = d$pval < 0.05 & d$yi > 0
-  publish = rep( 1, nrow(d) )
-  publish[ signif == FALSE ] = rbinom( n = sum(signif == FALSE), size = 1, prob = 1/p$eta )
+    # 1-tailed publication bias
+    signif = d$pval < 0.05 & d$yi > 0
+    publish = rep( 1, nrow(d) )
+    publish[ signif == FALSE ] = rbinom( n = sum(signif == FALSE), size = 1, prob = 1/p$eta )
 
-  d$weight = 1
-  d$weight[ signif == 0 ] = p$eta
-  d = d[ publish == 1, ]
+    d$weight = 1
+    d$weight[ signif == 0 ] = p$eta
+    d = d[ publish == 1, ]
 
-  return(d)
+    return(d)
+  })
 }
 
 # ##### Sanity Check #####
