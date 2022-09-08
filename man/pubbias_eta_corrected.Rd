@@ -10,7 +10,7 @@ pubbias_eta_corrected(
   vi,
   sei,
   eta,
-  clustervar = 1:length(yi),
+  cluster = 1:length(yi),
   model,
   selection_tails = 1,
   favor_positive,
@@ -43,7 +43,7 @@ corrected_meta(
 \item{eta}{The number of times more likely an affirmative study is to be
 published than a nonaffirmative study; see Details.}
 
-\item{clustervar}{A character, factor, or numeric vector with the same length
+\item{cluster}{A character, factor, or numeric vector with the same length
 as yi. Unique values should indicate unique clusters of point estimates. By
 default, assumes all point estimates are independent.}
 
@@ -67,6 +67,8 @@ estimate will be calculated from \code{ci_level}.)}
 \item{small}{Should inference allow for a small meta-analysis? We recommend
 always using \code{TRUE}.}
 
+\item{clustervar}{(deprecated) see cluster}
+
 \item{selection.tails}{(deprecated) see selection_tails}
 
 \item{favor.positive}{(deprecated) see favor_positive}
@@ -83,7 +85,7 @@ A list with three elements, \code{values}, \code{stats} and
   list that contains the user's specified \code{eta}, the number of
   affirmative and nonaffirmative studies (\code{k_affirmative} and
   \code{k_nonaffirmative}), and a dataframe combining \code{yi}, \code{vi},
-  \code{clustervar}.
+  \code{cluster}.
 }
 \description{
 For a chosen ratio of publication probabilities, \code{eta}, estimates a
@@ -138,7 +140,7 @@ The ratio \code{eta} represents the number of times more likely
                         vi = dat$vi,
                         eta = 5,
                         favor_positive = FALSE,
-                        clustervar = dat$author,
+                        cluster = dat$author,
                         model = "robust" )
 
  ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
@@ -148,7 +150,7 @@ The ratio \code{eta} represents the number of times more likely
  # compute estimate for each value of eta
  estimates = lapply(etas, function(e) {
    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, eta = e, model = "robust",
-                          clustervar = dat$author, favor_positive = FALSE )$stats
+                          cluster = dat$author, favor_positive = FALSE )$stats
  })
  estimates = dplyr::bind_rows(estimates)
  estimates$eta = etas

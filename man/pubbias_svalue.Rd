@@ -10,7 +10,7 @@ pubbias_svalue(
   vi,
   sei,
   q,
-  clustervar = 1:length(yi),
+  cluster = 1:length(yi),
   model,
   alpha_select = 0.05,
   eta_grid_hi = 200,
@@ -48,7 +48,7 @@ than negative, estimates.}
 Should be specified on the same scale as \code{yi} (e.g., if \code{yi} is
 on the log-RR scale, then \code{q} should be as well).}
 
-\item{clustervar}{A character, factor, or numeric vector with the same length
+\item{cluster}{A character, factor, or numeric vector with the same length
 as \code{yi}. Unique values should indicate unique clusters of point
 estimates. If left unspecified, assumes studies are independent.}
 
@@ -73,6 +73,8 @@ using always using \code{TRUE}.}
 
 \item{return_worst_meta}{Should the worst-case meta-analysis of only the
 nonaffirmative studies be returned?}
+
+\item{clustervar}{(deprecated) see cluster}
 
 \item{alpha.select}{(deprecated) see alpha_select}
 

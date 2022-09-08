@@ -12,7 +12,7 @@
 #'   (only relevant when not using \code{vi}).
 #' @param eta The number of times more likely an affirmative study is to be
 #'   published than a nonaffirmative study; see Details.
-#' @param clustervar A character, factor, or numeric vector with the same length
+#' @param cluster A character, factor, or numeric vector with the same length
 #'   as yi. Unique values should indicate unique clusters of point estimates. By
 #'   default, assumes all point estimates are independent.
 #' @param model "fixed" for fixed-effects (a.k.a. "common-effect") or "robust"
@@ -48,7 +48,7 @@
 #'   list that contains the user's specified \code{eta}, the number of
 #'   affirmative and nonaffirmative studies (\code{k_affirmative} and
 #'   \code{k_nonaffirmative}), and a dataframe combining \code{yi}, \code{vi},
-#'   \code{clustervar}.
+#'   \code{cluster}.
 #'
 #' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
 #'   publication bias in meta-analyses. \emph{Journal of the Royal Statistical
@@ -89,7 +89,7 @@
 #'                         vi = dat$vi,
 #'                         eta = 5,
 #'                         favor_positive = FALSE,
-#'                         clustervar = dat$author,
+#'                         cluster = dat$author,
 #'                         model = "robust" )
 #'
 #'  ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
@@ -99,7 +99,7 @@
 #'  # compute estimate for each value of eta
 #'  estimates = lapply(etas, function(e) {
 #'    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, eta = e, model = "robust",
-#'                           clustervar = dat$author, favor_positive = FALSE )$stats
+#'                           cluster = dat$author, favor_positive = FALSE )$stats
 #'  })
 #'  estimates = dplyr::bind_rows(estimates)
 #'  estimates$eta = etas
@@ -115,7 +115,7 @@ pubbias_eta_corrected = function( yi,
                                   vi,
                                   sei,
                                   eta,
-                                  clustervar = 1:length(yi),
+                                  cluster = 1:length(yi),
                                   model,
                                   selection_tails = 1,
                                   favor_positive,
@@ -141,7 +141,7 @@ pubbias_eta_corrected = function( yi,
   alpha = 1 - ci_level
 
   # warn if clusters but user said fixed
-  nclusters = length( unique( clustervar ) )
+  nclusters = length( unique( cluster ) )
   if ( nclusters < k & model == "fixed" ) {
     warning( "Clusters exist, but will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model = robust.")
   }
@@ -164,7 +164,7 @@ pubbias_eta_corrected = function( yi,
     stop( "There are zero affirmative studies or zero nonaffirmative studies. Model estimation cannot proceed.")
   }
 
-  dat = data.frame( yi, yif, vi, A, clustervar )
+  dat = data.frame( yi, yif, vi, A, cluster )
 
 
   ##### Fixed-Effects Model #####
@@ -221,7 +221,7 @@ pubbias_eta_corrected = function( yi,
 
     # fit weighted robust model
     meta_robu = robumeta::robu( yi ~ 1,
-                                studynum = clustervar,
+                                studynum = cluster,
                                 data = dat,
                                 userweights = weights / (vi + t2hat_naive),
                                 var.eff.size = vi,
@@ -266,6 +266,7 @@ pubbias_eta_corrected = function( yi,
 
 
 #' @rdname pubbias_eta_corrected
+#' @param clustervar (deprecated) see cluster
 #' @param selection.tails (deprecated) see selection_tails
 #' @param favor.positive (deprecated) see favor_positive
 #' @param alpha.select (deprecated) see alpha_select
@@ -285,7 +286,7 @@ corrected_meta <- function( yi,
   pubbias_eta_corrected(yi = yi,
                         vi = vi,
                         eta = eta,
-                        clustervar = clustervar,
+                        cluster = clustervar,
                         model = model,
                         selection_tails = selection.tails,
                         favor_positive = favor.positive,

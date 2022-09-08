@@ -6,7 +6,7 @@ library(metafor)
 # helper fn for simulating meta-analysis with publication bias
 
 # # p: row of parameters dataframe
-sim_data = function(p) {
+sim_data <- function(p) {
 
   N = p$k * p$per.cluster
 
@@ -80,18 +80,18 @@ test_that("pubbias_eta_corrected #1", {
 
   ##### Recover Regular Robust Indepenent Model With Eta = 1 #####
   for ( .small in c(TRUE, FALSE) ) {
-    clustervar = 1:length(dat$yi)
+    cluster = 1:length(dat$yi)
 
     meta.re = rma.uni( yi = dat$yi,
                        vi = dat$vi)
     t2hat.naive = meta.re$tau2
 
-    RI.robust = robu( yi ~ 1,
-                      studynum = clustervar,
-                      data = dat,
-                      userweights = 1 / (vi + t2hat.naive),
-                      var.eff.size = vi,
-                      small = .small )
+    RI.robust = robumeta::robu( yi ~ 1,
+                                studynum = cluster,
+                                data = dat,
+                                userweights = 1 / (vi + t2hat.naive),
+                                var.eff.size = vi,
+                                small = .small )
 
 
     RI.adj = pubbias_eta_corrected( yi = dat$yi,
@@ -113,25 +113,25 @@ test_that("pubbias_eta_corrected #1", {
 
   ##### Recover Regular Robust Clustered Model With Eta = 1 #####
   for ( .small in c(TRUE, FALSE) ) {
-    clustervar = dat$author
+    cluster = dat$author
 
     meta.re = rma.uni( yi = dat$yi,
                        vi = dat$vi)
     t2hat.naive = meta.re$tau2
 
-    RI.robust = robu( yi ~ 1,
-                      studynum = clustervar,
-                      data = dat,
-                      userweights = 1 / (vi + t2hat.naive),
-                      var.eff.size = vi,
-                      small = .small )
+    RI.robust = robumeta::robu( yi ~ 1,
+                                studynum = cluster,
+                                data = dat,
+                                userweights = 1 / (vi + t2hat.naive),
+                                var.eff.size = vi,
+                                small = .small )
 
 
     RI.adj = pubbias_eta_corrected( yi = dat$yi,
                              vi = dat$vi,
                              eta = 1,
                              model = "robust",
-                             clustervar = clustervar,
+                             cluster = cluster,
                              selection_tails = 1,
                              ci_level = 0.95,
                              small = .small,
@@ -408,13 +408,13 @@ test_that( "significance_funnel #1", {
 # ### robust clusters
 # pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
-#         clustervar = d$study,
+#         cluster = d$study,
 #         q = 0,
 #         model = "robust" )
 #
 # pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
-#         clustervar = d$study,
+#         cluster = d$study,
 #         q = r_to_z(0.1),
 #         model = "robust" )
 #
@@ -464,13 +464,13 @@ test_that( "significance_funnel #1", {
 # ### robust clusters
 # pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
-#         clustervar = d$cluster,
+#         cluster = d$cluster,
 #         q = 0,
 #         model = "robust" )
 #
 # pubbias_svalue( yi = d$yi,
 #         vi = d$vi,
-#         clustervar = d$cluster,
+#         cluster = d$cluster,
 #         q = r_to_z(0.1),
 #         model = "robust" )
 # # should move CI to 0.10
@@ -478,7 +478,7 @@ test_that( "significance_funnel #1", {
 #                 vi = d$vi,
 #                 eta = 3.5,
 #                 model = "robust",
-#                 clustervar = d$cluster )
+#                 cluster = d$cluster )
 
 
 

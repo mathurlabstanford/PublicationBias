@@ -15,7 +15,7 @@
 #' @param q The attenuated value to which to shift the point estimate or CI.
 #'   Should be specified on the same scale as \code{yi} (e.g., if \code{yi} is
 #'   on the log-RR scale, then \code{q} should be as well).
-#' @param clustervar A character, factor, or numeric vector with the same length
+#' @param cluster A character, factor, or numeric vector with the same length
 #'   as \code{yi}. Unique values should indicate unique clusters of point
 #'   estimates. If left unspecified, assumes studies are independent.
 #' @param model \code{"fixed"} for fixed-effects (a.k.a. "common-effect") or
@@ -117,7 +117,7 @@ pubbias_svalue = function( yi,
                            vi,
                            sei,
                            q,
-                           clustervar = 1:length(yi),
+                           cluster = 1:length(yi),
                            model,
                            alpha_select = 0.05,
                            eta_grid_hi = 200,
@@ -143,7 +143,7 @@ pubbias_svalue = function( yi,
   alpha = 1 - ci_level
 
   # warn if clusters but user said fixed
-  nclusters = length( unique( clustervar ) )
+  nclusters = length( unique( cluster ) )
   if ( nclusters < k_studies & model == "fixed" ) {
     warning( "You indicated there are clusters, but these will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model = robust.")
   }
@@ -154,7 +154,7 @@ pubbias_svalue = function( yi,
                               sei = sei,
                               eta = 1,
                               model = model,
-                              clustervar = clustervar,
+                              cluster = cluster,
                               selection_tails = 1,
                               favor_positive = favor_positive,
                               ci_level = ci_level,
@@ -191,7 +191,7 @@ pubbias_svalue = function( yi,
     stop( "There are zero affirmative studies or zero nonaffirmative studies. Model estimation cannot proceed.")
   }
 
-  dat = data.frame( yi, vi, A, clustervar )
+  dat = data.frame( yi, vi, A, cluster )
 
 
   ##### Fixed-Effects Model #####
@@ -290,7 +290,7 @@ pubbias_svalue = function( yi,
 
       # fit model exactly as in pubbias_eta_corrected
       meta_worst =  robumeta::robu( yi ~ 1,
-                                    studynum = clustervar,
+                                    studynum = cluster,
                                     data = dat[ A == FALSE, ],
                                     userweights = 1 / (vi + t2hat_naive),
                                     var.eff.size = vi,
@@ -319,7 +319,7 @@ pubbias_svalue = function( yi,
                                            sei = sei,
                                            eta = .eta,
                                            model = model,
-                                           clustervar = clustervar,
+                                           cluster = cluster,
                                            selection_tails = 1,
                                            favor_positive = TRUE,  # always TRUE because we've already flipped signs if needed
                                            ci_level = ci_level,
@@ -354,7 +354,7 @@ pubbias_svalue = function( yi,
                                          sei = sei,
                                          eta = .eta,
                                          model = model,
-                                         clustervar = clustervar,
+                                         cluster = cluster,
                                          selection_tails = 1,
                                          favor_positive = TRUE, # always TRUE because we've already flipped signs if needed
                                          ci_level = ci_level,
@@ -424,6 +424,7 @@ pubbias_svalue = function( yi,
 
 
 #' @rdname pubbias_svalue
+#' @param clustervar (deprecated) see cluster
 #' @param alpha.select (deprecated) see alpha_select
 #' @param eta.grid.hi (deprecated) see eta_grid_hi
 #' @param favor.positive (deprecated) see favor_positive
@@ -445,7 +446,7 @@ svalue <- function( yi,
   pubbias_svalue(yi = yi,
                  vi = vi,
                  q = q,
-                 clustervar = clustervar,
+                 cluster = clustervar,
                  model = model,
                  alpha_select = alpha.select,
                  eta_grid_hi = eta.grid.hi,
