@@ -33,10 +33,10 @@ sim_data <- function(p) {
     # 1-tailed publication bias
     signif = d$pval < 0.05 & d$yi > 0
     publish = rep( 1, nrow(d) )
-    publish[ signif == FALSE ] = rbinom( n = sum(signif == FALSE), size = 1, prob = 1/p$eta )
+    publish[ signif == FALSE ] = rbinom( n = sum(signif == FALSE), size = 1, prob = 1/p$selection_ratio )
 
     d$weight = 1
-    d$weight[ signif == 0 ] = p$eta
+    d$weight[ signif == 0 ] = p$selection_ratio
     d = d[ publish == 1, ]
 
     return(d)
@@ -51,23 +51,23 @@ sim_data <- function(p) {
 #                           V.gam = .5,
 #                           sei.min = 0.01,
 #                           sei.max = 0.01,
-#                           eta = 1 ) )
+#                           selection_ratio = 1 ) )
 
 
 # does pubbias_eta_corrected agree with regular meta-analysis fns when there
 #  is no selection?
 test_that("pubbias_eta_corrected #1", {
 
-  ##### Recover Regular FE model With Eta = 1 #####
-  # when using z-based inference and eta = 1,
+  ##### Recover Regular FE model With selection_ratio = 1 #####
+  # when using z-based inference and selection_ratio = 1,
   # should match metafor
   dat = escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
   FE.plain = rma( yi, vi, data = dat, method = "FE" )
-  # should match corrected with eta = 1
+  # should match corrected with selection_ratio = 1
 
   FE.adj = pubbias_eta_corrected( yi = dat$yi,
                              vi = dat$vi,
-                             eta = 1,
+                             selection_ratio = 1,
                              model = "fixed",
                              selection_tails = 1,
                              ci_level = 0.95,
@@ -80,7 +80,7 @@ test_that("pubbias_eta_corrected #1", {
   expect_equal( FE.adj$ci_upper, as.numeric(FE.plain$ci.ub), tol = 0.001 )
   expect_equal( FE.adj$p_value, as.numeric(FE.plain$pval), tol = 0.001 )
 
-  ##### Recover Regular Robust Indepenent Model With Eta = 1 #####
+  ##### Recover Regular Robust Indepenent Model With selection_ratio = 1 #####
   for ( .small in c(TRUE, FALSE) ) {
     cluster = 1:length(dat$yi)
 
@@ -98,7 +98,7 @@ test_that("pubbias_eta_corrected #1", {
 
     RI.adj = pubbias_eta_corrected( yi = dat$yi,
                              vi = dat$vi,
-                             eta = 1,
+                             selection_ratio = 1,
                              model = "robust",
                              selection_tails = 1,
                              ci_level = 0.95,
@@ -113,7 +113,7 @@ test_that("pubbias_eta_corrected #1", {
   }
 
 
-  ##### Recover Regular Robust Clustered Model With Eta = 1 #####
+  ##### Recover Regular Robust Clustered Model With selection_ratio = 1 #####
   for ( .small in c(TRUE, FALSE) ) {
     cluster = dat$author
 
@@ -131,7 +131,7 @@ test_that("pubbias_eta_corrected #1", {
 
     RI.adj = pubbias_eta_corrected( yi = dat$yi,
                              vi = dat$vi,
-                             eta = 1,
+                             selection_ratio = 1,
                              model = "robust",
                              cluster = cluster,
                              selection_tails = 1,
@@ -165,10 +165,10 @@ test_that("pubbias_svalue #1", {
                       small = .small,
                       favor_positive = FALSE )
 
-      # CI upper limit should be exactly 0 when eta = sval_ci
+      # CI upper limit should be exactly 0 when selection_ratio = sval_ci
       meta = pubbias_eta_corrected( yi = dat$yi,
                              vi = dat$vi,
-                             eta = as.numeric(svals$stats$sval_ci),
+                             selection_ratio = as.numeric(svals$stats$sval_ci),
                              model = "fixed",
                              selection_tails = 1,
                              ci_level = 0.95,
@@ -298,10 +298,10 @@ test_that("pubbias_svalue #3.5", {
 
 
 # does pubbias_svalue give correct results when the s-value is greater than the highest
-#  value in eta grid?
+#  value in selection_ratio grid?
 test_that( "pubbias_svalue #4", {
 
-  eta = 3
+  selection_ratio = 3
 
   d = sim_data( data.frame( k = 50,
                             per.cluster = 5,
@@ -310,14 +310,14 @@ test_that( "pubbias_svalue #4", {
                             V.gam = 0,
                             sei.min = 0.1,
                             sei.max = 1,
-                            eta = eta ) )
+                            selection_ratio = selection_ratio ) )
 
   svals = pubbias_svalue( yi = d$yi,
           vi = d$vi,
           q = 0,
           model = "robust",
-          eta_grid_hi = 10,
-          # eta_grid = seq(1,10,1),
+          selection_ratio_grid_hi = 10,
+          # selection_ratio_grid = seq(1,10,1),
           ci_level = 0.95,
           small = FALSE,
           favor_positive = FALSE)
@@ -328,7 +328,7 @@ test_that( "pubbias_svalue #4", {
 
 # does significance_funnel give error if no non-affirmative studies?
 test_that( "significance_funnel #1", {
-  eta = 50
+  selection_ratio = 50
 
   d = sim_data( data.frame( k = 50,
                             per.cluster = 1,
@@ -339,7 +339,7 @@ test_that( "significance_funnel #1", {
                             # sei.max = .9,
                             sei.min = .1,
                             sei.max=.1,
-                            eta = eta ) )
+                            selection_ratio = selection_ratio ) )
 
 
   # also see if significance_funnel works
@@ -356,7 +356,7 @@ test_that( "significance_funnel #1", {
 
 
 # ##### Visually Test Significance Funnel on Simulated Data #####
-# eta = 5
+# selection_ratio = 5
 #
 # d = sim_data( data.frame( k = 500,
 #                           per.cluster = 1,
@@ -365,7 +365,7 @@ test_that( "significance_funnel #1", {
 #                           V.gam = 0,
 #                           sei.min = 0.01,
 #                           sei.max = 0.05,
-#                           eta = eta ) )
+#                           selection_ratio = selection_ratio ) )
 #
 #
 # # also see if significance_funnel works
@@ -459,7 +459,7 @@ test_that( "significance_funnel #1", {
 # # should move CI to 0.10
 # pubbias_eta_corrected( yi = d$yi,
 #                 vi = d$vi,
-#                 eta = 5.25,
+#                 selection_ratio = 5.25,
 #                 model = "robust" )
 # # yes :)
 #
@@ -478,7 +478,7 @@ test_that( "significance_funnel #1", {
 # # should move CI to 0.10
 # pubbias_eta_corrected( yi = d$yi,
 #                 vi = d$vi,
-#                 eta = 3.5,
+#                 selection_ratio = 3.5,
 #                 model = "robust",
 #                 cluster = d$cluster )
 

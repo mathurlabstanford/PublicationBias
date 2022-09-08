@@ -10,7 +10,7 @@
 #' @param vi A vector of estimated variances for the point estimates.
 #' @param sei A vector of estimated standard errors for the point estimates
 #'   (only relevant when not using \code{vi}).
-#' @param eta The number of times more likely an affirmative study is to be
+#' @param selection_ratio The number of times more likely an affirmative study is to be
 #'   published than a nonaffirmative study; see Details.
 #' @param cluster A character, factor, or numeric vector with the same length
 #'   as yi. Unique values should indicate unique clusters of point estimates. By
@@ -30,7 +30,7 @@
 #' @param small Should inference allow for a small meta-analysis? We recommend
 #'   always using \code{TRUE}.
 #'
-#' @details The ratio \code{eta} represents the number of times more likely
+#' @details The \code{selection_ratio} represents the number of times more likely
 #'   affirmative studies (i.e., those with a "statistically significant" and
 #'   positive estimate) are to be published than nonaffirmative studies (i.e.,
 #'   those with a "nonsignificant" or negative estimate).
@@ -45,7 +45,7 @@
 #'   \code{fit}. Stats is a list that contains the bias-corrected pooled point
 #'   estimate (\code{estimate}) and inference on the bias-corrected estimate
 #'   (\code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}). Values is a
-#'   list that contains the user's specified \code{eta}, the number of
+#'   list that contains the user's specified \code{selection_ratio}, the number of
 #'   affirmative and nonaffirmative studies (\code{k_affirmative} and
 #'   \code{k_nonaffirmative}), and a dataframe combining \code{yi}, \code{vi},
 #'   \code{cluster}.
@@ -66,11 +66,11 @@
 #'  metafor::rma( yi, vi, data = dat, method = "FE" )
 #'
 #'  # warmup
-#'  # note that passing eta = 1 (no publication bias) yields the naive point
+#'  # note that passing selection_ratio = 1 (no publication bias) yields the naive point
 #'  # estimate from rma above, which makes sense
 #'  pubbias_eta_corrected( yi = dat$yi,
 #'                         vi = dat$vi,
-#'                         eta = 1,
+#'                         selection_ratio = 1,
 #'                         model = "fixed",
 #'                         favor_positive = FALSE )
 #'
@@ -79,7 +79,7 @@
 #'  # nonaffirmative ones
 #'  pubbias_eta_corrected( yi = dat$yi,
 #'                         vi = dat$vi,
-#'                         eta = 5,
+#'                         selection_ratio = 5,
 #'                         favor_positive = FALSE,
 #'                         model = "fixed" )
 #'
@@ -87,25 +87,25 @@
 #'  # robust specification
 #'  pubbias_eta_corrected( yi = dat$yi,
 #'                         vi = dat$vi,
-#'                         eta = 5,
+#'                         selection_ratio = 5,
 #'                         favor_positive = FALSE,
 #'                         cluster = dat$author,
 #'                         model = "robust" )
 #'
 #'  ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
 #'  # range of parameters to try (more dense at the very small ones)
-#'  etas = c( 200, 150, 100, 50, 40, 30, 20, seq(15, 1) )
+#'  selection_ratios = c( 200, 150, 100, 50, 40, 30, 20, seq(15, 1) )
 #'
-#'  # compute estimate for each value of eta
-#'  estimates = lapply(etas, function(e) {
-#'    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, eta = e, model = "robust",
+#'  # compute estimate for each value of selection_ratio
+#'  estimates = lapply(selection_ratios, function(e) {
+#'    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, selection_ratio = e, model = "robust",
 #'                           cluster = dat$author, favor_positive = FALSE )$stats
 #'  })
 #'  estimates = dplyr::bind_rows(estimates)
-#'  estimates$eta = etas
+#'  estimates$selection_ratio = selection_ratios
 #'
 #'  require(ggplot2)
-#'  ggplot( estimates, aes( x = eta, y = estimate ) ) +
+#'  ggplot( estimates, aes( x = selection_ratio, y = estimate ) ) +
 #'    geom_ribbon( aes( ymin = ci_lower, ymax = ci_upper ), fill = "gray" ) +
 #'    geom_line( lwd = 1.2 ) +
 #'    labs( x = bquote( eta ), y = bquote( hat(mu)[eta] ) ) +
@@ -114,7 +114,7 @@
 pubbias_eta_corrected = function( yi,
                                   vi,
                                   sei,
-                                  eta,
+                                  selection_ratio,
                                   cluster = 1:length(yi),
                                   model,
                                   selection_tails = 1,
@@ -123,8 +123,8 @@ pubbias_eta_corrected = function( yi,
                                   ci_level = 0.95,
                                   small = TRUE ) {
 
-  # stop if eta doesn't make sense
-  if ( eta < 1 ) stop( "Eta must be at least 1.")
+  # stop if selection_ratio doesn't make sense
+  if ( selection_ratio < 1 ) stop( "selection_ratio must be at least 1.")
 
   # resolve vi and sei
   if (missing(vi)) {
@@ -182,10 +182,10 @@ pubbias_eta_corrected = function( yi,
     nuS = strat$nu[ strat$A == 1 ]
 
     # corrected pooled point estimate
-    est = ( eta * ybarN + ybarS ) / ( eta * nuN + nuS )
+    est = ( selection_ratio * ybarN + ybarS ) / ( selection_ratio * nuN + nuS )
 
     # inference
-    var = ( eta^2 * nuN + nuS ) / ( eta * nuN + nuS )^2
+    var = ( selection_ratio^2 * nuN + nuS ) / ( selection_ratio * nuN + nuS )^2
     se = sqrt(var)
 
     # z-based inference
@@ -211,7 +211,7 @@ pubbias_eta_corrected = function( yi,
 
     # weight for model
     weights = rep( 1, length(pvals) )
-    weights[ A == FALSE ] = eta
+    weights[ A == FALSE ] = selection_ratio
 
     # initialize a dumb (unclustered and uncorrected) version of tau^2
     # which is only used for constructing weights
@@ -232,11 +232,11 @@ pubbias_eta_corrected = function( yi,
     lo = meta_robu$reg_table$CI.L
     hi = meta_robu$reg_table$CI.U
     pval_est = meta_robu$reg_table$prob
-    eta = eta
+    selection_ratio = selection_ratio
   } # end robust = TRUE
 
   data = dat %>% dplyr::rename(affirm = .data$A)
-  values = list(eta = eta,
+  values = list(selection_ratio = selection_ratio,
                 model = model,
                 selection_tails = selection_tails,
                 favor_positive = favor_positive,
@@ -266,6 +266,7 @@ pubbias_eta_corrected = function( yi,
 
 
 #' @rdname pubbias_eta_corrected
+#' @param eta (deprecated) see selection_ratio
 #' @param clustervar (deprecated) see cluster
 #' @param selection.tails (deprecated) see selection_tails
 #' @param favor.positive (deprecated) see favor_positive
@@ -285,7 +286,7 @@ corrected_meta <- function( yi,
   .Deprecated("pubbias_eta_corrected")
   pubbias_eta_corrected(yi = yi,
                         vi = vi,
-                        eta = eta,
+                        selection_ratio = eta,
                         cluster = clustervar,
                         model = model,
                         selection_tails = selection.tails,

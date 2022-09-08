@@ -13,7 +13,7 @@ pubbias_svalue(
   cluster = 1:length(yi),
   model,
   alpha_select = 0.05,
-  eta_grid_hi = 200,
+  selection_ratio_grid_hi = 200,
   favor_positive,
   ci_level = 0.95,
   small = TRUE,
@@ -58,7 +58,7 @@ estimates. If left unspecified, assumes studies are independent.}
 \item{alpha_select}{Alpha-level at which publication probability is assumed
 to change.}
 
-\item{eta_grid_hi}{The largest value of \code{eta} that should be included in
+\item{selection_ratio_grid_hi}{The largest value of \code{selection_ratio} that should be included in
 the grid search. This argument is only needed when \code{model = "robust"}.}
 
 \item{favor_positive}{\code{TRUE} if publication bias is assumed to favor
@@ -78,7 +78,7 @@ nonaffirmative studies be returned?}
 
 \item{alpha.select}{(deprecated) see alpha_select}
 
-\item{eta.grid.hi}{(deprecated) see eta_grid_hi}
+\item{eta.grid.hi}{(deprecated) see selection_ratio_grid_hi}
 
 \item{favor.positive}{(deprecated) see favor_positive}
 

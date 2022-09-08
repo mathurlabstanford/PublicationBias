@@ -22,7 +22,7 @@
 #'   \code{"robust"} for robust random-effects.
 #' @param alpha_select Alpha-level at which publication probability is assumed
 #'   to change.
-#' @param eta_grid_hi The largest value of \code{eta} that should be included in
+#' @param selection_ratio_grid_hi The largest value of \code{selection_ratio} that should be included in
 #'   the grid search. This argument is only needed when \code{model = "robust"}.
 #' @param favor_positive \code{TRUE} if publication bias is assumed to favor
 #'   positive estimates; \code{FALSE} if assumed to favor negative estimates.
@@ -120,14 +120,14 @@ pubbias_svalue = function( yi,
                            cluster = 1:length(yi),
                            model,
                            alpha_select = 0.05,
-                           eta_grid_hi = 200,
+                           selection_ratio_grid_hi = 200,
                            favor_positive,
                            ci_level = 0.95,
                            small = TRUE,
                            return_worst_meta = FALSE ) {
 
-  # stop if eta doesn't make sense
-  if ( eta_grid_hi < 1 ) stop( "eta_grid_hi must be at least 1.")
+  # stop if selection_ratio doesn't make sense
+  if ( selection_ratio_grid_hi < 1 ) stop( "selection_ratio_grid_hi must be at least 1.")
 
   # resolve vi and sei
   if (missing(vi)) {
@@ -152,7 +152,7 @@ pubbias_svalue = function( yi,
   m0 = pubbias_eta_corrected( yi = yi,
                               vi = vi,
                               sei = sei,
-                              eta = 1,
+                              selection_ratio = 1,
                               model = model,
                               cluster = cluster,
                               selection_tails = 1,
@@ -265,9 +265,9 @@ pubbias_svalue = function( yi,
 
     # # sanity check by inversion
     # # corrected CI limit
-    # eta = sval_ci
-    # termD = (eta * a + b) / (eta * c + d)
-    # termE = k * sqrt( (eta^2 * c + d) / (eta * c + d)^2 )
+    # selection_ratio = sval_ci
+    # termD = (selection_ratio * a + b) / (selection_ratio * c + d)
+    # termE = k * sqrt( (selection_ratio^2 * c + d) / (selection_ratio * c + d)^2 )
     # expect_equal( termD - termE,
     #               q )
     # # WORKS!!!
@@ -313,11 +313,11 @@ pubbias_svalue = function( yi,
 
       # define the function we need to minimize
       # i.e., distance between corrected estimate and the target value of q
-      func = function(.eta) {
+      func = function(.selection_ratio) {
         corrected = pubbias_eta_corrected( yi = yi,
                                            vi = vi,
                                            sei = sei,
-                                           eta = .eta,
+                                           selection_ratio = .selection_ratio,
                                            model = model,
                                            cluster = cluster,
                                            selection_tails = 1,
@@ -328,7 +328,7 @@ pubbias_svalue = function( yi,
       }
 
       opt = optimize( f = func,
-                      interval = c(1, eta_grid_hi),
+                      interval = c(1, selection_ratio_grid_hi),
                       maximum = FALSE )
       sval_est = opt$minimum
 
@@ -337,8 +337,8 @@ pubbias_svalue = function( yi,
 
       # if the optimal value is very close to the upper range of grid search
       #  AND we're still not very close to the target q,
-      #  that means the optimal value was above eta_grid_hi
-      if ( abs(sval_est - eta_grid_hi) < 0.0001 & diff > 0.0001 ) sval_est = paste(">", eta_grid_hi)
+      #  that means the optimal value was above selection_ratio_grid_hi
+      if ( abs(sval_est - selection_ratio_grid_hi) < 0.0001 & diff > 0.0001 ) sval_est = paste(">", selection_ratio_grid_hi)
     }
 
     # do something similar for CI
@@ -348,11 +348,11 @@ pubbias_svalue = function( yi,
     } else {
       # define the function we need to minimize
       # i.e., distance between corrected estimate and the target value of q
-      func = function(.eta) {
+      func = function(.selection_ratio) {
         corrected = pubbias_eta_corrected( yi = yi,
                                          vi = vi,
                                          sei = sei,
-                                         eta = .eta,
+                                         selection_ratio = .selection_ratio,
                                          model = model,
                                          cluster = cluster,
                                          selection_tails = 1,
@@ -363,7 +363,7 @@ pubbias_svalue = function( yi,
       }
 
       opt = optimize( f = func,
-                      interval = c(1, eta_grid_hi),
+                      interval = c(1, selection_ratio_grid_hi),
                       maximum = FALSE )
       sval_ci = opt$minimum
 
@@ -372,8 +372,8 @@ pubbias_svalue = function( yi,
 
       # if the optimal value is very close to the upper range of grid search
       #  AND we're still not very close to the target q,
-      #  that means the optimal value was above eta_grid_hi
-      if ( abs(sval_ci - eta_grid_hi) < 0.0001 & diff > 0.0001 ) sval_ci = paste(">", eta_grid_hi)
+      #  that means the optimal value was above selection_ratio_grid_hi
+      if ( abs(sval_ci - selection_ratio_grid_hi) < 0.0001 & diff > 0.0001 ) sval_ci = paste(">", selection_ratio_grid_hi)
     }
 
   }
@@ -398,7 +398,7 @@ pubbias_svalue = function( yi,
     q = q,
     model = model,
     alpha_select = alpha_select,
-    eta_grid_hi = eta_grid_hi,
+    selection_ratio_grid_hi = selection_ratio_grid_hi,
     favor_positive = favor_positive,
     ci_level = ci_level,
     small = small,
@@ -426,7 +426,7 @@ pubbias_svalue = function( yi,
 #' @rdname pubbias_svalue
 #' @param clustervar (deprecated) see cluster
 #' @param alpha.select (deprecated) see alpha_select
-#' @param eta.grid.hi (deprecated) see eta_grid_hi
+#' @param eta.grid.hi (deprecated) see selection_ratio_grid_hi
 #' @param favor.positive (deprecated) see favor_positive
 #' @param CI.level (deprecated) see ci_level
 #' @param return.worst.meta (deprecated) see return_worst_meta
@@ -449,7 +449,7 @@ svalue <- function( yi,
                  cluster = clustervar,
                  model = model,
                  alpha_select = alpha.select,
-                 eta_grid_hi = eta.grid.hi,
+                 selection_ratio_grid_hi = eta.grid.hi,
                  favor_positive = favor.positive,
                  ci_level = CI.level,
                  small = small,
