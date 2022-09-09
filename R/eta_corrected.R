@@ -229,10 +229,10 @@ pubbias_eta_corrected = function( yi,
 
     est = as.numeric(meta_robu$b.r)
     se = meta_robu$reg_table$SE
-    lo = meta_robu$reg_table$CI.L
-    hi = meta_robu$reg_table$CI.U
+    reg_table <- meta_robu$reg_table
+    lo <- est - qt(1 - alpha / 2, reg_table$dfs) * reg_table$SE
+    hi <- est + qt(1 - alpha / 2, reg_table$dfs) * reg_table$SE
     pval_est = meta_robu$reg_table$prob
-    selection_ratio = selection_ratio
   } # end robust = TRUE
 
   data = dat %>% dplyr::rename(affirm = .data$A)

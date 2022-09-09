@@ -202,8 +202,8 @@ pubbias_svalue = function( yi,
       meta_worst = metafor::rma.uni( yi = yi,
                                      vi = vi,
                                      data = dat[ A == FALSE, ],
-                                     method = "FE" )
-
+                                     method = "FE",
+                                     level = ci_level )
 
       est_worst = as.numeric(meta_worst$b)
       lo_worst = meta_worst$ci.lb
@@ -211,7 +211,7 @@ pubbias_svalue = function( yi,
 
     if (k_nonaffirmative == 1) {
       est_worst = dat$yi[ A == FALSE ]
-      lo_worst = dat$yi[ A == FALSE ] - qnorm(0.975) * sqrt(dat$vi[ A == FALSE ])
+      lo_worst = dat$yi[ A == FALSE ] - qnorm(1 - alpha / 2) * sqrt(dat$vi[ A == FALSE ])
     }
 
     # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
@@ -297,13 +297,15 @@ pubbias_svalue = function( yi,
                                     small = small )
 
       est_worst = as.numeric(meta_worst$b.r)
-      lo_worst = meta_worst$reg_table$CI.L
+      table_worst <- meta_worst$reg_table
+      lo_worst <- est_worst - qt(1 - alpha / 2, table_worst$dfs) * table_worst$SE
+      # lo_worst = meta_worst$reg_table$CI.L
     }
 
     # robumeta above can't handle meta-analyzing only 1 nonaffirmative study
     if (k_nonaffirmative == 1) {
       est_worst = dat$yi[ A == FALSE ]
-      lo_worst = dat$yi[ A == FALSE ] - qnorm(0.975) * sqrt(dat$vi[ A == FALSE ])
+      lo_worst = dat$yi[ A == FALSE ] - qnorm(1 - alpha / 2) * sqrt(dat$vi[ A == FALSE ])
     }
 
     ##### Get S-value for estimate
