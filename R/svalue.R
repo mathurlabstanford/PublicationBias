@@ -18,12 +18,12 @@
 #' @param cluster A character, factor, or numeric vector with the same length
 #'   as \code{yi}. Unique values should indicate unique clusters of point
 #'   estimates. If left unspecified, assumes studies are independent.
-#' @param model \code{"fixed"} for fixed-effects (a.k.a. "common-effect") or
+#' @param model_type \code{"fixed"} for fixed-effects (a.k.a. "common-effect") or
 #'   \code{"robust"} for robust random-effects.
 #' @param alpha_select Alpha-level at which publication probability is assumed
 #'   to change.
-#' @param selection_ratio_grid_hi The largest value of \code{selection_ratio} that should be included in
-#'   the grid search. This argument is only needed when \code{model = "robust"}.
+#' @param selection_ratio_max The largest value of \code{selection_ratio} that should be included in
+#'   the grid search. This argument is only needed when \code{model_type = "robust"}.
 #' @param favor_positive \code{TRUE} if publication bias is assumed to favor
 #'   positive estimates; \code{FALSE} if assumed to favor negative estimates.
 #'   See Details.
@@ -56,9 +56,9 @@
 #'   for whether the point estimates' signs were recoded (\code{signs_recoded}).
 #'
 #'   If \code{return_worst_meta = TRUE}, also returns the worst-case
-#'   meta-analysis of only the nonaffirmative studies. If \code{model =
+#'   meta-analysis of only the nonaffirmative studies. If \code{model_type =
 #'   "fixed"}, the worst-case meta-analysis is fit by \code{metafor::rma.uni}.
-#'   If \code{model = "robust"}, it is fit by \code{robumeta::robu}. Note that
+#'   If \code{model_type = "robust"}, it is fit by \code{robumeta::robu}. Note that
 #'   in the latter case, custom inverse-variance weights are used, which are the
 #'   inverse of the sum of the study's variance and a heterogeneity estimate
 #'   from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020).
@@ -85,7 +85,7 @@
 #'                                  vi = dat$vi,
 #'                                  q = 0,
 #'                                  favor_positive = FALSE,
-#'                                  model = "fixed" )
+#'                                  model_type = "fixed" )
 #'
 #'  # publication bias required to shift point estimate to 0
 #'  svals_fixed_0$stats$sval_est
@@ -98,7 +98,7 @@
 #'                                  vi = dat$vi,
 #'                                  q = log(.9),
 #'                                  favor_positive = FALSE,
-#'                                  model = "fixed" )
+#'                                  model_type = "fixed" )
 #'
 #'  # publication bias required to shift point estimate to RR = 0.90
 #'  svals_fixed_q$stats$sval_est
@@ -111,23 +111,23 @@
 #'                  vi = dat$vi,
 #'                  q = 0,
 #'                  favor_positive = FALSE,
-#'                  model = "robust" )
+#'                  model_type = "robust" )
 
 pubbias_svalue = function( yi,
                            vi,
                            sei,
-                           q,
+                           q = 0,
                            cluster = 1:length(yi),
-                           model,
+                           model_type,
                            alpha_select = 0.05,
-                           selection_ratio_grid_hi = 200,
-                           favor_positive,
+                           selection_ratio_max = 200,
+                           favor_positive = TRUE,
                            ci_level = 0.95,
                            small = TRUE,
                            return_worst_meta = FALSE ) {
 
   # stop if selection_ratio doesn't make sense
-  if ( selection_ratio_grid_hi < 1 ) stop( "selection_ratio_grid_hi must be at least 1.")
+  if ( selection_ratio_max < 1 ) stop( "selection_ratio_max must be at least 1.")
 
   # resolve vi and sei
   if (missing(vi)) {
@@ -144,8 +144,8 @@ pubbias_svalue = function( yi,
 
   # warn if clusters but user said fixed
   nclusters = length( unique( cluster ) )
-  if ( nclusters < k_studies & model == "fixed" ) {
-    warning( "You indicated there are clusters, but these will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model = robust.")
+  if ( nclusters < k_studies & model_type == "fixed" ) {
+    warning( "You indicated there are clusters, but these will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model_type = robust.")
   }
 
   # fit uncorrected model
@@ -153,7 +153,7 @@ pubbias_svalue = function( yi,
                               vi = vi,
                               sei = sei,
                               selection_ratio = 1,
-                              model = model,
+                              model_type = model_type,
                               cluster = cluster,
                               selection_tails = 1,
                               favor_positive = favor_positive,
@@ -195,7 +195,7 @@ pubbias_svalue = function( yi,
 
 
   ##### Fixed-Effects Model #####
-  if ( model == "fixed" ) {
+  if ( model_type == "fixed" ) {
 
     if (k_nonaffirmative > 1){
       # first fit worst-case meta
@@ -276,7 +276,7 @@ pubbias_svalue = function( yi,
 
 
   ##### Robust Independent and Robust Clustered #####
-  if ( model == "robust" ) {
+  if ( model_type == "robust" ) {
 
     ##### Worst-Case Meta to See if We Should Search at All
 
@@ -320,7 +320,7 @@ pubbias_svalue = function( yi,
                                            vi = vi,
                                            sei = sei,
                                            selection_ratio = .selection_ratio,
-                                           model = model,
+                                           model_type = model_type,
                                            cluster = cluster,
                                            selection_tails = 1,
                                            favor_positive = TRUE,  # always TRUE because we've already flipped signs if needed
@@ -330,7 +330,7 @@ pubbias_svalue = function( yi,
       }
 
       opt = optimize( f = func,
-                      interval = c(1, selection_ratio_grid_hi),
+                      interval = c(1, selection_ratio_max),
                       maximum = FALSE )
       sval_est = opt$minimum
 
@@ -339,8 +339,8 @@ pubbias_svalue = function( yi,
 
       # if the optimal value is very close to the upper range of grid search
       #  AND we're still not very close to the target q,
-      #  that means the optimal value was above selection_ratio_grid_hi
-      if ( abs(sval_est - selection_ratio_grid_hi) < 0.0001 & diff > 0.0001 ) sval_est = paste(">", selection_ratio_grid_hi)
+      #  that means the optimal value was above selection_ratio_max
+      if ( abs(sval_est - selection_ratio_max) < 0.0001 & diff > 0.0001 ) sval_est = paste(">", selection_ratio_max)
     }
 
     # do something similar for CI
@@ -355,7 +355,7 @@ pubbias_svalue = function( yi,
                                          vi = vi,
                                          sei = sei,
                                          selection_ratio = .selection_ratio,
-                                         model = model,
+                                         model_type = model_type,
                                          cluster = cluster,
                                          selection_tails = 1,
                                          favor_positive = TRUE, # always TRUE because we've already flipped signs if needed
@@ -365,7 +365,7 @@ pubbias_svalue = function( yi,
       }
 
       opt = optimize( f = func,
-                      interval = c(1, selection_ratio_grid_hi),
+                      interval = c(1, selection_ratio_max),
                       maximum = FALSE )
       sval_ci = opt$minimum
 
@@ -374,8 +374,8 @@ pubbias_svalue = function( yi,
 
       # if the optimal value is very close to the upper range of grid search
       #  AND we're still not very close to the target q,
-      #  that means the optimal value was above selection_ratio_grid_hi
-      if ( abs(sval_ci - selection_ratio_grid_hi) < 0.0001 & diff > 0.0001 ) sval_ci = paste(">", selection_ratio_grid_hi)
+      #  that means the optimal value was above selection_ratio_max
+      if ( abs(sval_ci - selection_ratio_max) < 0.0001 & diff > 0.0001 ) sval_ci = paste(">", selection_ratio_max)
     }
 
   }
@@ -398,9 +398,9 @@ pubbias_svalue = function( yi,
 
   values = list(
     q = q,
-    model = model,
+    model_type = model_type,
     alpha_select = alpha_select,
-    selection_ratio_grid_hi = selection_ratio_grid_hi,
+    selection_ratio_max = selection_ratio_max,
     favor_positive = favor_positive,
     ci_level = ci_level,
     small = small,
@@ -427,8 +427,9 @@ pubbias_svalue = function( yi,
 
 #' @rdname pubbias_svalue
 #' @param clustervar (deprecated) see cluster
+#' @param model (deprecated) see model_type
 #' @param alpha.select (deprecated) see alpha_select
-#' @param eta.grid.hi (deprecated) see selection_ratio_grid_hi
+#' @param eta.grid.hi (deprecated) see selection_ratio_max
 #' @param favor.positive (deprecated) see favor_positive
 #' @param CI.level (deprecated) see ci_level
 #' @param return.worst.meta (deprecated) see return_worst_meta
@@ -449,9 +450,9 @@ svalue <- function( yi,
                  vi = vi,
                  q = q,
                  cluster = clustervar,
-                 model = model,
+                 model_type = model,
                  alpha_select = alpha.select,
-                 selection_ratio_grid_hi = eta.grid.hi,
+                 selection_ratio_max = eta.grid.hi,
                  favor_positive = favor.positive,
                  ci_level = CI.level,
                  small = small,

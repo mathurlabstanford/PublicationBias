@@ -15,7 +15,7 @@
 #' @param cluster A character, factor, or numeric vector with the same length
 #'   as yi. Unique values should indicate unique clusters of point estimates. By
 #'   default, assumes all point estimates are independent.
-#' @param model "fixed" for fixed-effects (a.k.a. "common-effect") or "robust"
+#' @param model_type "fixed" for fixed-effects (a.k.a. "common-effect") or "robust"
 #'   for robust random-effects.
 #' @param selection_tails 1 (for one-tailed selection, recommended for its
 #'   conservatism) or 2 (for two-tailed selection).
@@ -71,7 +71,7 @@
 #'  pubbias_eta_corrected( yi = dat$yi,
 #'                         vi = dat$vi,
 #'                         selection_ratio = 1,
-#'                         model = "fixed",
+#'                         model_type = "fixed",
 #'                         favor_positive = FALSE )
 #'
 #'  # assume a known selection ratio of 5
@@ -81,7 +81,7 @@
 #'                         vi = dat$vi,
 #'                         selection_ratio = 5,
 #'                         favor_positive = FALSE,
-#'                         model = "fixed" )
+#'                         model_type = "fixed" )
 #'
 #'  # same selection ratio, but now account for heterogeneity and clustering via
 #'  # robust specification
@@ -90,7 +90,7 @@
 #'                         selection_ratio = 5,
 #'                         favor_positive = FALSE,
 #'                         cluster = dat$author,
-#'                         model = "robust" )
+#'                         model_type = "robust" )
 #'
 #'  ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
 #'  # range of parameters to try (more dense at the very small ones)
@@ -98,7 +98,7 @@
 #'
 #'  # compute estimate for each value of selection_ratio
 #'  estimates = lapply(selection_ratios, function(e) {
-#'    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, selection_ratio = e, model = "robust",
+#'    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, selection_ratio = e, model_type = "robust",
 #'                           cluster = dat$author, favor_positive = FALSE )$stats
 #'  })
 #'  estimates = dplyr::bind_rows(estimates)
@@ -116,9 +116,9 @@ pubbias_eta_corrected = function( yi,
                                   sei,
                                   selection_ratio,
                                   cluster = 1:length(yi),
-                                  model,
+                                  model_type,
                                   selection_tails = 1,
-                                  favor_positive,
+                                  favor_positive = TRUE,
                                   alpha_select = 0.05,
                                   ci_level = 0.95,
                                   small = TRUE ) {
@@ -142,8 +142,8 @@ pubbias_eta_corrected = function( yi,
 
   # warn if clusters but user said fixed
   nclusters = length( unique( cluster ) )
-  if ( nclusters < k & model == "fixed" ) {
-    warning( "Clusters exist, but will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model = robust.")
+  if ( nclusters < k & model_type == "fixed" ) {
+    warning( "Clusters exist, but will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model_type = robust.")
   }
 
   ##### Flip Estimate Signs If Needed #####
@@ -168,7 +168,7 @@ pubbias_eta_corrected = function( yi,
 
 
   ##### Fixed-Effects Model #####
-  if ( model == "fixed" ) {
+  if ( model_type == "fixed" ) {
 
     # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
     strat = dat %>% dplyr::group_by(A) %>%
@@ -207,7 +207,7 @@ pubbias_eta_corrected = function( yi,
   } # end fixed = TRUE
 
   ##### Robust Independent and Robust Clustered #####
-  if ( model == "robust" ) {
+  if ( model_type == "robust" ) {
 
     # weight for model
     weights = rep( 1, length(pvals) )
@@ -237,7 +237,7 @@ pubbias_eta_corrected = function( yi,
 
   data = dat %>% dplyr::rename(affirm = .data$A)
   values = list(selection_ratio = selection_ratio,
-                model = model,
+                model_type = model_type,
                 selection_tails = selection_tails,
                 favor_positive = favor_positive,
                 alpha_select = alpha_select,
@@ -268,6 +268,7 @@ pubbias_eta_corrected = function( yi,
 #' @rdname pubbias_eta_corrected
 #' @param eta (deprecated) see selection_ratio
 #' @param clustervar (deprecated) see cluster
+#' @param model (deprecated) see model_type
 #' @param selection.tails (deprecated) see selection_tails
 #' @param favor.positive (deprecated) see favor_positive
 #' @param alpha.select (deprecated) see alpha_select
@@ -288,7 +289,7 @@ corrected_meta <- function( yi,
                         vi = vi,
                         selection_ratio = eta,
                         cluster = clustervar,
-                        model = model,
+                        model_type = model,
                         selection_tails = selection.tails,
                         favor_positive = favor.positive,
                         alpha_select = alpha.select,
