@@ -12,25 +12,25 @@
 #' @param vi A vector of estimated variances for the point estimates.
 #' @param sei A vector of estimated standard errors for the point estimates
 #'   (only relevant when not using \code{vi}).
-#' @param q The attenuated value to which to shift the point estimate or CI.
-#'   Should be specified on the same scale as \code{yi} (e.g., if \code{yi} is
-#'   on the log-RR scale, then \code{q} should be as well).
 #' @param cluster A character, factor, or numeric vector with the same length
 #'   as \code{yi}. Unique values should indicate unique clusters of point
 #'   estimates. If left unspecified, assumes studies are independent.
+#' @param q The attenuated value to which to shift the point estimate or CI.
+#'   Should be specified on the same scale as \code{yi} (e.g., if \code{yi} is
+#'   on the log-RR scale, then \code{q} should be as well).
 #' @param model_type \code{"fixed"} for fixed-effects (a.k.a. "common-effect") or
 #'   \code{"robust"} for robust random-effects.
-#' @param alpha_select Alpha-level at which publication probability is assumed
-#'   to change.
-#' @param selection_ratio_max The largest value of \code{selection_ratio} that should be included in
-#'   the grid search. This argument is only needed when \code{model_type = "robust"}.
 #' @param favor_positive \code{TRUE} if publication bias is assumed to favor
 #'   positive estimates; \code{FALSE} if assumed to favor negative estimates.
 #'   See Details.
+#' @param alpha_select Alpha-level at which publication probability is assumed
+#'   to change.
 #' @param ci_level Confidence interval level (as a proportion) for the corrected
 #'   point estimate.
 #' @param small Should inference allow for a small meta-analysis? We recommend
 #'   using always using \code{TRUE}.
+#' @param selection_ratio_max The largest value of \code{selection_ratio} that should be included in
+#'   the grid search. This argument is only needed when \code{model_type = "robust"}.
 #' @param return_worst_meta Should the worst-case meta-analysis of only the
 #'   nonaffirmative studies be returned?
 #'
@@ -154,10 +154,10 @@ pubbias_svalue = function( yi, # data
   m0 = pubbias_eta_corrected( yi = yi,
                               vi = vi,
                               sei = sei,
-                              selection_ratio = 1,
-                              model_type = model_type,
                               cluster = cluster,
+                              selection_ratio = 1,
                               selection_tails = 1,
+                              model_type = model_type,
                               favor_positive = favor_positive,
                               ci_level = ci_level,
                               small = small )
@@ -171,10 +171,11 @@ pubbias_svalue = function( yi, # data
   if ( est0 > 0 & q > est0 ) stop( q_error("less") )
   if ( est0 < 0 & q < est0 ) stop( q_error("greater") )
 
+  # warn if naive estimate is in opposite direction than favor_positive
+  # if ((est0 > 0) != favor_positive)
+  #   warning("Favored direction is opposite of the pooled estimate.")
 
   ##### Flip Estimate Signs If Needed #####
-
-  # if favor_positive == TRUE, then we don't need to fit a naive meta-analysis or do anything
   if ( !favor_positive ) {
     yi = -yi
     q = -q
@@ -318,16 +319,17 @@ pubbias_svalue = function( yi, # data
       # define the function we need to minimize
       # i.e., distance between corrected estimate and the target value of q
       func = function(.selection_ratio) {
-        corrected = pubbias_eta_corrected( yi = yi,
-                                           vi = vi,
-                                           sei = sei,
-                                           selection_ratio = .selection_ratio,
-                                           model_type = model_type,
-                                           cluster = cluster,
-                                           selection_tails = 1,
-                                           favor_positive = TRUE,  # always TRUE because we've already flipped signs if needed
-                                           ci_level = ci_level,
-                                           small = small )
+        corrected = suppressWarnings(
+          pubbias_eta_corrected( yi = yi,
+                                 vi = vi,
+                                 sei = sei,
+                                 cluster = cluster,
+                                 selection_ratio = .selection_ratio,
+                                 selection_tails = 1,
+                                 model_type = model_type,
+                                 favor_positive = TRUE,  # always TRUE because we've already flipped signs if needed
+                                 ci_level = ci_level,
+                                 small = small ))
         return( abs(corrected$stats$estimate - q))
       }
 
@@ -353,16 +355,17 @@ pubbias_svalue = function( yi, # data
       # define the function we need to minimize
       # i.e., distance between corrected estimate and the target value of q
       func = function(.selection_ratio) {
-        corrected = pubbias_eta_corrected( yi = yi,
-                                         vi = vi,
-                                         sei = sei,
-                                         selection_ratio = .selection_ratio,
-                                         model_type = model_type,
-                                         cluster = cluster,
-                                         selection_tails = 1,
-                                         favor_positive = TRUE, # always TRUE because we've already flipped signs if needed
-                                         ci_level = ci_level,
-                                         small = small )
+        corrected = suppressWarnings(
+          pubbias_eta_corrected( yi = yi,
+                                 vi = vi,
+                                 sei = sei,
+                                 cluster = cluster,
+                                 selection_ratio = .selection_ratio,
+                                 selection_tails = 1,
+                                 model_type = model_type,
+                                 favor_positive = TRUE, # always TRUE because we've already flipped signs if needed
+                                 ci_level = ci_level,
+                                 small = small ))
         return( abs(corrected$stats$ci_lower - q))
       }
 
@@ -450,13 +453,13 @@ svalue <- function( yi,
   .Deprecated("pubbias_svalue")
   pubbias_svalue(yi = yi,
                  vi = vi,
-                 q = q,
                  cluster = clustervar,
+                 q = q,
                  model_type = model,
-                 alpha_select = alpha.select,
-                 selection_ratio_max = eta.grid.hi,
                  favor_positive = favor.positive,
+                 alpha_select = alpha.select,
                  ci_level = CI.level,
                  small = small,
+                 selection_ratio_max = eta.grid.hi,
                  return_worst_meta = return.worst.meta)
 }

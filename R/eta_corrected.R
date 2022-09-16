@@ -149,8 +149,12 @@ pubbias_eta_corrected = function(yi, # data
     warning( "Clusters exist, but will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model_type = robust.")
   }
 
+  # warn if naive estimate is in opposite direction than favor_positive
+  naive_pos <- metafor::rma(yi, vi, method = "FE")$beta > 0
+  if (naive_pos != favor_positive)
+    warning("Favored direction is opposite of the pooled estimate.")
+
   ##### Flip Estimate Signs If Needed #####
-  # if favor_positive == TRUE, then we don't need to fit a naive meta-analysis or do anything
   if ( favor_positive ) yif = yi else yif = -yi
 
   # 2-sided p-values for each study even if 1-tailed selection
