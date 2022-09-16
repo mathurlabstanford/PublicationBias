@@ -10,15 +10,15 @@
 #' @param vi A vector of estimated variances for the point estimates.
 #' @param sei A vector of estimated standard errors for the point estimates
 #'   (only relevant when not using \code{vi}).
-#' @param selection_ratio The number of times more likely an affirmative study is to be
-#'   published than a nonaffirmative study; see Details.
 #' @param cluster A character, factor, or numeric vector with the same length
 #'   as yi. Unique values should indicate unique clusters of point estimates. By
 #'   default, assumes all point estimates are independent.
-#' @param model_type "fixed" for fixed-effects (a.k.a. "common-effect") or "robust"
-#'   for robust random-effects.
+#' @param selection_ratio The number of times more likely an affirmative study is to be
+#'   published than a nonaffirmative study; see Details.
 #' @param selection_tails 1 (for one-tailed selection, recommended for its
 #'   conservatism) or 2 (for two-tailed selection).
+#' @param model_type "fixed" for fixed-effects (a.k.a. "common-effect") or "robust"
+#'   for robust random-effects.
 #' @param favor_positive \code{TRUE} if publication bias is assumed to favor
 #'   positive estimates; \code{FALSE} if assumed to favor negative estimates;
 #'   see Details.
@@ -80,17 +80,17 @@
 #'  pubbias_eta_corrected( yi = dat$yi,
 #'                         vi = dat$vi,
 #'                         selection_ratio = 5,
-#'                         favor_positive = FALSE,
-#'                         model_type = "fixed" )
+#'                         model_type = "fixed",
+#'                         favor_positive = FALSE )
 #'
 #'  # same selection ratio, but now account for heterogeneity and clustering via
 #'  # robust specification
 #'  pubbias_eta_corrected( yi = dat$yi,
 #'                         vi = dat$vi,
-#'                         selection_ratio = 5,
-#'                         favor_positive = FALSE,
 #'                         cluster = dat$author,
-#'                         model_type = "robust" )
+#'                         selection_ratio = 5,
+#'                         model_type = "robust",
+#'                         favor_positive = FALSE )
 #'
 #'  ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
 #'  # range of parameters to try (more dense at the very small ones)
@@ -98,8 +98,9 @@
 #'
 #'  # compute estimate for each value of selection_ratio
 #'  estimates = lapply(selection_ratios, function(e) {
-#'    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, selection_ratio = e, model_type = "robust",
-#'                           cluster = dat$author, favor_positive = FALSE )$stats
+#'    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, cluster = dat$author,
+#'                           selection_ratio = e, model_type = "robust",
+#'                           favor_positive = FALSE )$stats
 #'  })
 #'  estimates = dplyr::bind_rows(estimates)
 #'  estimates$selection_ratio = selection_ratios
@@ -111,17 +112,19 @@
 #'    labs( x = bquote( eta ), y = bquote( hat(mu)[eta] ) ) +
 #'    theme_classic()
 
-pubbias_eta_corrected = function( yi,
-                                  vi,
-                                  sei,
-                                  selection_ratio,
-                                  cluster = 1:length(yi),
-                                  model_type,
-                                  selection_tails = 1,
-                                  favor_positive = TRUE,
-                                  alpha_select = 0.05,
-                                  ci_level = 0.95,
-                                  small = TRUE ) {
+pubbias_eta_corrected = function(yi, # data
+                                 vi,
+                                 sei,
+                                 cluster = 1:length(yi),
+
+                                 selection_ratio, # params
+                                 selection_tails = 1,
+
+                                 model_type = "robust", # opts
+                                 favor_positive = TRUE,
+                                 alpha_select = 0.05,
+                                 ci_level = 0.95,
+                                 small = TRUE) {
 
   # stop if selection_ratio doesn't make sense
   if ( selection_ratio < 1 ) stop( "selection_ratio must be at least 1.")
@@ -287,10 +290,10 @@ corrected_meta <- function( yi,
   .Deprecated("pubbias_eta_corrected")
   pubbias_eta_corrected(yi = yi,
                         vi = vi,
-                        selection_ratio = eta,
                         cluster = clustervar,
-                        model_type = model,
+                        selection_ratio = eta,
                         selection_tails = selection.tails,
+                        model_type = model,
                         favor_positive = favor.positive,
                         alpha_select = alpha.select,
                         ci_level = CI.level,

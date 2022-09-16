@@ -84,8 +84,8 @@
 #'  svals_fixed_0 = pubbias_svalue( yi = dat$yi,
 #'                                  vi = dat$vi,
 #'                                  q = 0,
-#'                                  favor_positive = FALSE,
-#'                                  model_type = "fixed" )
+#'                                  model_type = "fixed",
+#'                                  favor_positive = FALSE )
 #'
 #'  # publication bias required to shift point estimate to 0
 #'  svals_fixed_0$stats$sval_est
@@ -97,8 +97,8 @@
 #'  svals_fixed_q = pubbias_svalue( yi = dat$yi,
 #'                                  vi = dat$vi,
 #'                                  q = log(.9),
-#'                                  favor_positive = FALSE,
-#'                                  model_type = "fixed" )
+#'                                  model_type = "fixed",
+#'                                  favor_positive = FALSE )
 #'
 #'  # publication bias required to shift point estimate to RR = 0.90
 #'  svals_fixed_q$stats$sval_est
@@ -110,20 +110,22 @@
 #'  pubbias_svalue( yi = dat$yi,
 #'                  vi = dat$vi,
 #'                  q = 0,
-#'                  favor_positive = FALSE,
-#'                  model_type = "robust" )
+#'                  model_type = "robust",
+#'                  favor_positive = FALSE )
 
-pubbias_svalue = function( yi,
+pubbias_svalue = function( yi, # data
                            vi,
                            sei,
-                           q = 0,
                            cluster = 1:length(yi),
-                           model_type,
-                           alpha_select = 0.05,
-                           selection_ratio_max = 200,
+
+                           q = 0, # params
+
+                           model_type = "robust", # opts
                            favor_positive = TRUE,
+                           alpha_select = 0.05,
                            ci_level = 0.95,
                            small = TRUE,
+                           selection_ratio_max = 200,
                            return_worst_meta = FALSE ) {
 
   # stop if selection_ratio doesn't make sense
