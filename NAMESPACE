@@ -2,7 +2,7 @@
 
 S3method(print,metabias)
 export(corrected_meta)
-export(pubbias_eta_corrected)
+export(pubbias_meta)
 export(pubbias_svalue)
 export(pval_plot)
 export(significance_funnel)

@@ -9,14 +9,14 @@ pubbias_svalue(
   yi,
   vi,
   sei,
-  q,
   cluster = 1:length(yi),
-  model,
+  q = 0,
+  model_type = "robust",
+  favor_positive = TRUE,
   alpha_select = 0.05,
-  selection_ratio_grid_hi = 200,
-  favor_positive,
   ci_level = 0.95,
   small = TRUE,
+  selection_ratio_max = 200,
   return_worst_meta = FALSE
 )
 
@@ -44,26 +44,23 @@ than negative, estimates.}
 \item{sei}{A vector of estimated standard errors for the point estimates
 (only relevant when not using \code{vi}).}
 
-\item{q}{The attenuated value to which to shift the point estimate or CI.
-Should be specified on the same scale as \code{yi} (e.g., if \code{yi} is
-on the log-RR scale, then \code{q} should be as well).}
-
 \item{cluster}{A character, factor, or numeric vector with the same length
 as \code{yi}. Unique values should indicate unique clusters of point
 estimates. If left unspecified, assumes studies are independent.}
 
-\item{model}{\code{"fixed"} for fixed-effects (a.k.a. "common-effect") or
+\item{q}{The attenuated value to which to shift the point estimate or CI.
+Should be specified on the same scale as \code{yi} (e.g., if \code{yi} is
+on the log-RR scale, then \code{q} should be as well).}
+
+\item{model_type}{\code{"fixed"} for fixed-effects (a.k.a. "common-effect") or
 \code{"robust"} for robust random-effects.}
-
-\item{alpha_select}{Alpha-level at which publication probability is assumed
-to change.}
-
-\item{selection_ratio_grid_hi}{The largest value of \code{selection_ratio} that should be included in
-the grid search. This argument is only needed when \code{model = "robust"}.}
 
 \item{favor_positive}{\code{TRUE} if publication bias is assumed to favor
 positive estimates; \code{FALSE} if assumed to favor negative estimates.
 See Details.}
+
+\item{alpha_select}{Alpha-level at which publication probability is assumed
+to change.}
 
 \item{ci_level}{Confidence interval level (as a proportion) for the corrected
 point estimate.}
@@ -71,14 +68,19 @@ point estimate.}
 \item{small}{Should inference allow for a small meta-analysis? We recommend
 using always using \code{TRUE}.}
 
+\item{selection_ratio_max}{The largest value of \code{selection_ratio} that should be included in
+the grid search. This argument is only needed when \code{model_type = "robust"}.}
+
 \item{return_worst_meta}{Should the worst-case meta-analysis of only the
 nonaffirmative studies be returned?}
 
 \item{clustervar}{(deprecated) see cluster}
 
+\item{model}{(deprecated) see model_type}
+
 \item{alpha.select}{(deprecated) see alpha_select}
 
-\item{eta.grid.hi}{(deprecated) see selection_ratio_grid_hi}
+\item{eta.grid.hi}{(deprecated) see selection_ratio_max}
 
 \item{favor.positive}{(deprecated) see favor_positive}
 
@@ -96,14 +98,14 @@ The function returns: the amount of publication bias required to
   for whether the point estimates' signs were recoded (\code{signs_recoded}).
 
   If \code{return_worst_meta = TRUE}, also returns the worst-case
-  meta-analysis of only the nonaffirmative studies. If \code{model =
+  meta-analysis of only the nonaffirmative studies. If \code{model_type =
   "fixed"}, the worst-case meta-analysis is fit by \code{metafor::rma.uni}.
-  If \code{model = "robust"}, it is fit by \code{robumeta::robu}. Note that
+  If \code{model_type = "robust"}, it is fit by \code{robumeta::robu}. Note that
   in the latter case, custom inverse-variance weights are used, which are the
   inverse of the sum of the study's variance and a heterogeneity estimate
   from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020).
   This is done for consistency with the results of
-  \code{pubbias_eta_corrected}, which is used to determine \code{sval_est}
+  \code{pubbias_meta}, which is used to determine \code{sval_est}
   and \code{sval_ci}. Therefore, the worst-case meta-analysis results may
   differ slightly from what you would obtain if you simply fit
   \code{robumeta::robu} on the nonaffirmative studies with the default
@@ -140,8 +142,8 @@ To illustrate interpretation of the S-value, if the S-value for the
  svals_fixed_0 = pubbias_svalue( yi = dat$yi,
                                  vi = dat$vi,
                                  q = 0,
-                                 favor_positive = FALSE,
-                                 model = "fixed" )
+                                 model_type = "fixed",
+                                 favor_positive = FALSE )
 
  # publication bias required to shift point estimate to 0
  svals_fixed_0$stats$sval_est
@@ -153,8 +155,8 @@ To illustrate interpretation of the S-value, if the S-value for the
  svals_fixed_q = pubbias_svalue( yi = dat$yi,
                                  vi = dat$vi,
                                  q = log(.9),
-                                 favor_positive = FALSE,
-                                 model = "fixed" )
+                                 model_type = "fixed",
+                                 favor_positive = FALSE )
 
  # publication bias required to shift point estimate to RR = 0.90
  svals_fixed_q$stats$sval_est
@@ -166,8 +168,8 @@ To illustrate interpretation of the S-value, if the S-value for the
  pubbias_svalue( yi = dat$yi,
                  vi = dat$vi,
                  q = 0,
-                 favor_positive = FALSE,
-                 model = "robust" )
+                 model_type = "robust",
+                 favor_positive = FALSE )
 }
 \references{
 Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for

@@ -54,9 +54,9 @@ sim_data <- function(p) {
 #                           selection_ratio = 1 ) )
 
 
-# does pubbias_eta_corrected agree with regular meta-analysis fns when there
+# does pubbias_meta agree with regular meta-analysis fns when there
 #  is no selection?
-test_that("pubbias_eta_corrected #1", {
+test_that("pubbias_meta #1", {
 
   ##### Recover Regular FE model With selection_ratio = 1 #####
   # when using z-based inference and selection_ratio = 1,
@@ -65,7 +65,7 @@ test_that("pubbias_eta_corrected #1", {
   FE.plain = rma( yi, vi, data = dat, method = "FE" )
   # should match corrected with selection_ratio = 1
 
-  FE.adj = pubbias_eta_corrected( yi = dat$yi,
+  FE.adj = pubbias_meta( yi = dat$yi,
                              vi = dat$vi,
                              selection_ratio = 1,
                              model = "fixed",
@@ -96,7 +96,7 @@ test_that("pubbias_eta_corrected #1", {
                                 small = .small )
 
 
-    RI.adj = pubbias_eta_corrected( yi = dat$yi,
+    RI.adj = pubbias_meta( yi = dat$yi,
                              vi = dat$vi,
                              selection_ratio = 1,
                              model = "robust",
@@ -129,7 +129,7 @@ test_that("pubbias_eta_corrected #1", {
                                 small = .small )
 
 
-    RI.adj = pubbias_eta_corrected( yi = dat$yi,
+    RI.adj = pubbias_meta( yi = dat$yi,
                              vi = dat$vi,
                              selection_ratio = 1,
                              model = "robust",
@@ -149,7 +149,7 @@ test_that("pubbias_eta_corrected #1", {
 })
 
 
-# do pubbias_svalue and pubbias_eta_corrected agree?
+# do pubbias_svalue and pubbias_meta agree?
 test_that("pubbias_svalue #1", {
 
   dat = escalc(measure="RR", ai=tpos, bi=tneg, ci=cpos, di=cneg, data=dat.bcg)
@@ -166,7 +166,7 @@ test_that("pubbias_svalue #1", {
                       favor_positive = FALSE )
 
       # CI upper limit should be exactly 0 when selection_ratio = sval_ci
-      meta = pubbias_eta_corrected( yi = dat$yi,
+      meta = pubbias_meta( yi = dat$yi,
                              vi = dat$vi,
                              selection_ratio = as.numeric(svals$stats$sval_ci),
                              model = "fixed",
@@ -457,7 +457,7 @@ test_that( "significance_funnel #1", {
 #         q = r_to_z(0.1),
 #         model = "robust" )
 # # should move CI to 0.10
-# pubbias_eta_corrected( yi = d$yi,
+# pubbias_meta( yi = d$yi,
 #                 vi = d$vi,
 #                 selection_ratio = 5.25,
 #                 model = "robust" )
@@ -476,7 +476,7 @@ test_that( "significance_funnel #1", {
 #         q = r_to_z(0.1),
 #         model = "robust" )
 # # should move CI to 0.10
-# pubbias_eta_corrected( yi = d$yi,
+# pubbias_meta( yi = d$yi,
 #                 vi = d$vi,
 #                 selection_ratio = 3.5,
 #                 model = "robust",

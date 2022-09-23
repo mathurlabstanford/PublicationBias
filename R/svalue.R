@@ -63,7 +63,7 @@
 #'   inverse of the sum of the study's variance and a heterogeneity estimate
 #'   from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020).
 #'   This is done for consistency with the results of
-#'   \code{pubbias_eta_corrected}, which is used to determine \code{sval_est}
+#'   \code{pubbias_meta}, which is used to determine \code{sval_est}
 #'   and \code{sval_ci}. Therefore, the worst-case meta-analysis results may
 #'   differ slightly from what you would obtain if you simply fit
 #'   \code{robumeta::robu} on the nonaffirmative studies with the default
@@ -151,7 +151,7 @@ pubbias_svalue = function( yi, # data
   }
 
   # fit uncorrected model
-  m0 = pubbias_eta_corrected( yi = yi,
+  m0 = pubbias_meta( yi = yi,
                               vi = vi,
                               sei = sei,
                               cluster = cluster,
@@ -291,7 +291,7 @@ pubbias_svalue = function( yi, # data
                                   vi = vi)
       t2hat_naive = meta_re$tau2
 
-      # fit model exactly as in pubbias_eta_corrected
+      # fit model exactly as in pubbias_meta
       meta_worst =  robumeta::robu( yi ~ 1,
                                     studynum = cluster,
                                     data = dat[ A == FALSE, ],
@@ -320,7 +320,7 @@ pubbias_svalue = function( yi, # data
       # i.e., distance between corrected estimate and the target value of q
       func = function(.selection_ratio) {
         corrected = suppressWarnings(
-          pubbias_eta_corrected( yi = yi,
+          pubbias_meta( yi = yi,
                                  vi = vi,
                                  sei = sei,
                                  cluster = cluster,
@@ -356,7 +356,7 @@ pubbias_svalue = function( yi, # data
       # i.e., distance between corrected estimate and the target value of q
       func = function(.selection_ratio) {
         corrected = suppressWarnings(
-          pubbias_eta_corrected( yi = yi,
+          pubbias_meta( yi = yi,
                                  vi = vi,
                                  sei = sei,
                                  cluster = cluster,

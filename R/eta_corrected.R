@@ -68,7 +68,7 @@
 #'  # warmup
 #'  # note that passing selection_ratio = 1 (no publication bias) yields the naive point
 #'  # estimate from rma above, which makes sense
-#'  pubbias_eta_corrected( yi = dat$yi,
+#'  pubbias_meta( yi = dat$yi,
 #'                         vi = dat$vi,
 #'                         selection_ratio = 1,
 #'                         model_type = "fixed",
@@ -77,7 +77,7 @@
 #'  # assume a known selection ratio of 5
 #'  # i.e., affirmative results are 5x more likely to be published than
 #'  # nonaffirmative ones
-#'  pubbias_eta_corrected( yi = dat$yi,
+#'  pubbias_meta( yi = dat$yi,
 #'                         vi = dat$vi,
 #'                         selection_ratio = 5,
 #'                         model_type = "fixed",
@@ -85,7 +85,7 @@
 #'
 #'  # same selection ratio, but now account for heterogeneity and clustering via
 #'  # robust specification
-#'  pubbias_eta_corrected( yi = dat$yi,
+#'  pubbias_meta( yi = dat$yi,
 #'                         vi = dat$vi,
 #'                         cluster = dat$author,
 #'                         selection_ratio = 5,
@@ -98,7 +98,7 @@
 #'
 #'  # compute estimate for each value of selection_ratio
 #'  estimates = lapply(selection_ratios, function(e) {
-#'    pubbias_eta_corrected( yi = dat$yi, vi = dat$vi, cluster = dat$author,
+#'    pubbias_meta( yi = dat$yi, vi = dat$vi, cluster = dat$author,
 #'                           selection_ratio = e, model_type = "robust",
 #'                           favor_positive = FALSE )$stats
 #'  })
@@ -112,19 +112,19 @@
 #'    labs( x = bquote( eta ), y = bquote( hat(mu)[eta] ) ) +
 #'    theme_classic()
 
-pubbias_eta_corrected = function(yi, # data
-                                 vi,
-                                 sei,
-                                 cluster = 1:length(yi),
+pubbias_meta = function(yi, # data
+                        vi,
+                        sei,
+                        cluster = 1:length(yi),
 
-                                 selection_ratio, # params
-                                 selection_tails = 1,
+                        selection_ratio, # params
 
-                                 model_type = "robust", # opts
-                                 favor_positive = TRUE,
-                                 alpha_select = 0.05,
-                                 ci_level = 0.95,
-                                 small = TRUE) {
+                        model_type = "robust", # opts
+                        favor_positive = TRUE,
+                        selection_tails = 1,
+                        alpha_select = 0.05,
+                        ci_level = 0.95,
+                        small = TRUE) {
 
   # stop if selection_ratio doesn't make sense
   if ( selection_ratio < 1 ) stop( "selection_ratio must be at least 1.")
@@ -272,7 +272,7 @@ pubbias_eta_corrected = function(yi, # data
 }
 
 
-#' @rdname pubbias_eta_corrected
+#' @rdname pubbias_meta
 #' @param eta (deprecated) see selection_ratio
 #' @param clustervar (deprecated) see cluster
 #' @param model (deprecated) see model_type
@@ -291,8 +291,8 @@ corrected_meta <- function( yi,
                             alpha.select = 0.05,
                             CI.level = 0.95,
                             small = TRUE ) {
-  .Deprecated("pubbias_eta_corrected")
-  pubbias_eta_corrected(yi = yi,
+  .Deprecated("pubbias_meta")
+  pubbias_meta(yi = yi,
                         vi = vi,
                         cluster = clustervar,
                         selection_ratio = eta,
