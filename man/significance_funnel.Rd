@@ -70,13 +70,13 @@ precise quantitative conclusions.
 }
 \details{
 By default (\code{plot_pooled = TRUE}), also plots the pooled point
-  estimate within all studies, supplied by the user as \code{est_all} (black
-  diamond), and within only the nonaffirmative studies, supplied by the user
-  as \code{est_N} (grey diamond). The user can calculate \code{est_all} and
-  \code{est_N} using their choice of meta-analysis model. If instead these
-  are not supplied but \code{plot_pooled = TRUE}, these pooled estimates will
-  be automatically calculated using a fixed-effects (a.k.a. "common-effect")
-  model.
+estimate within all studies, supplied by the user as \code{est_all} (black
+diamond), and within only the nonaffirmative studies, supplied by the user
+as \code{est_N} (grey diamond). The user can calculate \code{est_all} and
+\code{est_N} using their choice of meta-analysis model. If instead these
+are not supplied but \code{plot_pooled = TRUE}, these pooled estimates will
+be automatically calculated using a fixed-effects (a.k.a. "common-effect")
+model.
 }
 \examples{
 ##### Make Significance Funnel with User-Specified Pooled Estimates #####
@@ -125,6 +125,6 @@ significance_funnel(yi = dat$yi,
 }
 \references{
 Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-  publication bias in meta-analyses. \emph{Journal of the Royal Statistical
-  Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+publication bias in meta-analyses. \emph{Journal of the Royal Statistical
+Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 }

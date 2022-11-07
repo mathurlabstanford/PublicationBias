@@ -1,59 +1,40 @@
 #' Estimate publication bias-corrected meta-analysis
 #'
-#' For a chosen ratio of publication probabilities, \code{eta}, estimates a
+#' For a chosen ratio of publication probabilities, `eta`, estimates a
 #' publication bias-corrected pooled point estimate and confidence interval per
 #' Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a.
 #' "common-effect"), robust independent, and robust clustered specifications.
-#' @export
 #'
-#' @param yi A vector of point estimates to be meta-analyzed.
-#' @param vi A vector of estimated variances for the point estimates.
-#' @param sei A vector of estimated standard errors for the point estimates
-#'   (only relevant when not using \code{vi}).
-#' @param cluster A character, factor, or numeric vector with the same length
-#'   as yi. Unique values should indicate unique clusters of point estimates. By
-#'   default, assumes all point estimates are independent.
-#' @param selection_ratio The number of times more likely an affirmative study is to be
-#'   published than a nonaffirmative study; see Details.
+#' @inheritParams metabias::params
 #' @param selection_tails 1 (for one-tailed selection, recommended for its
 #'   conservatism) or 2 (for two-tailed selection).
-#' @param model_type "fixed" for fixed-effects (a.k.a. "common-effect") or "robust"
-#'   for robust random-effects.
-#' @param favor_positive \code{TRUE} if publication bias is assumed to favor
-#'   positive estimates; \code{FALSE} if assumed to favor negative estimates;
-#'   see Details.
-#' @param alpha_select Alpha-level at which publication probability is assumed
-#'   to change.
-#' @param ci_level Confidence interval level (as proportion) for the corrected
-#'   point estimate. (The alpha level for inference on the corrected point
-#'   estimate will be calculated from \code{ci_level}.)
-#' @param small Should inference allow for a small meta-analysis? We recommend
-#'   always using \code{TRUE}.
+#' @param model_type "fixed" for fixed-effects (a.k.a. "common-effect") or
+#'   "robust" for robust random-effects.
 #'
-#' @details The \code{selection_ratio} represents the number of times more likely
+#' @details The `selection_ratio` represents the number of times more likely
 #'   affirmative studies (i.e., those with a "statistically significant" and
 #'   positive estimate) are to be published than nonaffirmative studies (i.e.,
 #'   those with a "nonsignificant" or negative estimate).
 #'
-#'   If \code{favor_positive == FALSE}, such that publication bias is assumed to
-#'   favor negative rather than positive estimates, the signs of \code{yi} will
-#'   be reversed prior to performing analyses. The corrected estimate will be
+#'   If `favor_positive` is `FALSE`, such that publication bias is assumed to
+#'   favor negative rather than positive estimates, the signs of `yi` will be
+#'   reversed prior to performing analyses. The corrected estimate will be
 #'   reported based on the recoded signs rather than the original sign
 #'   convention.
 #'
-#' @return A list with three elements, \code{values}, \code{stats} and
-#'   \code{fit}. Stats is a list that contains the bias-corrected pooled point
-#'   estimate (\code{estimate}) and inference on the bias-corrected estimate
-#'   (\code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}). Values is a
-#'   list that contains the user's specified \code{selection_ratio}, the number of
-#'   affirmative and nonaffirmative studies (\code{k_affirmative} and
-#'   \code{k_nonaffirmative}), and a dataframe combining \code{yi}, \code{vi},
-#'   \code{cluster}.
+#' @return A list with three elements, `values`, `stats` and `fit`. Stats is a
+#'   list that contains the bias-corrected pooled point estimate (`estimate`)
+#'   and inference on the bias-corrected estimate (`se`, `ci_lower`, `ci_upper`,
+#'   `p_value`). Values is a list that contains the user's specified
+#'   `selection_ratio`, the number of affirmative and nonaffirmative studies
+#'   (`k_affirmative` and `k_nonaffirmative`), and a dataframe combining `yi`,
+#'   `vi`, `cluster`.
 #'
 #' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-#'   publication bias in meta-analyses. \emph{Journal of the Royal Statistical
-#'   Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+#'   publication bias in meta-analyses. *Journal of the Royal Statistical
+#'   Society, Series C.* Preprint available at https://osf.io/s9dp6/.
 #'
+#' @export
 #' @example inst/examples/pubbias_meta.R
 pubbias_meta = function(yi, # data
                         vi,

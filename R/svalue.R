@@ -3,76 +3,54 @@
 #' Estimates the S-value, defined as the severity of publication bias (i.e., the
 #' ratio by which affirmative studies are more likely to be published than
 #' nonaffirmative studies) that would be required to shift the pooled point
-#' estimate or its confidence interval limit to the value \code{q}.
-#' @export
+#' estimate or its confidence interval limit to the value `q`.
 #'
-#' @param yi A vector of point estimates to be meta-analyzed. Their signs should
-#'   be coded such that publication bias is assumed to favor positive, rather
-#'   than negative, estimates.
-#' @param vi A vector of estimated variances for the point estimates.
-#' @param sei A vector of estimated standard errors for the point estimates
-#'   (only relevant when not using \code{vi}).
-#' @param cluster A character, factor, or numeric vector with the same length
-#'   as \code{yi}. Unique values should indicate unique clusters of point
-#'   estimates. If left unspecified, assumes studies are independent.
-#' @param q The attenuated value to which to shift the point estimate or CI.
-#'   Should be specified on the same scale as \code{yi} (e.g., if \code{yi} is
-#'   on the log-RR scale, then \code{q} should be as well).
-#' @param model_type \code{"fixed"} for fixed-effects (a.k.a. "common-effect") or
-#'   \code{"robust"} for robust random-effects.
-#' @param favor_positive \code{TRUE} if publication bias is assumed to favor
-#'   positive estimates; \code{FALSE} if assumed to favor negative estimates.
-#'   See Details.
-#' @param alpha_select Alpha-level at which publication probability is assumed
-#'   to change.
-#' @param ci_level Confidence interval level (as a proportion) for the corrected
-#'   point estimate.
-#' @param small Should inference allow for a small meta-analysis? We recommend
-#'   using always using \code{TRUE}.
-#' @param selection_ratio_max The largest value of \code{selection_ratio} that should be included in
-#'   the grid search. This argument is only needed when \code{model_type = "robust"}.
+#' @inheritParams metabias::params
+#' @inheritParams pubbias_meta
+#' @param selection_ratio_max The largest value of `selection_ratio` that should
+#'   be included in the grid search. This argument is only needed when
+#'   `model_type = "robust"`.
 #' @param return_worst_meta Should the worst-case meta-analysis of only the
 #'   nonaffirmative studies be returned?
 #'
 #' @details To illustrate interpretation of the S-value, if the S-value for the
-#'   point estimate is 30 with \code{q=0}, this indicates that affirmative
-#'   studies (i.e., those with a "statistically significant" and positive
-#'   estimate) would need to be 30-fold more likely to be published than
-#'   nonaffirmative studies (i.e., those with a "nonsignificant" or negative
-#'   estimate) to attenuate the pooled point estimate to \code{q}.
+#'   point estimate is 30 with `q=0`, this indicates that affirmative studies
+#'   (i.e., those with a "statistically significant" and positive estimate)
+#'   would need to be 30-fold more likely to be published than nonaffirmative
+#'   studies (i.e., those with a "nonsignificant" or negative estimate) to
+#'   attenuate the pooled point estimate to `q`.
 #'
-#'   If \code{favor_positive == FALSE}, such that publication bias is assumed to
-#'   favor negative rather than positive estimates, the signs of \code{yi} will
-#'   be reversed prior to performing analyses. The returned number of
-#'   affirmative and nonaffirmative studies will reflect the recoded signs, and
-#'   accordingly the returned value \code{signs_recoded} will be \code{TRUE}.
+#'   If `favor_positive = FALSE`, such that publication bias is assumed to favor
+#'   negative rather than positive estimates, the signs of `yi` will be reversed
+#'   prior to performing analyses. The returned number of affirmative and
+#'   nonaffirmative studies will reflect the recoded signs, and accordingly the
+#'   returned value `signs_recoded` will be `TRUE`.
 #'
 #' @return The function returns: the amount of publication bias required to
-#'   attenuate the pooled point estimate to \code{q} (\code{sval_est}), the
-#'   amount of publication bias required to attenuate the confidence interval
-#'   limit of the pooled point estimate to \code{q} (\code{sval_ci}), the number
-#'   of affirmative and nonaffirmative studies after any needed recoding of
-#'   signs (\code{k_affirmative} and \code{k_nonaffirmative}), and an indicator
-#'   for whether the point estimates' signs were recoded (\code{signs_recoded}).
+#'   attenuate the pooled point estimate to `q` (`sval_est`), the amount of
+#'   publication bias required to attenuate the confidence interval limit of the
+#'   pooled point estimate to `q` (`sval_ci`), the number of affirmative and
+#'   nonaffirmative studies after any needed recoding of signs (`k_affirmative`
+#'   and `k_nonaffirmative`), and an indicator for whether the point estimates'
+#'   signs were recoded (`signs_recoded`).
 #'
-#'   If \code{return_worst_meta = TRUE}, also returns the worst-case
-#'   meta-analysis of only the nonaffirmative studies. If \code{model_type =
-#'   "fixed"}, the worst-case meta-analysis is fit by \code{metafor::rma.uni}.
-#'   If \code{model_type = "robust"}, it is fit by \code{robumeta::robu}. Note that
-#'   in the latter case, custom inverse-variance weights are used, which are the
-#'   inverse of the sum of the study's variance and a heterogeneity estimate
-#'   from a naive random-effects meta-analysis (Mathur & VanderWeele, 2020).
-#'   This is done for consistency with the results of
-#'   \code{pubbias_meta}, which is used to determine \code{sval_est}
-#'   and \code{sval_ci}. Therefore, the worst-case meta-analysis results may
-#'   differ slightly from what you would obtain if you simply fit
-#'   \code{robumeta::robu} on the nonaffirmative studies with the default
-#'   weights.
+#'   If `return_worst_meta = TRUE`, also returns the worst-case meta-analysis of
+#'   only the nonaffirmative studies. If `model_type = "fixed"`, the worst-case
+#'   meta-analysis is fit by `metafor::rma.uni()`. If `model_type = "robust"`,
+#'   it is fit by `robumeta::robu()`. Note that in the latter case, custom
+#'   inverse-variance weights are used, which are the inverse of the sum of the
+#'   study's variance and a heterogeneity estimate from a naive random-effects
+#'   meta-analysis (Mathur & VanderWeele, 2020). This is done for consistency
+#'   with the results of `pubbias_meta()`, which is used to determine `sval_est`
+#'   and `sval_ci`. Therefore, the worst-case meta-analysis results may differ
+#'   slightly from what you would obtain if you simply fit `robumeta::robu()` on
+#'   the nonaffirmative studies with the default weights.
 #'
 #' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-#'   publication bias in meta-analyses. \emph{Journal of the Royal Statistical
-#'   Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+#'   publication bias in meta-analyses. *Journal of the Royal Statistical
+#'   Society, Series C.* Preprint available at https://osf.io/s9dp6/.
 #'
+#' @export
 #' @example inst/examples/pubbias_svalue.R
 pubbias_svalue = function( yi, # data
                            vi,

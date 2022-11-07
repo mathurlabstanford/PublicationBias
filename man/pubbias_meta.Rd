@@ -35,37 +35,41 @@ corrected_meta(
 \arguments{
 \item{yi}{A vector of point estimates to be meta-analyzed.}
 
-\item{vi}{A vector of estimated variances for the point estimates.}
+\item{vi}{A vector of estimated variances (i.e., squared standard errors) for
+the point estimates.}
 
-\item{sei}{A vector of estimated standard errors for the point estimates
-(only relevant when not using \code{vi}).}
+\item{sei}{A vector of estimated standard errors for the point estimates.
+(Only one of `vi` or `sei` needs to be specified).}
 
-\item{cluster}{A character, factor, or numeric vector with the same length
-as yi. Unique values should indicate unique clusters of point estimates. By
-default, assumes all point estimates are independent.}
+\item{cluster}{Vector of the same length as the number of rows in the data,
+indicating which cluster each study should be considered part of (defaults
+to treating studies as independent; i.e., each study is in its own cluster).}
 
-\item{selection_ratio}{The number of times more likely an affirmative study is to be
-published than a nonaffirmative study; see Details.}
+\item{selection_ratio}{Ratio by which publication bias favors affirmative
+studies (i.e., studies with p-values less than `alpha_select` and
+estimates in the direction indicated by `favor_positive`).}
 
-\item{model_type}{"fixed" for fixed-effects (a.k.a. "common-effect") or "robust"
-for robust random-effects.}
+\item{model_type}{"fixed" for fixed-effects (a.k.a. "common-effect") or
+"robust" for robust random-effects.}
 
-\item{favor_positive}{\code{TRUE} if publication bias is assumed to favor
-positive estimates; \code{FALSE} if assumed to favor negative estimates;
-see Details.}
+\item{favor_positive}{`TRUE` if publication bias are
+assumed to favor significant positive estimates; `FALSE` if assumed to
+favor significant negative estimates.}
 
 \item{selection_tails}{1 (for one-tailed selection, recommended for its
 conservatism) or 2 (for two-tailed selection).}
 
-\item{alpha_select}{Alpha-level at which publication probability is assumed
-to change.}
+\item{alpha_select}{Alpha level at which an estimate's probability of being
+favored by publication bias is assumed to change (i.e.,
+the threshold at which study investigators, journal editors, etc., consider
+an estimate to be significant).}
 
 \item{ci_level}{Confidence interval level (as proportion) for the corrected
 point estimate. (The alpha level for inference on the corrected point
-estimate will be calculated from \code{ci_level}.)}
+estimate will be calculated from `ci_level`.)}
 
 \item{small}{Should inference allow for a small meta-analysis? We recommend
-always using \code{TRUE}.}
+always using `TRUE`.}
 
 \item{eta}{(deprecated) see selection_ratio}
 
@@ -82,14 +86,13 @@ always using \code{TRUE}.}
 \item{CI.level}{(deprecated) see ci_level}
 }
 \value{
-A list with three elements, \code{values}, \code{stats} and
-  \code{fit}. Stats is a list that contains the bias-corrected pooled point
-  estimate (\code{estimate}) and inference on the bias-corrected estimate
-  (\code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}). Values is a
-  list that contains the user's specified \code{selection_ratio}, the number of
-  affirmative and nonaffirmative studies (\code{k_affirmative} and
-  \code{k_nonaffirmative}), and a dataframe combining \code{yi}, \code{vi},
-  \code{cluster}.
+A list with three elements, \code{values}, \code{stats} and \code{fit}. Stats is a
+list that contains the bias-corrected pooled point estimate (\code{estimate})
+and inference on the bias-corrected estimate (\code{se}, \code{ci_lower}, \code{ci_upper},
+\code{p_value}). Values is a list that contains the user's specified
+\code{selection_ratio}, the number of affirmative and nonaffirmative studies
+(\code{k_affirmative} and \code{k_nonaffirmative}), and a dataframe combining \code{yi},
+\code{vi}, \code{cluster}.
 }
 \description{
 For a chosen ratio of publication probabilities, \code{eta}, estimates a
@@ -99,15 +102,15 @@ Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a.
 }
 \details{
 The \code{selection_ratio} represents the number of times more likely
-  affirmative studies (i.e., those with a "statistically significant" and
-  positive estimate) are to be published than nonaffirmative studies (i.e.,
-  those with a "nonsignificant" or negative estimate).
+affirmative studies (i.e., those with a "statistically significant" and
+positive estimate) are to be published than nonaffirmative studies (i.e.,
+those with a "nonsignificant" or negative estimate).
 
-  If \code{favor_positive == FALSE}, such that publication bias is assumed to
-  favor negative rather than positive estimates, the signs of \code{yi} will
-  be reversed prior to performing analyses. The corrected estimate will be
-  reported based on the recoded signs rather than the original sign
-  convention.
+If \code{favor_positive} is \code{FALSE}, such that publication bias is assumed to
+favor negative rather than positive estimates, the signs of \code{yi} will be
+reversed prior to performing analyses. The corrected estimate will be
+reported based on the recoded signs rather than the original sign
+convention.
 }
 \examples{
 # calculate effect sizes from example dataset in metafor
@@ -169,6 +172,6 @@ ggplot(estimates, aes(x = selection_ratio, y = estimate)) +
 }
 \references{
 Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-  publication bias in meta-analyses. \emph{Journal of the Royal Statistical
-  Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+publication bias in meta-analyses. \emph{Journal of the Royal Statistical
+Society, Series C.} Preprint available at https://osf.io/s9dp6/.
 }

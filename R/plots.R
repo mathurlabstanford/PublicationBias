@@ -9,7 +9,7 @@
 #' much smaller than the pooled estimate among all studies (black diamond), this
 #' suggests that the meta-analysis may not be robust to extreme publication
 #' bias. Numerical sensitivity analyses (via
-#' \code{PublicationBias::pubbias_svalue}) should still be carried out for more
+#' `PublicationBias::pubbias_svalue`) should still be carried out for more
 #' precise quantitative conclusions.
 #' @export
 #'
@@ -26,25 +26,25 @@
 #' @param est_all Regular meta-analytic estimate among all studies (optional).
 #' @param est_N Worst-case meta-analytic estimate among only nonaffirmative
 #'   studies (optional).
-#' @param favor_positive \code{TRUE} if publication bias is assumed to favor
-#'   positive estimates; \code{FALSE} if assumed to favor negative estimates.
+#' @param favor_positive `TRUE` if publication bias is assumed to favor
+#'   positive estimates; `FALSE` if assumed to favor negative estimates.
 #' @param alpha_select Alpha-level at which publication probability is assumed
 #'   to change.
 #' @param plot_pooled Should the pooled estimates within all studies and within
 #'   only the nonaffirmative studies be plotted as well?
 #'
-#' @details By default (\code{plot_pooled = TRUE}), also plots the pooled point
-#'   estimate within all studies, supplied by the user as \code{est_all} (black
+#' @details By default (`plot_pooled = TRUE`), also plots the pooled point
+#'   estimate within all studies, supplied by the user as `est_all` (black
 #'   diamond), and within only the nonaffirmative studies, supplied by the user
-#'   as \code{est_N} (grey diamond). The user can calculate \code{est_all} and
-#'   \code{est_N} using their choice of meta-analysis model. If instead these
-#'   are not supplied but \code{plot_pooled = TRUE}, these pooled estimates will
+#'   as `est_N` (grey diamond). The user can calculate `est_all` and
+#'   `est_N` using their choice of meta-analysis model. If instead these
+#'   are not supplied but `plot_pooled = TRUE`, these pooled estimates will
 #'   be automatically calculated using a fixed-effects (a.k.a. "common-effect")
 #'   model.
 #'
 #' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-#'   publication bias in meta-analyses. \emph{Journal of the Royal Statistical
-#'   Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+#'   publication bias in meta-analyses. *Journal of the Royal Statistical
+#'   Society, Series C.* Preprint available at https://osf.io/s9dp6/.
 #'
 #' @example inst/examples/significance_funnel.R
 significance_funnel = function( yi,
@@ -219,8 +219,8 @@ significance_funnel = function( yi,
 #'   to change
 #'
 #' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-#' publication bias in meta-analyses. \emph{Journal of the Royal Statistical
-#' Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+#' publication bias in meta-analyses. *Journal of the Royal Statistical
+#' Society, Series C.* Preprint available at https://osf.io/s9dp6/.
 
 #' @examples
 #'  # compute meta-analytic effect sizes
