@@ -23,10 +23,10 @@
 #'   If `favor_positive = FALSE`, such that publication bias is assumed to favor
 #'   negative rather than positive estimates, the signs of `yi` will be reversed
 #'   prior to performing analyses. The returned number of affirmative and
-#'   nonaffirmative studies will reflect the recoded signs, and accordingly the
-#'   returned value `signs_recoded` will be `TRUE`.
+#'   nonaffirmative studies will reflect the recoded signs.
 #'
-#' @return The function returns: the amount of publication bias required to
+#' @return An object of class [metabias::metabias()].
+#'   `stats` includes: the amount of publication bias required to
 #'   attenuate the pooled point estimate to `q` (`sval_est`), the amount of
 #'   publication bias required to attenuate the confidence interval limit of the
 #'   pooled point estimate to `q` (`sval_ci`), the number of affirmative and
@@ -157,7 +157,7 @@ pubbias_svalue = function( yi, # data
     }
 
     # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
-    strat = dat %>% dplyr::group_by(A) %>%
+    strat = dat |> dplyr::group_by(A) |>
       dplyr::summarise( nu = sum( 1 / vi ),
                         ybar = sum( yi / vi ) )
 
@@ -338,7 +338,7 @@ pubbias_svalue = function( yi, # data
     message("sval_ci is not applicable because the naive confidence interval already contains q")
   }
 
-  data = dat %>% dplyr::rename(affirm = .data$A)
+  data = dat |> dplyr::rename(affirm = .data$A)
 
   values = list(
     q = q,
@@ -362,9 +362,10 @@ pubbias_svalue = function( yi, # data
     fit$meta_worst = meta_worst
   }
 
-  results <- list(data = data, values = values, stats = stats, fit = fit)
-  class(results) <- "metabias"
-  return(results)
+  metabias::metabias(data = data, values = values, stats = stats, fit = fit)
+  # results <- list(data = data, values = values, stats = stats, fit = fit)
+  # class(results) <- "metabias"
+  # return(results)
 
 }
 

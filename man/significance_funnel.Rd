@@ -24,10 +24,11 @@ significance_funnel(
 \arguments{
 \item{yi}{A vector of point estimates to be meta-analyzed.}
 
-\item{vi}{A vector of estimated variances for the point estimates.}
+\item{vi}{A vector of estimated variances (i.e., squared standard errors) for
+the point estimates.}
 
-\item{sei}{A vector of estimated standard errors for the point estimates
-(only relevant when not using code{vi}).}
+\item{sei}{A vector of estimated standard errors for the point estimates.
+(Only one of \code{vi} or \code{sei} needs to be specified).}
 
 \item{xmin}{x-axis (point estimate) lower limit for plot.}
 
@@ -41,16 +42,19 @@ significance_funnel(
 
 \item{ylab}{Label for y-axis (standard error).}
 
-\item{favor_positive}{\code{TRUE} if publication bias is assumed to favor
-positive estimates; \code{FALSE} if assumed to favor negative estimates.}
+\item{favor_positive}{\code{TRUE} if publication bias are
+assumed to favor significant positive estimates; \code{FALSE} if assumed to
+favor significant negative estimates.}
 
 \item{est_all}{Regular meta-analytic estimate among all studies (optional).}
 
 \item{est_N}{Worst-case meta-analytic estimate among only nonaffirmative
 studies (optional).}
 
-\item{alpha_select}{Alpha-level at which publication probability is assumed
-to change.}
+\item{alpha_select}{Alpha level at which an estimate's probability of being
+favored by publication bias is assumed to change (i.e.,
+the threshold at which study investigators, journal editors, etc., consider
+an estimate to be significant).}
 
 \item{plot_pooled}{Should the pooled estimates within all studies and within
 only the nonaffirmative studies be plotted as well?}
@@ -64,9 +68,8 @@ entire set of point estimates. The estimate among only nonaffirmative studies
 bias. If the gray diamond represents a negligible effect size or if it is
 much smaller than the pooled estimate among all studies (black diamond), this
 suggests that the meta-analysis may not be robust to extreme publication
-bias. Numerical sensitivity analyses (via
-\code{PublicationBias::pubbias_svalue}) should still be carried out for more
-precise quantitative conclusions.
+bias. Numerical sensitivity analyses (via \code{\link[=pubbias_svalue]{pubbias_svalue()}}) should still be
+carried out for more precise quantitative conclusions.
 }
 \details{
 By default (\code{plot_pooled = TRUE}), also plots the pooled point

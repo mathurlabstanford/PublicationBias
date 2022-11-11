@@ -13,15 +13,17 @@ Description: Performs sensitivity analysis for publication bias in meta-analyses
 License: GPL-2
 Encoding: UTF-8
 Imports:
+  dplyr,
+  ggplot2,
+  metabias,
   metafor,
   stats,
-  dplyr,
-  robumeta,
-  ggplot2,
-  rlang
+  rlang,
+  robumeta
 Suggests:
-  testthat,
-  withr
+    testthat (>= 3.0.0),
+    withr
 LazyData: true
 RoxygenNote: 7.2.1
 Roxygen: list(markdown = TRUE)
+Config/testthat/edition: 3

@@ -41,21 +41,21 @@ svalue(
 the point estimates.}
 
 \item{sei}{A vector of estimated standard errors for the point estimates.
-(Only one of `vi` or `sei` needs to be specified).}
+(Only one of \code{vi} or \code{sei} needs to be specified).}
 
 \item{cluster}{Vector of the same length as the number of rows in the data,
 indicating which cluster each study should be considered part of (defaults
 to treating studies as independent; i.e., each study is in its own cluster).}
 
 \item{q}{The attenuated value to which to shift the point estimate or CI.
-Should be specified on the same scale as `yi` (e.g., if
-`yi` is on the log-RR scale, then `q` should be as well).}
+Should be specified on the same scale as \code{yi} (e.g., if
+\code{yi} is on the log-RR scale, then \code{q} should be as well).}
 
 \item{model_type}{"fixed" for fixed-effects (a.k.a. "common-effect") or
 "robust" for robust random-effects.}
 
-\item{favor_positive}{`TRUE` if publication bias are
-assumed to favor significant positive estimates; `FALSE` if assumed to
+\item{favor_positive}{\code{TRUE} if publication bias are
+assumed to favor significant positive estimates; \code{FALSE} if assumed to
 favor significant negative estimates.}
 
 \item{alpha_select}{Alpha level at which an estimate's probability of being
@@ -65,10 +65,10 @@ an estimate to be significant).}
 
 \item{ci_level}{Confidence interval level (as proportion) for the corrected
 point estimate. (The alpha level for inference on the corrected point
-estimate will be calculated from `ci_level`.)}
+estimate will be calculated from \code{ci_level}.)}
 
 \item{small}{Should inference allow for a small meta-analysis? We recommend
-always using `TRUE`.}
+always using \code{TRUE}.}
 
 \item{selection_ratio_max}{The largest value of \code{selection_ratio} that should
 be included in the grid search. This argument is only needed when
@@ -92,7 +92,8 @@ nonaffirmative studies be returned?}
 \item{return.worst.meta}{(deprecated) see return_worst_meta}
 }
 \value{
-The function returns: the amount of publication bias required to
+An object of class \code{\link[metabias:metabias-class]{metabias::metabias()}}.
+\code{stats} includes: the amount of publication bias required to
 attenuate the pooled point estimate to \code{q} (\code{sval_est}), the amount of
 publication bias required to attenuate the confidence interval limit of the
 pooled point estimate to \code{q} (\code{sval_ci}), the number of affirmative and
@@ -129,8 +130,7 @@ attenuate the pooled point estimate to \code{q}.
 If \code{favor_positive = FALSE}, such that publication bias is assumed to favor
 negative rather than positive estimates, the signs of \code{yi} will be reversed
 prior to performing analyses. The returned number of affirmative and
-nonaffirmative studies will reflect the recoded signs, and accordingly the
-returned value \code{signs_recoded} will be \code{TRUE}.
+nonaffirmative studies will reflect the recoded signs.
 }
 \examples{
 # calculate effect sizes from example dataset in metafor

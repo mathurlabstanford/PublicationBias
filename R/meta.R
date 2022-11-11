@@ -22,13 +22,7 @@
 #'   reported based on the recoded signs rather than the original sign
 #'   convention.
 #'
-#' @return A list with three elements, `values`, `stats` and `fit`. Stats is a
-#'   list that contains the bias-corrected pooled point estimate (`estimate`)
-#'   and inference on the bias-corrected estimate (`se`, `ci_lower`, `ci_upper`,
-#'   `p_value`). Values is a list that contains the user's specified
-#'   `selection_ratio`, the number of affirmative and nonaffirmative studies
-#'   (`k_affirmative` and `k_nonaffirmative`), and a dataframe combining `yi`,
-#'   `vi`, `cluster`.
+#' @return An object of class [metabias::metabias()].
 #'
 #' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
 #'   publication bias in meta-analyses. *Journal of the Royal Statistical
@@ -102,7 +96,7 @@ pubbias_meta = function(yi, # data
   if ( model_type == "fixed" ) {
 
     # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
-    strat = dat %>% dplyr::group_by(A) %>%
+    strat = dat |> dplyr::group_by(A) |>
       dplyr::summarise( nu = sum( 1 / vi ),
                         ybar = sum( yi / vi ) )
 
@@ -166,7 +160,7 @@ pubbias_meta = function(yi, # data
     pval_est = meta_robu$reg_table$prob
   } # end robust = TRUE
 
-  data = dat %>% dplyr::rename(affirm = .data$A)
+  data = dat |> dplyr::rename(affirm = .data$A)
   values = list(selection_ratio = selection_ratio,
                 model_type = model_type,
                 selection_tails = selection_tails,
@@ -189,9 +183,10 @@ pubbias_meta = function(yi, # data
     fit$robust = meta_robu
   }
 
-  results <- list(data = data, values = values, stats = stats, fit = fit)
-  class(results) <- "metabias"
-  return(results)
+  metabias::metabias(data = data, values = values, stats = stats, fit = fit)
+  # results <- list(data = data, values = values, stats = stats, fit = fit)
+  # class(results) <- "metabias"
+  # return(results)
 
 }
 

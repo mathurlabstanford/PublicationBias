@@ -8,15 +8,12 @@
 #' bias. If the gray diamond represents a negligible effect size or if it is
 #' much smaller than the pooled estimate among all studies (black diamond), this
 #' suggests that the meta-analysis may not be robust to extreme publication
-#' bias. Numerical sensitivity analyses (via
-#' `PublicationBias::pubbias_svalue`) should still be carried out for more
-#' precise quantitative conclusions.
+#' bias. Numerical sensitivity analyses (via [pubbias_svalue()]) should still be
+#' carried out for more precise quantitative conclusions.
+#'
 #' @export
 #'
-#' @param yi A vector of point estimates to be meta-analyzed.
-#' @param vi A vector of estimated variances for the point estimates.
-#' @param sei A vector of estimated standard errors for the point estimates
-#'   (only relevant when not using code{vi}).
+#' @inheritParams metabias::params
 #' @param xmin x-axis (point estimate) lower limit for plot.
 #' @param xmax x-axis (point estimate) upper limit for plot.
 #' @param ymin y-axis (standard error) lower limit for plot.
@@ -26,10 +23,6 @@
 #' @param est_all Regular meta-analytic estimate among all studies (optional).
 #' @param est_N Worst-case meta-analytic estimate among only nonaffirmative
 #'   studies (optional).
-#' @param favor_positive `TRUE` if publication bias is assumed to favor
-#'   positive estimates; `FALSE` if assumed to favor negative estimates.
-#' @param alpha_select Alpha-level at which publication probability is assumed
-#'   to change.
 #' @param plot_pooled Should the pooled estimates within all studies and within
 #'   only the nonaffirmative studies be plotted as well?
 #'
@@ -209,14 +202,10 @@ significance_funnel = function( yi,
 #' two-tailed rather than one-tailed.
 #' @export
 #'
+#' @inheritParams metabias::params
 #' @param yi A vector of point estimates to be meta-analyzed. The signs of the
 #'   estimates should be chosen such that publication bias is assumed to operate
 #'   in favor of positive estimates.
-#' @param vi A vector of estimated variances for the point estimates
-#' @param sei A vector of estimated standard errors for the point estimates
-#'   (only relevant when not using vi)
-#' @param alpha_select Alpha-level at which publication probability is assumed
-#'   to change
 #'
 #' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
 #' publication bias in meta-analyses. *Journal of the Royal Statistical
@@ -233,7 +222,6 @@ significance_funnel = function( yi,
 #'
 #'  pval_plot( yi = dat$yi,
 #'             vi = dat$vi )
-
 pval_plot = function( yi,
                       vi,
                       sei,

@@ -11,13 +11,16 @@ pval_plot(yi, vi, sei, alpha_select = 0.05)
 estimates should be chosen such that publication bias is assumed to operate
 in favor of positive estimates.}
 
-\item{vi}{A vector of estimated variances for the point estimates}
+\item{vi}{A vector of estimated variances (i.e., squared standard errors) for
+the point estimates.}
 
-\item{sei}{A vector of estimated standard errors for the point estimates
-(only relevant when not using vi)}
+\item{sei}{A vector of estimated standard errors for the point estimates.
+(Only one of \code{vi} or \code{sei} needs to be specified).}
 
-\item{alpha_select}{Alpha-level at which publication probability is assumed
-to change}
+\item{alpha_select}{Alpha level at which an estimate's probability of being
+favored by publication bias is assumed to change (i.e.,
+the threshold at which study investigators, journal editors, etc., consider
+an estimate to be significant).}
 }
 \description{
 Plots the one-tailed p-values. The leftmost red line indicates the cutoff for
