@@ -46,9 +46,8 @@
 #'   slightly from what you would obtain if you simply fit `robumeta::robu()` on
 #'   the nonaffirmative studies with the default weights.
 #'
-#' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-#'   publication bias in meta-analyses. *Journal of the Royal Statistical
-#'   Society, Series C.* Preprint available at https://osf.io/s9dp6/.
+#' @references
+#' \insertRef{mathur2020}{metabias}
 #'
 #' @export
 #' @example inst/examples/pubbias_svalue.R

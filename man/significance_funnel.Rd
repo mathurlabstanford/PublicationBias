@@ -16,7 +16,7 @@ significance_funnel(
   ylab = "Estimated standard error",
   favor_positive = NA,
   est_all = NA,
-  est_N = NA,
+  est_worst = NA,
   alpha_select = 0.05,
   plot_pooled = TRUE
 )
@@ -48,7 +48,7 @@ favor significant negative estimates.}
 
 \item{est_all}{Regular meta-analytic estimate among all studies (optional).}
 
-\item{est_N}{Worst-case meta-analytic estimate among only nonaffirmative
+\item{est_worst}{Worst-case meta-analytic estimate among only nonaffirmative
 studies (optional).}
 
 \item{alpha_select}{Alpha level at which an estimate's probability of being
@@ -75,59 +75,50 @@ carried out for more precise quantitative conclusions.
 By default (\code{plot_pooled = TRUE}), also plots the pooled point
 estimate within all studies, supplied by the user as \code{est_all} (black
 diamond), and within only the nonaffirmative studies, supplied by the user
-as \code{est_N} (grey diamond). The user can calculate \code{est_all} and
-\code{est_N} using their choice of meta-analysis model. If instead these
+as \code{est_worst} (grey diamond). The user can calculate \code{est_all} and
+\code{est_worst} using their choice of meta-analysis model. If instead these
 are not supplied but \code{plot_pooled = TRUE}, these pooled estimates will
 be automatically calculated using a fixed-effects (a.k.a. "common-effect")
 model.
 }
 \examples{
 ##### Make Significance Funnel with User-Specified Pooled Estimates #####
-
 # compute meta-analytic effect sizes for an example dataset
 require(metafor)
 dat <- metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
                        di = cneg, data = dat.bcg)
 
-# flip signs since we think publication bias operates in favor of negative
-# effects alternatively, if not flipping signs, could pass
-# favor_positive = FALSE to significance_funnel
-dat$yi <- -dat$yi
+# favor_positive = FALSE since we think publication bias operates in favor of negative
+significance_funnel(yi = dat$yi, vi = dat$vi, favor_positive = FALSE)
 
-# optional: regular meta-analysis of all studies (for the black diamond)
-# for flexibility, you can use any choice of meta-analysis model here
-# in this case, we'll use the robust independent specification since the
+# by default, the meta-analytic estimates plotted are from metafor::rma.uni()
+# you can instead supply estimates from another meta-analysis model
+# for example, using the robust independent specification since the
 # point estimates seem to be from unique papers
-# thus, each study gets its own studynum
-require(robumeta)
-meta_all <- robumeta::robu(yi ~ 1,
-                           studynum = 1:nrow(dat),
-                           data = dat,
-                           var.eff.size = vi,
-                           small = TRUE)
-
-# optional: calculate worst-case estimate (for the gray diamond) by analyzing
-# only the nonaffirmative studies
-dat$pval <- 2 * (1 - pnorm(abs(dat$yi / sqrt(dat$vi))))  # two-tailed p-value
-dat$affirm <- (dat$yi > 0) & (dat$pval < 0.05)  # is study affirmative?
-meta_worst <- robumeta::robu(yi ~ 1,
-                             studynum = 1:nrow( dat[ dat$affirm == TRUE, ] ),
-                             data = dat[ dat$affirm == TRUE, ],
-                             var.eff.size = vi,
-                             small = TRUE)
-
-##### Make Significance Funnel with Alpha = 0.50 and Default Pooled Estimates #####
-# change alpha to 0.50 just for illustration
-# now the pooled estimates are from the fixed-effect specification because
-# they are not provided by the user
-significance_funnel(yi = dat$yi,
-                    vi = dat$vi,
-                    favor_positive = TRUE,
-                    alpha_select = 0.50,
-                    plot_pooled = TRUE)
+# require(robumeta)
+# meta_all <- robumeta::robu(yi ~ 1,
+#                            studynum = 1:nrow(dat),
+#                            data = dat,
+#                            var.eff.size = vi,
+#                            small = TRUE)
+#
+# # worst-case meta-analysis (non-affirmative studies)
+# dat$pval <- 2 * (1 - pnorm(abs(dat$yi / sqrt(dat$vi))))  # two-tailed p-value
+# dat$affirm <- (dat$yi > 0) & (dat$pval < 0.05)  # is study affirmative?
+# meta_worst <- robumeta::robu(yi ~ 1,
+#                              studynum = 1:nrow( dat[ dat$affirm == TRUE, ] ),
+#                              data = dat[ dat$affirm == TRUE, ],
+#                              var.eff.size = vi,
+#                              small = TRUE)
+#
+# meta_all <- pubbias_meta(yi = dat$yi, vi = dat$vi, selection_ratio = 1) # etc
+# meta_all$fits$robust$b.r
+# meta_all$data
+# pubbias_svalue(yi = dat$yi, vi = dat$vi, favor_positive = FALSE, return_worst_meta = TRUE)
+#
+# significance_funnel(yi = dat$yi, vi = dat$vi, est_all = meta_all$b.r,
+#                     est_worse = meta_worst$b.r, favor_positive = FALSE)
 }
 \references{
-Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-publication bias in meta-analyses. \emph{Journal of the Royal Statistical
-Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+\insertRef{mathur2020}{metabias}
 }

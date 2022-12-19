@@ -91,8 +91,9 @@ An object of class \code{\link[metabias:metabias-class]{metabias::metabias()}}.
 \description{
 For a chosen ratio of publication probabilities, \code{eta}, estimates a
 publication bias-corrected pooled point estimate and confidence interval per
-Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a.
-"common-effect"), robust independent, and robust clustered specifications.
+\insertCite{mathur2020;textual}{metabias}. Model options include
+fixed-effects (a.k.a. "common-effect"), robust independent, and robust
+clustered specifications.
 }
 \details{
 The \code{selection_ratio} represents the number of times more likely
@@ -118,8 +119,8 @@ dat <- metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
 metafor::rma(yi, vi, data = dat, method = "FE")
 
 # warmup
-# note that passing selection_ratio = 1 (no publication bias) yields the naive point
-# estimate from rma above, which makes sense
+# note that passing selection_ratio = 1 (no publication bias) yields the naive
+# point estimate from rma above, which makes sense
 pubbias_meta(yi = dat$yi,
              vi = dat$vi,
              selection_ratio = 1,
@@ -146,7 +147,7 @@ pubbias_meta(yi = dat$yi,
 
 ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
 # range of parameters to try (more dense at the very small ones)
-selection_ratios = c(200, 150, 100, 50, 40, 30, 20, seq(15, 1))
+selection_ratios <- c(200, 150, 100, 50, 40, 30, 20, seq(15, 1))
 
 # compute estimate for each value of selection_ratio
 estimates <- lapply(selection_ratios, function(e) {
@@ -165,7 +166,5 @@ ggplot(estimates, aes(x = selection_ratio, y = estimate)) +
   theme_classic()
 }
 \references{
-Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-publication bias in meta-analyses. \emph{Journal of the Royal Statistical
-Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+\insertRef{mathur2020}{metabias}
 }

@@ -2,8 +2,9 @@
 #'
 #' For a chosen ratio of publication probabilities, `eta`, estimates a
 #' publication bias-corrected pooled point estimate and confidence interval per
-#' Mathur & VanderWeele (2020). Model options include fixed-effects (a.k.a.
-#' "common-effect"), robust independent, and robust clustered specifications.
+#' \insertCite{mathur2020;textual}{metabias}. Model options include
+#' fixed-effects (a.k.a. "common-effect"), robust independent, and robust
+#' clustered specifications.
 #'
 #' @inheritParams metabias::params
 #' @param selection_tails 1 (for one-tailed selection, recommended for its
@@ -24,9 +25,8 @@
 #'
 #' @return An object of class [metabias::metabias()].
 #'
-#' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-#'   publication bias in meta-analyses. *Journal of the Royal Statistical
-#'   Society, Series C.* Preprint available at https://osf.io/s9dp6/.
+#' @references
+#' \insertRef{mathur2020}{metabias}
 #'
 #' @export
 #' @example inst/examples/pubbias_meta.R

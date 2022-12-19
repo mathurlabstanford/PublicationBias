@@ -8,4 +8,25 @@
 \description{
 Performs sensitivity analysis for publication bias in meta-analyses (per Mathur & VanderWeele, 2020 [\url{https://osf.io/s9dp6}]). These analyses enable statements such as: "For publication bias to shift the observed point estimate to the null, 'significant' results would need to be at least 30-fold more likely to be published than negative or 'nonsignificant' results." Comparable statements can be made regarding shifting to a chosen non-null value or shifting the confidence interval. Provides a worst-case meta-analytic point estimate under maximal publication bias obtained simply by conducting a standard meta-analysis of only the negative and "nonsignificant" studies.
 }
+\references{
+\insertRef{mathur2020}{metabias}
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/mayamathur/PublicationBias}
+  \item Report bugs at \url{https://github.com/mayamathur/PublicationBias/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Maya Mathur \email{mmathur@stanford.edu}
+
+Authors:
+\itemize{
+  \item Mika Braginsky \email{mika.br@gmail.com}
+  \item Tyler J. VanderWeele \email{tvanderw@hsph.harvard.edu}
+}
+
+}
 \keyword{internal}

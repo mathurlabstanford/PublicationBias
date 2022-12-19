@@ -35,9 +35,8 @@
 #'   be automatically calculated using a fixed-effects (a.k.a. "common-effect")
 #'   model.
 #'
-#' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-#'   publication bias in meta-analyses. *Journal of the Royal Statistical
-#'   Society, Series C.* Preprint available at https://osf.io/s9dp6/.
+#' @references
+#' \insertRef{mathur2020}{metabias}
 #'
 #' @example inst/examples/significance_funnel.R
 significance_funnel <- function(yi,
@@ -166,10 +165,9 @@ significance_funnel <- function(yi,
 #'   estimates should be chosen such that publication bias is assumed to operate
 #'   in favor of positive estimates.
 #'
-#' @references Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-#' publication bias in meta-analyses. *Journal of the Royal Statistical
-#' Society, Series C.* Preprint available at https://osf.io/s9dp6/.
-
+#' @references
+#' \insertRef{mathur2020}{metabias}
+#'
 #' @examples
 #' # compute meta-analytic effect sizes
 #' require(metafor)

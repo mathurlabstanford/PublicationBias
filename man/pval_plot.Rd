@@ -33,19 +33,16 @@ right of the rightmost red line, this suggests that selection may be
 two-tailed rather than one-tailed.
 }
 \examples{
- # compute meta-analytic effect sizes
- require(metafor)
-dat = metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
-                      di = cneg, data = dat.bcg)
+# compute meta-analytic effect sizes
+require(metafor)
+dat <- metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
+                       di = cneg, data = dat.bcg)
 
- # flip signs since we think publication bias operates in favor of negative effects
- dat$yi = -dat$yi
+# flip signs since we think publication bias favors negative effects
+dat$yi <- -dat$yi
 
- pval_plot( yi = dat$yi,
-            vi = dat$vi )
+pval_plot(yi = dat$yi, vi = dat$vi)
 }
 \references{
-Mathur MB & VanderWeele TJ (2020). Sensitivity analysis for
-publication bias in meta-analyses. \emph{Journal of the Royal Statistical
-Society, Series C.} Preprint available at https://osf.io/s9dp6/.
+\insertRef{mathur2020}{metabias}
 }
