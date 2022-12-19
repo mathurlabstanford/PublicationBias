@@ -113,20 +113,20 @@ pubbias_meta <- function(yi, # data
     var <- (selection_ratio ^ 2 * nu_n + nu_s) / (selection_ratio * nu_n + nu_s) ^ 2
     se <- sqrt(var)
 
-    # z-based inference
     if (!small) {
+      # z-based inference
       lo <- est - qnorm(1 - alpha / 2) * sqrt(var)
       hi <- est + qnorm(1 - alpha / 2) * sqrt(var)
       z <- abs(est / sqrt(var))
       pval_est <- 2 * (1 - pnorm(z))
+    } else {
+      # t-based inference
+      df <- k - 1
+      lo <- est - qt(1 - alpha / 2, df = df) * sqrt(var)
+      hi <- est + qt(1 - alpha / 2, df = df) * sqrt(var)
+      t <- abs(est / sqrt(var))
+      pval_est <- 2 * (1 - pt(t, df = df))
     }
-
-    # t-based inference
-    df <- k - 1
-    lo <- est - qt(1 - alpha / 2, df = df) * sqrt(var)
-    hi <- est + qt(1 - alpha / 2, df = df) * sqrt(var)
-    t <- abs(est / sqrt(var))
-    pval_est <- 2 * (1 - pt(t, df = df))
 
     stats <- list(estimate = est,
                   se = se,

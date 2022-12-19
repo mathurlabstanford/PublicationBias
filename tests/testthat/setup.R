@@ -28,7 +28,7 @@ sim_data <- function(p) {
                     pval = 2 * (1 - pnorm(abs(yi) / sei)))
 
     # 1-tailed publication bias
-    signif <- d$pval < 0.05 && d$yi > 0
+    signif <- d$pval < 0.05 & d$yi > 0
     publish <- rep(1, nrow(d))
     publish[!signif] <- rbinom(n = sum(!signif), size = 1,
                                prob = 1 / p$selection_ratio)

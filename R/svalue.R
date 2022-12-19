@@ -121,7 +121,7 @@ pubbias_svalue <- function(yi, # data
   affirm <- (pvals < alpha_select) & (yi > 0)
 
   k_affirmative <- sum(affirm)
-  k_nonaffirmative <- k_studies - affirm
+  k_nonaffirmative <- k_studies - k_affirmative
 
   k_zero_msg <- \(dir) glue("There are zero {dir} studies. Model estimation cannot proceed.")
   if (k_affirmative == 0) stop(k_zero_msg("affirmative"))
@@ -166,8 +166,8 @@ pubbias_svalue <- function(yi, # data
     c <- nu_n
     d <- nu_a
 
-    if (!small) k <- qnorm(1 - (alpha / 2))
-    k <- qt(1 - (alpha / 2), df = k_studies - 1)
+    k <- if (!small) qnorm(1 - (alpha / 2)) else qt(1 - (alpha / 2),
+                                                    df = k_studies - 1)
     term_a <- k ^ 2 * (a ^ 2 * d -
                        (2 * c * d * q) * (a + b) +
                        b ^ 2 * c +
@@ -193,8 +193,7 @@ pubbias_svalue <- function(yi, # data
       # first fit worst-case meta to see if we should even attempt grid search
       # initialize a dumb (unclustered and uncorrected) version of tau^2
       # which is only used for constructing weights
-      meta_re <- metafor::rma.uni(yi = yi,
-                                  vi = vi)
+      meta_re <- metafor::rma.uni(yi = yi, vi = vi)
       t2hat_naive <- meta_re$tau2
 
       # fit model exactly as in pubbias_meta
@@ -310,8 +309,6 @@ pubbias_svalue <- function(yi, # data
     message("sval_ci is not applicable because the naive confidence interval already contains q")
   }
 
-  data <- dat |> dplyr::rename(affirm = .data$A)
-
   values <- list(
     q = q,
     model_type = model_type,
@@ -332,7 +329,7 @@ pubbias_svalue <- function(yi, # data
   # meta_worst might not exist, e.g. if there is only 1 nonaffirmative study
   if (return_worst_meta && exists("meta_worst")) fit$meta_worst <- meta_worst
 
-  metabias::metabias(data = data, values = values, stats = stats, fit = fit)
+  metabias::metabias(data = dat, values = values, stats = stats, fit = fit)
 
 }
 

@@ -1,6 +1,5 @@
 # does significance_funnel give error if no non-affirmative studies?
 test_that("significance_funnel no non-affirmative", {
-  selection_ratio <- 50
 
   d <- sim_data(data.frame(k = 50,
                            per.cluster = 1,
@@ -9,7 +8,7 @@ test_that("significance_funnel no non-affirmative", {
                            V.gam = 0,
                            sei.min = .1,
                            sei.max = .1,
-                           selection_ratio = selection_ratio))
+                           selection_ratio = 50))
 
 
   # also see if significance_funnel works
