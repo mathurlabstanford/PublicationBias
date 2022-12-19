@@ -52,7 +52,7 @@
 #'
 #' @export
 #' @example inst/examples/pubbias_svalue.R
-pubbias_svalue = function( yi, # data
+pubbias_svalue <- function(yi, # data
                            vi,
                            sei,
                            cluster = 1:length(yi),
@@ -65,10 +65,10 @@ pubbias_svalue = function( yi, # data
                            ci_level = 0.95,
                            small = TRUE,
                            selection_ratio_max = 200,
-                           return_worst_meta = FALSE ) {
+                           return_worst_meta = FALSE) {
 
   # stop if selection_ratio doesn't make sense
-  if ( selection_ratio_max < 1 ) stop( "selection_ratio_max must be at least 1.")
+  if (selection_ratio_max < 1) stop("selection_ratio_max must be at least 1.")
 
   # resolve vi and sei
   if (missing(vi)) {
@@ -79,268 +79,241 @@ pubbias_svalue = function( yi, # data
   }
 
   # number of point estimates
-  k_studies = length(yi)
+  k_studies <- length(yi)
 
-  alpha = 1 - ci_level
+  alpha <- 1 - ci_level
 
   # warn if clusters but user said fixed
-  nclusters = length( unique( cluster ) )
-  if ( nclusters < k_studies & model_type == "fixed" ) {
-    warning( "You indicated there are clusters, but these will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model_type = robust.")
+  nclusters <- length(unique(cluster))
+  if (nclusters < k_studies && model_type == "fixed") {
+    warning("You indicated there are clusters, but these will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model_type = robust.")
   }
 
   # fit uncorrected model
-  m0 = pubbias_meta( yi = yi,
-                              vi = vi,
-                              sei = sei,
-                              cluster = cluster,
-                              selection_ratio = 1,
-                              selection_tails = 1,
-                              model_type = model_type,
-                              favor_positive = favor_positive,
-                              ci_level = ci_level,
-                              small = small )
+  m0 <- pubbias_meta(yi = yi,
+                     vi = vi,
+                     sei = sei,
+                     cluster = cluster,
+                     selection_ratio = 1,
+                     selection_tails = 1,
+                     model_type = model_type,
+                     favor_positive = favor_positive,
+                     ci_level = ci_level,
+                     small = small)
 
-  est0 = m0$stats$estimate
-  q_error = function(dir) {
-    sprintf( "The uncorrected pooled point estimate is %.2f. q must be %s than this value (i.e., closer to zero).",
-             est0, dir)
+  est0 <- m0$stats$estimate
+  q_error <- function(dir) {
+    glue("The uncorrected pooled point estimate is {est0}. q must be {dir} than this value (i.e., closer to zero).")
   }
   # stop if q is on wrong side of null
-  if ( est0 > 0 & q > est0 ) stop( q_error("less") )
-  if ( est0 < 0 & q < est0 ) stop( q_error("greater") )
-
-  # warn if naive estimate is in opposite direction than favor_positive
-  # if ((est0 > 0) != favor_positive)
-  #   warning("Favored direction is opposite of the pooled estimate.")
+  if (est0 > 0 && q > est0) stop(q_error("less"))
+  if (est0 < 0 && q < est0) stop(q_error("greater"))
 
   ##### Flip Estimate Signs If Needed #####
-  if ( !favor_positive ) {
-    yi = -yi
-    q = -q
+  if (!favor_positive) {
+    yi <- -yi
+    q <- -q
   }
 
   # 2-sided p-values for each study even if 1-tailed selection
-  pvals = 2 * ( 1 - pnorm( abs(yi) / sqrt(vi) ) )
+  pvals <- 2 * (1 - pnorm(abs(yi) / sqrt(vi)))
 
   # affirmative indicator under 1-tailed selection
-  A = (pvals < alpha_select) & (yi > 0)
+  affirm <- (pvals < alpha_select) & (yi > 0)
 
-  k_affirmative = sum(A)
-  k_nonaffirmative = k_studies - sum(A)
+  k_affirmative <- sum(affirm)
+  k_nonaffirmative <- k_studies - affirm
 
-  if ( k_affirmative == 0 | k_nonaffirmative == 0 ) {
-    stop( "There are zero affirmative studies or zero nonaffirmative studies. Model estimation cannot proceed.")
-  }
+  k_zero_msg <- \(dir) glue("There are zero {dir} studies. Model estimation cannot proceed.")
+  if (k_affirmative == 0) stop(k_zero_msg("affirmative"))
+  if (k_nonaffirmative == 0) stop(k_zero_msg("nonaffirmative"))
 
-  dat = data.frame( yi, vi, A, cluster )
-
+  dat <- data.frame(yi, vi, affirm, cluster)
+  dat_naff <- dat |> dplyr::filter(!.data$affirm)
 
   ##### Fixed-Effects Model #####
-  if ( model_type == "fixed" ) {
+  if (model_type == "fixed") {
 
-    if (k_nonaffirmative > 1){
-      # first fit worst-case meta
-      meta_worst = metafor::rma.uni( yi = yi,
-                                     vi = vi,
-                                     data = dat[ A == FALSE, ],
-                                     method = "FE",
-                                     level = ci_level )
-
-      est_worst = as.numeric(meta_worst$b)
-      lo_worst = meta_worst$ci.lb
-    }
-
+    # special case worst-case meta for 1 non-affirmative study
     if (k_nonaffirmative == 1) {
-      est_worst = dat$yi[ A == FALSE ]
-      lo_worst = dat$yi[ A == FALSE ] - qnorm(1 - alpha / 2) * sqrt(dat$vi[ A == FALSE ])
+      est_worst <- dat_naff$yi
+      lo_worst <- dat_naff$yi - qnorm(1 - alpha / 2) * sqrt(dat_naff$vi)
     }
+
+    # first fit worst-case meta
+    meta_worst <- metafor::rma.uni(yi = dat_naff$yi, vi = dat_naff$vi,
+                                   method = "FE", level = ci_level)
+    est_worst <- as.numeric(meta_worst$b)
+    lo_worst <- meta_worst$ci.lb
 
     # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
-    strat = dat |> dplyr::group_by(A) |>
-      dplyr::summarise( nu = sum( 1 / vi ),
-                        ybar = sum( yi / vi ) )
+    strat <- dat |>
+      group_by(.data$affirm) |>
+      summarise(nu = sum(1 / .data$vi), ybar = sum(.data$yi / .data$vi))
 
     # components of bias-corrected estimate by affirmative status
-    ybarN = strat$ybar[ strat$A == 0 ]
-    ybarA = strat$ybar[ strat$A == 1 ]
-    nuN = strat$nu[ strat$A == 0 ]
-    nuA = strat$nu[ strat$A == 1 ]
+    ybar_n <- strat$ybar[!strat$affirm]
+    ybar_a <- strat$ybar[strat$affirm]
+    nu_n <- strat$nu[!strat$affirm]
+    nu_a <- strat$nu[strat$affirm]
 
     # S-value for point estimate
-    sval_est = ( nuA * q - ybarA ) / ( ybarN - nuN * q )
+    sval_est <- (nu_a * q - ybar_a) / (ybar_n - nu_n * q)
 
     # S-value for CI (to shift it to q)
     # match term names used in Wolfram Alpha
-    a = ybarN
-    b = ybarA
-    c = nuN
-    d = nuA
+    a <- ybar_n
+    b <- ybar_a
+    c <- nu_n
+    d <- nu_a
 
-    if ( small == FALSE ) k = qnorm( 1 - (alpha/2) )
-    if ( small == TRUE ) {
-      df = k_studies - 1
-      k = qt( 1 - (alpha/2), df = df )
-    }
+    if (!small) k <- qnorm(1 - (alpha / 2))
+    k <- qt(1 - (alpha / 2), df = k_studies - 1)
+    term_a <- k ^ 2 * (a ^ 2 * d -
+                       (2 * c * d * q) * (a + b) +
+                       b ^ 2 * c +
+                       q ^ 2 * (c ^ 2 * d + d ^ 2 * c) -
+                       c * d * k ^ 2)
 
-    # # version directly from Wolfram
-    # termA = a^2 * d * k^2 - (2 * a * c * d * k^2 * q) +
-    #           b^2 * c * k^2 -
-    #           (2 * b * c * d * k^2 * q) +
-    #           c^2 * d * k^2 * q^2 +
-    #           c * d^2 * k^2 * q^2 -
-    #           c * d * k^4
+    term_b <- -a * b + a * d * q + b * c * q - c * d * q ^ 2
 
-    # manually simplied version
-    termA = k^2 * ( a^2 * d -
-                      (2 * c * d * q) * (a + b) +
-                      b^2 * c +
-                      q^2 * (c^2 * d + d^2 * c) -
-                      c * d * k^2 )
+    term_c <- a ^ 2 - 2 * a * c * q + c ^ 2 * q ^ 2 - c * k ^ 2
 
-    termB = -a*b + a*d*q + b*c*q - c*d*q^2
-
-    termC = a^2 - 2*a*c*q + c^2*q^2 - c*k^2
-
-    sval_ci = ( -sqrt(termA) + termB ) / termC
-    if ( sval_ci < 0 ) sval_ci = ( sqrt(termA) + termB ) / termC
-
-    # # sanity check by inversion
-    # # corrected CI limit
-    # selection_ratio = sval_ci
-    # termD = (selection_ratio * a + b) / (selection_ratio * c + d)
-    # termE = k * sqrt( (selection_ratio^2 * c + d) / (selection_ratio * c + d)^2 )
-    # expect_equal( termD - termE,
-    #               q )
-    # # WORKS!!!
+    sval_ci <- (-sqrt(term_a) + term_b) / term_c
+    if (sval_ci < 0) sval_ci <- (sqrt(term_a) + term_b) / term_c
 
   } # end fixed = TRUE
 
 
   ##### Robust Independent and Robust Clustered #####
-  if ( model_type == "robust" ) {
+  if (model_type == "robust") {
 
     ##### Worst-Case Meta to See if We Should Search at All
 
-    if (k_nonaffirmative > 1){
+    if (k_nonaffirmative > 1) {
       # first fit worst-case meta to see if we should even attempt grid search
       # initialize a dumb (unclustered and uncorrected) version of tau^2
       # which is only used for constructing weights
-      meta_re = metafor::rma.uni( yi = yi,
+      meta_re <- metafor::rma.uni(yi = yi,
                                   vi = vi)
-      t2hat_naive = meta_re$tau2
+      t2hat_naive <- meta_re$tau2
 
       # fit model exactly as in pubbias_meta
-      meta_worst =  robumeta::robu( yi ~ 1,
+      meta_worst <-  robumeta::robu(yi ~ 1,
                                     studynum = cluster,
-                                    data = dat[ A == FALSE, ],
+                                    data = dat[!affirm, ],
                                     userweights = 1 / (vi + t2hat_naive),
                                     var.eff.size = vi,
-                                    small = small )
+                                    small = small)
 
-      est_worst = as.numeric(meta_worst$b.r)
+      est_worst <- as.numeric(meta_worst$b.r)
       table_worst <- meta_worst$reg_table
-      lo_worst <- est_worst - qt(1 - alpha / 2, table_worst$dfs) * table_worst$SE
-      # lo_worst = meta_worst$reg_table$CI.L
+      lo_worst <- est_worst -
+        qt(1 - alpha / 2, table_worst$dfs) * table_worst$SE
     }
 
     # robumeta above can't handle meta-analyzing only 1 nonaffirmative study
     if (k_nonaffirmative == 1) {
-      est_worst = dat$yi[ A == FALSE ]
-      lo_worst = dat$yi[ A == FALSE ] - qnorm(1 - alpha / 2) * sqrt(dat$vi[ A == FALSE ])
+      est_worst <- dat$yi[!affirm]
+      lo_worst <- dat$yi[!affirm] - qnorm(1 - alpha / 2) * sqrt(dat$vi[!affirm])
     }
 
     ##### Get S-value for estimate
-    if ( est_worst > q ) {
-      sval_est = "Not possible"
+    if (est_worst > q) {
+      sval_est <- "Not possible"
     } else {
 
       # define the function we need to minimize
       # i.e., distance between corrected estimate and the target value of q
-      func = function(.selection_ratio) {
-        corrected = suppressWarnings(
-          pubbias_meta( yi = yi,
-                                 vi = vi,
-                                 sei = sei,
-                                 cluster = cluster,
-                                 selection_ratio = .selection_ratio,
-                                 selection_tails = 1,
-                                 model_type = model_type,
-                                 favor_positive = TRUE,  # always TRUE because we've already flipped signs if needed
-                                 ci_level = ci_level,
-                                 small = small ))
-        return( abs(corrected$stats$estimate - q))
+      func <- function(.selection_ratio) {
+        corrected <- suppressWarnings(
+          pubbias_meta(yi = yi,
+                       vi = vi,
+                       sei = sei,
+                       cluster = cluster,
+                       selection_ratio = .selection_ratio,
+                       selection_tails = 1,
+                       model_type = model_type,
+                       favor_positive = TRUE,  # always TRUE because we've already flipped signs if needed
+                       ci_level = ci_level,
+                       small = small))
+        return(abs(corrected$stats$estimate - q))
       }
 
-      opt = optimize( f = func,
+      opt <- optimize(f = func,
                       interval = c(1, selection_ratio_max),
-                      maximum = FALSE )
-      sval_est = opt$minimum
+                      maximum = FALSE)
+      sval_est <- opt$minimum
 
       # discrepancy between the corrected estimate and the s-value
-      diff = opt$objective
+      diff <- opt$objective
 
       # if the optimal value is very close to the upper range of grid search
       #  AND we're still not very close to the target q,
       #  that means the optimal value was above selection_ratio_max
-      if ( abs(sval_est - selection_ratio_max) < 0.0001 & diff > 0.0001 ) sval_est = paste(">", selection_ratio_max)
+      if (abs(sval_est - selection_ratio_max) < 0.0001 && diff > 0.0001)
+        sval_est <- paste(">", selection_ratio_max)
     }
 
     # do something similar for CI
-    if ( lo_worst > q ) {
-      sval_ci = "Not possible"
+    if (lo_worst > q) {
+      sval_ci <- "Not possible"
 
     } else {
       # define the function we need to minimize
       # i.e., distance between corrected estimate and the target value of q
-      func = function(.selection_ratio) {
-        corrected = suppressWarnings(
-          pubbias_meta( yi = yi,
-                                 vi = vi,
-                                 sei = sei,
-                                 cluster = cluster,
-                                 selection_ratio = .selection_ratio,
-                                 selection_tails = 1,
-                                 model_type = model_type,
-                                 favor_positive = TRUE, # always TRUE because we've already flipped signs if needed
-                                 ci_level = ci_level,
-                                 small = small ))
-        return( abs(corrected$stats$ci_lower - q))
+      func <- function(.selection_ratio) {
+        corrected <- suppressWarnings(
+          pubbias_meta(yi = yi,
+                       vi = vi,
+                       sei = sei,
+                       cluster = cluster,
+                       selection_ratio = .selection_ratio,
+                       selection_tails = 1,
+                       model_type = model_type,
+                       favor_positive = TRUE, # always TRUE because we've already flipped signs if needed
+                       ci_level = ci_level,
+                       small = small))
+        return(abs(corrected$stats$ci_lower - q))
       }
 
-      opt = optimize( f = func,
+      opt <- optimize(f = func,
                       interval = c(1, selection_ratio_max),
-                      maximum = FALSE )
-      sval_ci = opt$minimum
+                      maximum = FALSE)
+      sval_ci <- opt$minimum
 
       # discrepancy between the corrected estimate and the s-value
-      diff = opt$objective
+      diff <- opt$objective
 
       # if the optimal value is very close to the upper range of grid search
       #  AND we're still not very close to the target q,
       #  that means the optimal value was above selection_ratio_max
-      if ( abs(sval_ci - selection_ratio_max) < 0.0001 & diff > 0.0001 ) sval_ci = paste(">", selection_ratio_max)
+      if (abs(sval_ci - selection_ratio_max) < 0.0001 && diff > 0.0001)
+        sval_ci <- paste(">", selection_ratio_max)
     }
 
   }
 
   # s-values less than 1 indicate complete robustness
   # is.numeric is in case we have a "< XXX" string instead of a number
-  if ( is.numeric(sval_est) & !is.na(sval_est) & sval_est < 1) sval_est = "Not possible"
-  if ( is.numeric(sval_ci) & !is.na(sval_ci) & sval_ci < 1) sval_ci = "Not possible"
+  if (is.numeric(sval_est) && !is.na(sval_est) && sval_est < 1)
+    sval_est <- "Not possible"
+  if (is.numeric(sval_ci) && !is.na(sval_ci) && sval_ci < 1)
+    sval_ci <- "Not possible"
 
   # m0 was fit BEFORE flipping signs
   # but q has now been flipped in the latter case in "or" statement below
-  if ( (est0 > 0 & m0$stats$ci_lower < q) | (est0 < 0 & m0$stats$ci_upper > -q) ) {
-    # important: Shiny website assumes that this exact string ("--") for CI can be interpreted as
-    #  the naive CI's already containing q
-    sval_ci = "--"
+  if ((est0 > 0 && m0$stats$ci_lower < q) ||
+      (est0 < 0 && m0$stats$ci_upper > -q)) {
+    # important: Shiny website assumes that this exact string ("--") for CI can
+    # be interpreted as the naive CI's already containing q
+    sval_ci <- "--"
     message("sval_ci is not applicable because the naive confidence interval already contains q")
   }
 
-  data = dat |> dplyr::rename(affirm = .data$A)
+  data <- dat |> dplyr::rename(affirm = .data$A)
 
-  values = list(
+  values <- list(
     q = q,
     model_type = model_type,
     alpha_select = alpha_select,
@@ -353,19 +326,14 @@ pubbias_svalue = function( yi, # data
     k_nonaffirmative = k_nonaffirmative
   )
 
-  stats = list( sval_est = sval_est,
-                sval_ci = sval_ci )
+  stats <- list(sval_est = sval_est,
+                sval_ci = sval_ci)
 
-  fit = list()
+  fit <- list()
   # meta_worst might not exist, e.g. if there is only 1 nonaffirmative study
-  if ( return_worst_meta & exists("meta_worst") ) {
-    fit$meta_worst = meta_worst
-  }
+  if (return_worst_meta && exists("meta_worst")) fit$meta_worst <- meta_worst
 
   metabias::metabias(data = data, values = values, stats = stats, fit = fit)
-  # results <- list(data = data, values = values, stats = stats, fit = fit)
-  # class(results) <- "metabias"
-  # return(results)
 
 }
 
@@ -379,17 +347,17 @@ pubbias_svalue = function( yi, # data
 #' @param CI.level (deprecated) see ci_level
 #' @param return.worst.meta (deprecated) see return_worst_meta
 #' @export
-svalue <- function( yi,
-                    vi,
-                    q,
-                    clustervar = 1:length(yi),
-                    model,
-                    alpha.select = 0.05,
-                    eta.grid.hi = 200,
-                    favor.positive,
-                    CI.level = 0.95,
-                    small = TRUE,
-                    return.worst.meta = FALSE ) {
+svalue <- function(yi,
+                   vi,
+                   q,
+                   clustervar = 1:length(yi),
+                   model,
+                   alpha.select = 0.05,
+                   eta.grid.hi = 200,
+                   favor.positive,
+                   CI.level = 0.95,
+                   small = TRUE,
+                   return.worst.meta = FALSE) {
   .Deprecated("pubbias_svalue")
   pubbias_svalue(yi = yi,
                  vi = vi,

@@ -34,7 +34,7 @@ test_that("pubbias_svalue / pubbias_meta agreement", {
 
 # does it reject bad choices of q?
 # i.e., the point estimate is already closer to the null than q
-test_that( "pubbias_svalue q outside point estimate", {
+test_that("pubbias_svalue q outside point estimate", {
   expect_error(
     regexp = "q must be greater",
     pubbias_svalue(yi = dat$yi,
@@ -117,9 +117,9 @@ test_that("pubbias_svalue q inside CI", {
 
 
 
-# does pubbias_svalue give correct results when the s-value is greater than the highest
-#  value in selection_ratio grid?
-test_that( "pubbias_svalue s-value outside grid", {
+# does pubbias_svalue give correct results when the s-value is greater than the
+# highest value in selection_ratio grid?
+test_that("pubbias_svalue s-value outside grid", {
 
   selection_ratio <- 3
   svals <- pubbias_svalue(yi = dat$yi,

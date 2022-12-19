@@ -9,8 +9,8 @@ dat <- metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
 metafor::rma(yi, vi, data = dat, method = "FE")
 
 # warmup
-# note that passing selection_ratio = 1 (no publication bias) yields the naive point
-# estimate from rma above, which makes sense
+# note that passing selection_ratio = 1 (no publication bias) yields the naive
+# point estimate from rma above, which makes sense
 pubbias_meta(yi = dat$yi,
              vi = dat$vi,
              selection_ratio = 1,
@@ -37,7 +37,7 @@ pubbias_meta(yi = dat$yi,
 
 ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
 # range of parameters to try (more dense at the very small ones)
-selection_ratios = c(200, 150, 100, 50, 40, 30, 20, seq(15, 1))
+selection_ratios <- c(200, 150, 100, 50, 40, 30, 20, seq(15, 1))
 
 # compute estimate for each value of selection_ratio
 estimates <- lapply(selection_ratios, function(e) {

@@ -21,7 +21,7 @@
 #' @param xlab Label for x-axis (point estimate).
 #' @param ylab Label for y-axis (standard error).
 #' @param est_all Regular meta-analytic estimate among all studies (optional).
-#' @param est_N Worst-case meta-analytic estimate among only nonaffirmative
+#' @param est_worst Worst-case meta-analytic estimate among only nonaffirmative
 #'   studies (optional).
 #' @param plot_pooled Should the pooled estimates within all studies and within
 #'   only the nonaffirmative studies be plotted as well?
@@ -29,8 +29,8 @@
 #' @details By default (`plot_pooled = TRUE`), also plots the pooled point
 #'   estimate within all studies, supplied by the user as `est_all` (black
 #'   diamond), and within only the nonaffirmative studies, supplied by the user
-#'   as `est_N` (grey diamond). The user can calculate `est_all` and
-#'   `est_N` using their choice of meta-analysis model. If instead these
+#'   as `est_worst` (grey diamond). The user can calculate `est_all` and
+#'   `est_worst` using their choice of meta-analysis model. If instead these
 #'   are not supplied but `plot_pooled = TRUE`, these pooled estimates will
 #'   be automatically calculated using a fixed-effects (a.k.a. "common-effect")
 #'   model.
@@ -40,20 +40,20 @@
 #'   Society, Series C.* Preprint available at https://osf.io/s9dp6/.
 #'
 #' @example inst/examples/significance_funnel.R
-significance_funnel = function( yi,
+significance_funnel <- function(yi,
                                 vi,
                                 sei,
                                 xmin = min(yi),
                                 xmax = max(yi),
                                 ymin = 0,  # so that pooled points are shown
-                                ymax = max( sqrt(vi) ),
+                                ymax = max(sqrt(vi)),
                                 xlab = "Point estimate",
                                 ylab = "Estimated standard error",
                                 favor_positive = NA,
                                 est_all = NA,
-                                est_N = NA,
+                                est_worst = NA,
                                 alpha_select = 0.05,
-                                plot_pooled = TRUE ) {
+                                plot_pooled = TRUE) {
 
   # resolve vi and sei
   if (missing(vi)) {
@@ -63,129 +63,88 @@ significance_funnel = function( yi,
     vi <- sei ^ 2
   }
 
-  d = data.frame(yi, vi)
-  d$sei = sqrt(vi)
-
-  # calculate p-values
-  d$pval = 2 * ( 1 - pnorm( abs(yi) / sqrt(vi) ) )
+  d <- tibble(yi, vi, sei = sqrt(vi),
+              pval = 2 * (1 - pnorm(abs(yi) / sqrt(vi))))
 
   # which direction of effects are favored?
   # if we have the pooled point estimate, but not the favored direction,
-  #  assume favored direction matches sign of pooled estimate (but issue warning)
-  if ( !is.na(est_all) & is.na(favor_positive) ) {
-    favor_positive = (est_all > 0)
-    warning("favor_positive not provided, so assuming publication bias favors estimates whose sign matches est_all")
+  # assume favored direction matches sign of pooled estimate (but issue warning)
+  if (!is.na(est_all) && is.na(favor_positive)) {
+    favor_positive <- est_all > 0
+    warning("favor_positive not provided, so assuming publication bias favors estimates whose sign matches pooled estimate")
   }
-  if ( is.na(est_all) & is.na(favor_positive) ) {
+  if (is.na(est_all) && is.na(favor_positive)) {
     stop("Need to specify favor_positive")
   }
 
-  # affirmative vs. nonaffirmative indicator
-  d$affirm = rep(NA, nrow(d))
-
-  if ( favor_positive == TRUE ) {
-    d$affirm[ (d$yi > 0) & (d$pval < alpha_select) ] = "Affirmative"
-    d$affirm[ (d$yi < 0) | (d$pval >= alpha_select) ] = "Non-affirmative"
-  }
-  if ( favor_positive == FALSE ) {
-    d$affirm[ (d$yi < 0) & (d$pval < alpha_select) ] = "Affirmative"
-    d$affirm[ (d$yi > 0) | (d$pval >= alpha_select) ] = "Non-affirmative"
-  }
-
-  # reorder levels for plotting joy
-  d$affirm = factor( d$affirm, c("Non-affirmative", "Affirmative") )
+  if (favor_positive) d <- d |>
+    mutate(affirm = .data$yi > 0 & .data$pval < alpha_select)
+  if (!favor_positive) d <- d |>
+    mutate(affirm = .data$yi < 0 & .data$pval < alpha_select)
 
   # stop if no studies in either group
-  if ( sum( d$affirm == "Non-affirmative" ) == 0 ) {
-    stop("There are no non-affirmative studies. The plot would look silly.")
-  }
-
-  if ( sum( d$affirm == "Affirmative" ) == 0 ) {
-    stop("There are no affirmative studies. The plot would look silly.")
-  }
+  if (all(d$affirm)) stop("There are no non-affirmative studies.")
+  if (!any(d$affirm)) stop("There are no affirmative studies.")
 
   # pooled fixed-effects estimates
   # if not supplied, gets them from common-effect model
-  if ( is.na(est_N) & is.na(est_all) ) {
-    est_N = metafor::rma.uni(yi = d$yi[ d$affirm == "Non-affirmative" ],
-                             vi = d$vi[ d$affirm == "Non-affirmative" ],
-                             method="FE")$b
-
-    est_all = metafor::rma.uni(yi = d$yi,
-                               vi = d$vi,
-                               method="FE")$b
+  if (is.na(est_worst) && is.na(est_all)) {
+    d_naff <- d |> dplyr::filter(!.data$affirm)
+    est_worst <- metafor::rma.uni(yi = d_naff$yi, vi = d_naff$vi,
+                                  method = "FE")$b
+    est_all <- metafor::rma.uni(yi = d$yi, vi = d$vi, method = "FE")$b
   }
+  d <- d |>
+    mutate(affirm = factor(.data$affirm,
+                           labels = c("Non-affirmative", "Affirmative")))
 
   # set up pooled estimates for plotting
-  pooled.pts = data.frame( yi = c(est_N, est_all),
-                           sei = c(0,0) )
-
-  # for a given SE (y-value), return the "just significant" point estimate value (x-value)
-  just_signif_est = function( .sei ) .sei * qnorm(1 - alpha_select/2)
+  pooled_pts <- data.frame(yi = c(est_worst, est_all), sei = c(0, 0))
 
   # calculate slope and intercept of the "just affirmative" line
   # i.e., 1.96 = (just affirmative estimate) / se
-  if (favor_positive == TRUE) sl = 1/qnorm(1 - alpha_select/2)
-  if (favor_positive == FALSE) sl = -1/qnorm(1 - alpha_select/2)
-  int = 0
-  # # sanity check: should be exactly alpha_select
-  # 2 * ( 1 - pnorm( abs(1) / sl ) )
-
+  sl <- 1 / qnorm(1 - alpha_select / 2)
+  if (!favor_positive) sl <- -sl
 
   ##### Make the Plot #####
-  colors = c("darkgray", "orange")
+  colors <- c("darkgray", "orange")
 
-  p.funnel = ggplot( data = d, aes( x = .data$yi,
-                                    y = .data$sei,
-                                    color = .data$affirm ) )
+  p_funnel <- ggplot(d, aes(x = .data$yi, y = .data$sei, color = .data$affirm))
 
-  if ( plot_pooled == TRUE ) {
+  if (plot_pooled) {
 
     # plot the pooled points
-    p.funnel = p.funnel + geom_point(
-      data = pooled.pts,
-      aes( x = .data$yi, y = .data$sei ),
-      size = 4,
-      shape = 5,
-      fill = NA,
-      color = c(colors[1], "black")
-    ) +
+    p_funnel <- p_funnel +
+      geom_point(aes(x = .data$yi, y = .data$sei), data = pooled_pts,
+                 size = 4, shape = 5, fill = NA,
+                 color = c(colors[1], "black")) +
 
-      geom_point(
-        data = pooled.pts,
-        aes( x = .data$yi, y = .data$sei ),
-        size = 4,
-        shape = 18,
-        color = c(colors[1], "black"),
-        alpha = 1
-      ) +
+      geom_point(aes(x = .data$yi, y = .data$sei), data = pooled_pts,
+                 size = 4, shape = 18, alpha = 1,
+                 color = c(colors[1], "black")) +
 
       # just for visual separation of pooled ests
-      geom_hline( yintercept = 0 ) +
+      geom_hline(yintercept = 0) +
 
       # diagonal "just significant" line
-      geom_abline(slope=sl,intercept = int, color = "gray")
+      geom_abline(slope = sl, intercept = 0, color = "gray")
   }
 
-  p.funnel = p.funnel +
+  p_funnel <- p_funnel +
 
     # semi-transparent points with solid circles around them
-    geom_point( size = 3, alpha=.3) +
-    geom_point( size = 3, shape = 1) +
+    geom_point(size = 3, alpha = .3) +
+    geom_point(size = 3, shape = 1) +
 
     scale_color_manual(values = colors) +
-
-    xlab(xlab) +
-    ylab(ylab) +
-
-    scale_x_continuous( limits = c(xmin, xmax) ) +
-    scale_y_continuous( limits = c(ymin, ymax) ) +
+    scale_x_continuous(name = xlab, limits = c(xmin, xmax)) +
+    scale_y_continuous(name = ylab, limits = c(ymin, ymax)) +
 
     theme_classic() +
-    theme(legend.title=element_blank())
+    theme(legend.title = element_blank())
 
-  plot(p.funnel)
-  return(p.funnel)
+  plot(p_funnel)
+  return(p_funnel)
 }
 
 
@@ -212,17 +171,16 @@ significance_funnel = function( yi,
 #' Society, Series C.* Preprint available at https://osf.io/s9dp6/.
 
 #' @examples
-#'  # compute meta-analytic effect sizes
-#'  require(metafor)
-#' dat = metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
-#'                       di = cneg, data = dat.bcg)
+#' # compute meta-analytic effect sizes
+#' require(metafor)
+#' dat <- metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,
+#'                        di = cneg, data = dat.bcg)
 #'
-#'  # flip signs since we think publication bias operates in favor of negative effects
-#'  dat$yi = -dat$yi
+#' # flip signs since we think publication bias favors negative effects
+#' dat$yi <- -dat$yi
 #'
-#'  pval_plot( yi = dat$yi,
-#'             vi = dat$vi )
-pval_plot = function( yi,
+#' pval_plot(yi = dat$yi, vi = dat$vi)
+pval_plot <- function(yi,
                       vi,
                       sei,
                       alpha_select = 0.05) {
@@ -236,19 +194,18 @@ pval_plot = function( yi,
   }
 
   # calculate 1-tailed p-values
-  pval = 1 - pnorm( yi / sqrt(vi) )
+  pval <- 1 - pnorm(yi / sqrt(vi))
 
-  ggplot( data = data.frame(pval = pval),
-          aes( x = .data$pval ) ) +
-    geom_vline(xintercept = alpha_select/2, color = "red", lwd = 1) +
-    geom_vline(xintercept = 1 - (alpha_select/2), color = "red", lwd = 1) +
-    geom_histogram( binwidth = 0.025 ) +
+  ggplot(data.frame(pval = pval), aes(x = .data$pval)) +
+    geom_vline(xintercept = alpha_select / 2, color = "red", lwd = 1) +
+    geom_vline(xintercept = 1 - (alpha_select / 2), color = "red", lwd = 1) +
+    geom_histogram(binwidth = 0.025) +
     xlab("One-tailed p-value") +
     theme_classic() +
-    theme( panel.grid = element_blank(),
-           axis.title.y = element_blank(),
-           axis.text.y = element_blank(),
-           axis.ticks.y = element_blank(),
-           axis.text=element_text(size=16),
-           axis.title=element_text(size=16, face = "bold") )
+    theme(panel.grid = element_blank(),
+          axis.title.y = element_blank(),
+          axis.text.y = element_blank(),
+          axis.ticks.y = element_blank(),
+          axis.text = element_text(size = 16),
+          axis.title = element_text(size = 16, face = "bold"))
 }
