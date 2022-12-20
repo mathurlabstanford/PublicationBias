@@ -28,6 +28,6 @@ svalue_names <- function(component) {
 
 #' @keywords internal
 svalue_names_str <- function(component) {
-  cnames <- evalue_names(component)
+  cnames <- svalue_names(component)
   paste(paste0("`", cnames, "`"), collapse = ", ")
 }
