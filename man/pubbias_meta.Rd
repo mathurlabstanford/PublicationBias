@@ -11,9 +11,9 @@ pubbias_meta(
   sei,
   cluster = 1:length(yi),
   selection_ratio,
+  selection_tails = 1,
   model_type = "robust",
   favor_positive = TRUE,
-  selection_tails = 1,
   alpha_select = 0.05,
   ci_level = 0.95,
   small = TRUE
@@ -49,15 +49,15 @@ to treating studies as independent; i.e., each study is in its own cluster).}
 studies (i.e., studies with p-values less than \code{alpha_select} and
 estimates in the direction indicated by \code{favor_positive}).}
 
+\item{selection_tails}{1 (for one-tailed selection, recommended for its
+conservatism) or 2 (for two-tailed selection).}
+
 \item{model_type}{"fixed" for fixed-effects (a.k.a. "common-effect") or
 "robust" for robust random-effects.}
 
 \item{favor_positive}{\code{TRUE} if publication bias are
 assumed to favor significant positive estimates; \code{FALSE} if assumed to
 favor significant negative estimates.}
-
-\item{selection_tails}{1 (for one-tailed selection, recommended for its
-conservatism) or 2 (for two-tailed selection).}
 
 \item{alpha_select}{Alpha level at which an estimate's probability of being
 favored by publication bias is assumed to change (i.e.,
@@ -86,12 +86,19 @@ always using \code{TRUE}.}
 \item{CI.level}{(deprecated) see ci_level}
 }
 \value{
-An object of class \code{\link[metabias:metabias-class]{metabias::metabias()}}.
+An object of class \code{\link[metabias:metabias-class]{metabias::metabias()}}, a list containing:
+\describe{
+\item{data}{A tibble with one row per study and the columns
+\code{yi}, \code{yif}, \code{vi}, \code{affirm}, \code{cluster}.}
+\item{values}{A list with the elements \code{selection_ratio}, \code{selection_tails}, \code{model_type}, \code{favor_positive}, \code{alpha_select}, \code{ci_level}, \code{small}, \code{k}, \code{k_affirmative}, \code{k_nonaffirmative}.}
+\item{stats}{A tibble with the columns \code{estimate}, \code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}.}
+\item{fit}{A list of fitted models, if any.}
+}
 }
 \description{
-For a chosen ratio of publication probabilities, \code{eta}, estimates a
-publication bias-corrected pooled point estimate and confidence interval per
-\insertCite{mathur2020;textual}{metabias}. Model options include
+For a chosen ratio of publication probabilities, \code{selection_ratio}, estimates
+a publication bias-corrected pooled point estimate and confidence interval
+per \insertCite{mathur2020;textual}{metabias}. Model options include
 fixed-effects (a.k.a. "common-effect"), robust independent, and robust
 clustered specifications.
 }

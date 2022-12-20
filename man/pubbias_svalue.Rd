@@ -92,26 +92,19 @@ nonaffirmative studies be returned?}
 \item{return.worst.meta}{(deprecated) see return_worst_meta}
 }
 \value{
-An object of class \code{\link[metabias:metabias-class]{metabias::metabias()}}.
-\code{stats} includes: the amount of publication bias required to
-attenuate the pooled point estimate to \code{q} (\code{sval_est}), the amount of
-publication bias required to attenuate the confidence interval limit of the
-pooled point estimate to \code{q} (\code{sval_ci}), the number of affirmative and
-nonaffirmative studies after any needed recoding of signs (\code{k_affirmative}
-and \code{k_nonaffirmative}), and an indicator for whether the point estimates'
-signs were recoded (\code{signs_recoded}).
-
-If \code{return_worst_meta = TRUE}, also returns the worst-case meta-analysis of
-only the nonaffirmative studies. If \code{model_type = "fixed"}, the worst-case
-meta-analysis is fit by \code{metafor::rma.uni()}. If \code{model_type = "robust"},
-it is fit by \code{robumeta::robu()}. Note that in the latter case, custom
-inverse-variance weights are used, which are the inverse of the sum of the
-study's variance and a heterogeneity estimate from a naive random-effects
-meta-analysis (Mathur & VanderWeele, 2020). This is done for consistency
-with the results of \code{pubbias_meta()}, which is used to determine \code{sval_est}
-and \code{sval_ci}. Therefore, the worst-case meta-analysis results may differ
-slightly from what you would obtain if you simply fit \code{robumeta::robu()} on
-the nonaffirmative studies with the default weights.
+An object of class \code{\link[metabias:metabias-class]{metabias::metabias()}}, a list containing:
+\describe{
+\item{data}{A tibble with one row per study and the columns
+\code{yi}, \code{yif}, \code{vi}, \code{affirm}, \code{cluster}.}
+\item{values}{A list with the elements \code{selection_ratio}, \code{selection_tails}, \code{model_type}, \code{favor_positive}, \code{alpha_select}, \code{ci_level}, \code{small}, \code{k}, \code{k_affirmative}, \code{k_nonaffirmative}.}
+\item{stats}{A tibble with the columns \code{estimate}, \code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}.
+\code{sval_est} represents the amount of publication bias required
+to attenuate the pooled point estimate to \code{q}; \code{sval_ci}
+represents the amount of publication bias required to
+attenuate the confidence interval limit of the pooled point
+estimate to \code{q}.}
+\item{fit}{A list of fitted models, if any.}
+}
 }
 \description{
 Estimates the S-value, defined as the severity of publication bias (i.e., the
@@ -131,6 +124,18 @@ If \code{favor_positive = FALSE}, such that publication bias is assumed to favor
 negative rather than positive estimates, the signs of \code{yi} will be reversed
 prior to performing analyses. The returned number of affirmative and
 nonaffirmative studies will reflect the recoded signs.
+
+If \code{return_worst_meta = TRUE}, also returns the worst-case meta-analysis of
+only the nonaffirmative studies. If \code{model_type = "fixed"}, the worst-case
+meta-analysis is fit by \code{metafor::rma.uni()}. If \code{model_type = "robust"},
+it is fit by \code{robumeta::robu()}. Note that in the latter case, custom
+inverse-variance weights are used, which are the inverse of the sum of the
+study's variance and a heterogeneity estimate from a naive random-effects
+meta-analysis (Mathur & VanderWeele, 2020). This is done for consistency
+with the results of \code{pubbias_meta()}, which is used to determine \code{sval_est}
+and \code{sval_ci}. Therefore, the worst-case meta-analysis results may differ
+slightly from what you would obtain if you simply fit \code{robumeta::robu()} on
+the nonaffirmative studies with the default weights.
 }
 \examples{
 # calculate effect sizes from example dataset in metafor

@@ -25,15 +25,6 @@
 #'   prior to performing analyses. The returned number of affirmative and
 #'   nonaffirmative studies will reflect the recoded signs.
 #'
-#' @return An object of class [metabias::metabias()].
-#'   `stats` includes: the amount of publication bias required to
-#'   attenuate the pooled point estimate to `q` (`sval_est`), the amount of
-#'   publication bias required to attenuate the confidence interval limit of the
-#'   pooled point estimate to `q` (`sval_ci`), the number of affirmative and
-#'   nonaffirmative studies after any needed recoding of signs (`k_affirmative`
-#'   and `k_nonaffirmative`), and an indicator for whether the point estimates'
-#'   signs were recoded (`signs_recoded`).
-#'
 #'   If `return_worst_meta = TRUE`, also returns the worst-case meta-analysis of
 #'   only the nonaffirmative studies. If `model_type = "fixed"`, the worst-case
 #'   meta-analysis is fit by `metafor::rma.uni()`. If `model_type = "robust"`,
@@ -45,6 +36,20 @@
 #'   and `sval_ci`. Therefore, the worst-case meta-analysis results may differ
 #'   slightly from what you would obtain if you simply fit `robumeta::robu()` on
 #'   the nonaffirmative studies with the default weights.
+#'
+#' @return An object of class [metabias::metabias()], a list containing:
+#' \describe{
+#'   \item{data}{A tibble with one row per study and the columns
+#'               `r meta_names_str("data")`.}
+#'   \item{values}{A list with the elements `r meta_names_str("values")`.}
+#'   \item{stats}{A tibble with the columns `r meta_names_str("stats")`.
+#'                `sval_est` represents the amount of publication bias required
+#'                to attenuate the pooled point estimate to `q`; `sval_ci`
+#'                represents the amount of publication bias required to
+#'                attenuate the confidence interval limit of the pooled point
+#'                estimate to `q`.}
+#'   \item{fit}{A list of fitted models, if any.}
+#' }
 #'
 #' @references
 #' \insertRef{mathur2020}{metabias}
@@ -312,18 +317,17 @@ pubbias_svalue <- function(yi, # data
   values <- list(
     q = q,
     model_type = model_type,
-    alpha_select = alpha_select,
-    selection_ratio_max = selection_ratio_max,
     favor_positive = favor_positive,
+    alpha_select = alpha_select,
     ci_level = ci_level,
     small = small,
+    selection_ratio_max = selection_ratio_max,
     k = k_studies,
     k_affirmative = k_affirmative,
     k_nonaffirmative = k_nonaffirmative
   )
 
-  stats <- list(sval_est = sval_est,
-                sval_ci = sval_ci)
+  stats <- tibble(sval_est = sval_est, sval_ci = sval_ci)
 
   fit <- list()
   # meta_worst might not exist, e.g. if there is only 1 nonaffirmative study

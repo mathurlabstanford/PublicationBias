@@ -1,8 +1,8 @@
 #' Estimate publication bias-corrected meta-analysis
 #'
-#' For a chosen ratio of publication probabilities, `eta`, estimates a
-#' publication bias-corrected pooled point estimate and confidence interval per
-#' \insertCite{mathur2020;textual}{metabias}. Model options include
+#' For a chosen ratio of publication probabilities, `selection_ratio`, estimates
+#' a publication bias-corrected pooled point estimate and confidence interval
+#' per \insertCite{mathur2020;textual}{metabias}. Model options include
 #' fixed-effects (a.k.a. "common-effect"), robust independent, and robust
 #' clustered specifications.
 #'
@@ -23,7 +23,14 @@
 #'   reported based on the recoded signs rather than the original sign
 #'   convention.
 #'
-#' @return An object of class [metabias::metabias()].
+#' @return An object of class [metabias::metabias()], a list containing:
+#' \describe{
+#'   \item{data}{A tibble with one row per study and the columns
+#'               `r meta_names_str("data")`.}
+#'   \item{values}{A list with the elements `r meta_names_str("values")`.}
+#'   \item{stats}{A tibble with the columns `r meta_names_str("stats")`.}
+#'   \item{fit}{A list of fitted models, if any.}
+#' }
 #'
 #' @references
 #' \insertRef{mathur2020}{metabias}
@@ -37,9 +44,9 @@ pubbias_meta <- function(yi, # data
 
                          selection_ratio, # params
 
-                         model_type = "robust", # opts
+                         selection_tails = 1, # opts
+                         model_type = "robust",
                          favor_positive = TRUE,
-                         selection_tails = 1,
                          alpha_select = 0.05,
                          ci_level = 0.95,
                          small = TRUE) {
@@ -128,11 +135,11 @@ pubbias_meta <- function(yi, # data
       pval_est <- 2 * (1 - pt(t, df = df))
     }
 
-    stats <- list(estimate = est,
-                  se = se,
-                  ci_lower = lo,
-                  ci_upper = hi,
-                  p_value = pval_est)
+    stats <- tibble(estimate = est,
+                    se = se,
+                    ci_lower = lo,
+                    ci_upper = hi,
+                    p_value = pval_est)
     fits <- list()
 
   } # end fixed = TRUE
@@ -162,8 +169,8 @@ pubbias_meta <- function(yi, # data
   } # end robust = TRUE
 
   values <- list(selection_ratio = selection_ratio,
-                 model_type = model_type,
                  selection_tails = selection_tails,
+                 model_type = model_type,
                  favor_positive = favor_positive,
                  alpha_select = alpha_select,
                  ci_level = ci_level,
