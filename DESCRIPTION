@@ -37,6 +37,8 @@ Suggests:
     purrr,
     testthat (>= 3.0.0),
     withr
+Remotes:
+    mikabr/metabias
 LazyData: true
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
