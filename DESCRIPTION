@@ -18,7 +18,8 @@ Description: Performs sensitivity analysis for publication bias in meta-analyses
     by conducting a standard meta-analysis of only the negative and
     "nonsignificant" studies.
 License: GPL-2
-URL: https://github.com/mayamathur/PublicationBias
+URL: https://github.com/mayamathur/PublicationBias,
+    https://mayamathur.github.io/PublicationBias/
 BugReports: https://github.com/mayamathur/PublicationBias/issues
 Encoding: UTF-8
 Depends:

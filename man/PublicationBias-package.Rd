@@ -15,6 +15,7 @@ Performs sensitivity analysis for publication bias in meta-analyses (per Mathur 
 Useful links:
 \itemize{
   \item \url{https://github.com/mayamathur/PublicationBias}
+  \item \url{https://mayamathur.github.io/PublicationBias/}
   \item Report bugs at \url{https://github.com/mayamathur/PublicationBias/issues}
 }
 
