@@ -282,30 +282,65 @@ the nonaffirmative studies with the default weights.</p>
 <span class="r-in"><span>               q <span class="op">=</span> <span class="fl">0</span>,</span></span>
 <span class="r-in"><span>               model_type <span class="op">=</span> <span class="st">"robust"</span>,</span></span>
 <span class="r-in"><span>               favor_positive <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> List of 4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ data  :'data.frame':	13 obs. of  4 variables:</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ yi     : num [1:13] 0.889 1.585 1.348 1.442 0.218 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   .. ..- attr(*, "ni")= int [1:13] 262 609 451 26465 10877 2992 3174 176782 14776 3381 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   .. ..- attr(*, "measure")= chr "RR"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ vi     : num [1:13] 0.3256 0.1946 0.4154 0.02 0.0512 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ affirm : logi [1:13] FALSE TRUE TRUE TRUE FALSE TRUE ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ cluster: int [1:13] 1 2 3 4 5 6 7 8 9 10 ...</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ values:List of 10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ q                  : num 0</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ model_type         : chr "robust"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ favor_positive     : logi FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ alpha_select       : num 0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ ci_level           : num 0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ small              : logi TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ selection_ratio_max: num 200</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ k                  : int 13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ k_affirmative      : int 8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ k_nonaffirmative   : int 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ stats : tibble [1 × 2] (S3: tbl_df/tbl/data.frame)</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ sval_est: chr "Not possible"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   ..$ sval_ci : num 4.17</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  $ fits  : list()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>  - attr(*, "class")= chr [1:2] "metabias" "list"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $data</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>             yi          vi affirm cluster</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1   0.88931133 0.325584765  FALSE       1</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2   1.58538866 0.194581121   TRUE       2</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3   1.34807315 0.415367965   TRUE       3</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4   1.44155119 0.020010032   TRUE       4</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5   0.21754732 0.051210172  FALSE       5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6   0.78611559 0.006905618   TRUE       6</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 7   1.62089822 0.223017248   TRUE       7</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 8  -0.01195233 0.003961579  FALSE       8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 9   0.46941765 0.056434210   TRUE       9</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 10  1.37134480 0.073024794   TRUE      10</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 11  0.33935883 0.012412214   TRUE      11</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 12 -0.44591340 0.532505845  FALSE      12</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 13  0.01731395 0.071404660  FALSE      13</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$q</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$model_type</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "robust"</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$favor_positive</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$alpha_select</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.05</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$ci_level</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.95</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$small</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$selection_ratio_max</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 200</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 13</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k_affirmative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 8</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k_nonaffirmative</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $stats</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 2</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   sval_est     sval_ci</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> Not possible    4.17</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> $fits</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "metabias" "list"    </span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>

@@ -79,17 +79,17 @@ carried out for more precise quantitative conclusions.</p>
 <span>  <span class="va">yi</span>,</span>
 <span>  <span class="va">vi</span>,</span>
 <span>  <span class="va">sei</span>,</span>
+<span>  favor_positive <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  alpha_select <span class="op">=</span> <span class="fl">0.05</span>,</span>
+<span>  plot_pooled <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  est_all <span class="op">=</span> <span class="cn">NA</span>,</span>
+<span>  est_worst <span class="op">=</span> <span class="cn">NA</span>,</span>
 <span>  xmin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">yi</span><span class="op">)</span>,</span>
 <span>  xmax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">yi</span><span class="op">)</span>,</span>
 <span>  ymin <span class="op">=</span> <span class="fl">0</span>,</span>
 <span>  ymax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/MathFun.html" class="external-link">sqrt</a></span><span class="op">(</span><span class="va">vi</span><span class="op">)</span><span class="op">)</span>,</span>
 <span>  xlab <span class="op">=</span> <span class="st">"Point estimate"</span>,</span>
-<span>  ylab <span class="op">=</span> <span class="st">"Estimated standard error"</span>,</span>
-<span>  favor_positive <span class="op">=</span> <span class="cn">NA</span>,</span>
-<span>  est_all <span class="op">=</span> <span class="cn">NA</span>,</span>
-<span>  est_worst <span class="op">=</span> <span class="cn">NA</span>,</span>
-<span>  alpha_select <span class="op">=</span> <span class="fl">0.05</span>,</span>
-<span>  plot_pooled <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  ylab <span class="op">=</span> <span class="st">"Estimated standard error"</span></span>
 <span><span class="op">)</span></span></code></pre></div>
     </div>
 
@@ -107,6 +107,33 @@ the point estimates.</p></dd>
 <dt>sei</dt>
 <dd><p>A vector of estimated standard errors for the point estimates.
 (Only one of <code>vi</code> or <code>sei</code> needs to be specified).</p></dd>
+
+
+<dt>favor_positive</dt>
+<dd><p><code>TRUE</code> if publication bias are
+assumed to favor significant positive estimates; <code>FALSE</code> if assumed to
+favor significant negative estimates.</p></dd>
+
+
+<dt>alpha_select</dt>
+<dd><p>Alpha level at which an estimate's probability of being
+favored by publication bias is assumed to change (i.e.,
+the threshold at which study investigators, journal editors, etc., consider
+an estimate to be significant).</p></dd>
+
+
+<dt>plot_pooled</dt>
+<dd><p>Should the pooled estimates within all studies and within
+only the nonaffirmative studies be plotted as well?</p></dd>
+
+
+<dt>est_all</dt>
+<dd><p>Regular meta-analytic estimate among all studies (optional).</p></dd>
+
+
+<dt>est_worst</dt>
+<dd><p>Worst-case meta-analytic estimate among only nonaffirmative
+studies (optional).</p></dd>
 
 
 <dt>xmin</dt>
@@ -132,33 +159,6 @@ the point estimates.</p></dd>
 <dt>ylab</dt>
 <dd><p>Label for y-axis (standard error).</p></dd>
 
-
-<dt>favor_positive</dt>
-<dd><p><code>TRUE</code> if publication bias are
-assumed to favor significant positive estimates; <code>FALSE</code> if assumed to
-favor significant negative estimates.</p></dd>
-
-
-<dt>est_all</dt>
-<dd><p>Regular meta-analytic estimate among all studies (optional).</p></dd>
-
-
-<dt>est_worst</dt>
-<dd><p>Worst-case meta-analytic estimate among only nonaffirmative
-studies (optional).</p></dd>
-
-
-<dt>alpha_select</dt>
-<dd><p>Alpha level at which an estimate's probability of being
-favored by publication bias is assumed to change (i.e.,
-the threshold at which study investigators, journal editors, etc., consider
-an estimate to be significant).</p></dd>
-
-
-<dt>plot_pooled</dt>
-<dd><p>Should the pooled estimates within all studies and within
-only the nonaffirmative studies be plotted as well?</p></dd>
-
 </dl></div>
     <div class="section level2">
     <h2 id="details">Details<a class="anchor" aria-label="anchor" href="#details"></a></h2>
@@ -180,7 +180,7 @@ model.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">##### Make Significance Funnel with User-Specified Pooled Estimates #####</span></span></span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="co">##### Make Significance Funnel #####</span></span></span>
 <span class="r-in"><span><span class="co"># compute meta-analytic effect sizes for an example dataset</span></span></span>
 <span class="r-in"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">require</a></span><span class="op">(</span><span class="va"><a href="https://www.metafor-project.org" class="external-link">metafor</a></span><span class="op">)</span></span></span>
 <span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">metafor</span><span class="fu">::</span><span class="fu"><a href="https://wviechtb.github.io/metafor/reference/escalc.html" class="external-link">escalc</a></span><span class="op">(</span>measure <span class="op">=</span> <span class="st">"RR"</span>, ai <span class="op">=</span> <span class="va">tpos</span>, bi <span class="op">=</span> <span class="va">tneg</span>, ci <span class="op">=</span> <span class="va">cpos</span>,</span></span>
@@ -189,7 +189,6 @@ model.</p>
 <span class="r-in"><span><span class="co"># favor_positive = FALSE since we think publication bias operates in favor of negative</span></span></span>
 <span class="r-in"><span><span class="fu">significance_funnel</span><span class="op">(</span>yi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">yi</span>, vi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">vi</span>, favor_positive <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
 <span class="r-plt img"><img src="significance_funnel-1.png" alt="" width="700" height="433"></span>
-<span class="r-plt img"><img src="significance_funnel-2.png" alt="" width="700" height="433"></span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc"><h2>On this page</h2>
