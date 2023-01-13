@@ -42,17 +42,17 @@
 significance_funnel <- function(yi,
                                 vi,
                                 sei,
+                                favor_positive = TRUE,
+                                alpha_select = 0.05,
+                                plot_pooled = TRUE,
+                                est_all = NA,
+                                est_worst = NA,
                                 xmin = min(yi),
                                 xmax = max(yi),
                                 ymin = 0,  # so that pooled points are shown
                                 ymax = max(sqrt(vi)),
                                 xlab = "Point estimate",
-                                ylab = "Estimated standard error",
-                                favor_positive = NA,
-                                est_all = NA,
-                                est_worst = NA,
-                                alpha_select = 0.05,
-                                plot_pooled = TRUE) {
+                                ylab = "Estimated standard error") {
 
   # resolve vi and sei
   if (missing(vi)) {
@@ -68,13 +68,15 @@ significance_funnel <- function(yi,
   # which direction of effects are favored?
   # if we have the pooled point estimate, but not the favored direction,
   # assume favored direction matches sign of pooled estimate (but issue warning)
-  if (!is.na(est_all) && is.na(favor_positive)) {
-    favor_positive <- est_all > 0
-    warning("favor_positive not provided, so assuming publication bias favors estimates whose sign matches pooled estimate")
-  }
-  if (is.na(est_all) && is.na(favor_positive)) {
-    stop("Need to specify favor_positive")
-  }
+  # if (!is.na(est_all) && is.na(favor_positive)) {
+  #   favor_positive <- est_all > 0
+  #   warning("favor_positive not provided, so assuming publication bias favors estimates whose sign matches pooled estimate")
+  # }
+  # if (is.na(est_all) && is.na(favor_positive)) {
+  #   stop("Need to specify favor_positive")
+  # }
+  if (!is.na(est_all) && (est_all > 0) != favor_positive)
+    warning("Favored direction is opposite of the pooled estimate.")
 
   if (favor_positive) d <- d |>
     mutate(affirm = .data$yi > 0 & .data$pval < alpha_select)
@@ -142,7 +144,7 @@ significance_funnel <- function(yi,
     theme_classic() +
     theme(legend.title = element_blank())
 
-  plot(p_funnel)
+  # plot(p_funnel)
   return(p_funnel)
 }
 

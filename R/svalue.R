@@ -333,7 +333,7 @@ pubbias_svalue <- function(yi, # data
   # meta_worst might not exist, e.g. if there is only 1 nonaffirmative study
   if (return_worst_meta && exists("meta_worst")) fit$meta_worst <- meta_worst
 
-  metabias::metabias(data = dat, values = values, stats = stats, fit = fit)
+  metabias::metabias(data = dat, values = values, stats = stats, fits = fit)
 
 }
 

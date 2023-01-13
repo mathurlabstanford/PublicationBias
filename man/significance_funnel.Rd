@@ -8,17 +8,17 @@ significance_funnel(
   yi,
   vi,
   sei,
+  favor_positive = TRUE,
+  alpha_select = 0.05,
+  plot_pooled = TRUE,
+  est_all = NA,
+  est_worst = NA,
   xmin = min(yi),
   xmax = max(yi),
   ymin = 0,
   ymax = max(sqrt(vi)),
   xlab = "Point estimate",
-  ylab = "Estimated standard error",
-  favor_positive = NA,
-  est_all = NA,
-  est_worst = NA,
-  alpha_select = 0.05,
-  plot_pooled = TRUE
+  ylab = "Estimated standard error"
 )
 }
 \arguments{
@@ -29,6 +29,23 @@ the point estimates.}
 
 \item{sei}{A vector of estimated standard errors for the point estimates.
 (Only one of \code{vi} or \code{sei} needs to be specified).}
+
+\item{favor_positive}{\code{TRUE} if publication bias are
+assumed to favor significant positive estimates; \code{FALSE} if assumed to
+favor significant negative estimates.}
+
+\item{alpha_select}{Alpha level at which an estimate's probability of being
+favored by publication bias is assumed to change (i.e.,
+the threshold at which study investigators, journal editors, etc., consider
+an estimate to be significant).}
+
+\item{plot_pooled}{Should the pooled estimates within all studies and within
+only the nonaffirmative studies be plotted as well?}
+
+\item{est_all}{Regular meta-analytic estimate among all studies (optional).}
+
+\item{est_worst}{Worst-case meta-analytic estimate among only nonaffirmative
+studies (optional).}
 
 \item{xmin}{x-axis (point estimate) lower limit for plot.}
 
@@ -41,23 +58,6 @@ the point estimates.}
 \item{xlab}{Label for x-axis (point estimate).}
 
 \item{ylab}{Label for y-axis (standard error).}
-
-\item{favor_positive}{\code{TRUE} if publication bias are
-assumed to favor significant positive estimates; \code{FALSE} if assumed to
-favor significant negative estimates.}
-
-\item{est_all}{Regular meta-analytic estimate among all studies (optional).}
-
-\item{est_worst}{Worst-case meta-analytic estimate among only nonaffirmative
-studies (optional).}
-
-\item{alpha_select}{Alpha level at which an estimate's probability of being
-favored by publication bias is assumed to change (i.e.,
-the threshold at which study investigators, journal editors, etc., consider
-an estimate to be significant).}
-
-\item{plot_pooled}{Should the pooled estimates within all studies and within
-only the nonaffirmative studies be plotted as well?}
 }
 \description{
 Creates a modified funnel plot that distinguishes between affirmative and
@@ -82,7 +82,7 @@ be automatically calculated using a fixed-effects (a.k.a. "common-effect")
 model.
 }
 \examples{
-##### Make Significance Funnel with User-Specified Pooled Estimates #####
+##### Make Significance Funnel #####
 # compute meta-analytic effect sizes for an example dataset
 require(metafor)
 dat <- metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,

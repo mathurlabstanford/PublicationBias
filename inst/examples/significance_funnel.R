@@ -1,4 +1,4 @@
-##### Make Significance Funnel with User-Specified Pooled Estimates #####
+##### Make Significance Funnel #####
 # compute meta-analytic effect sizes for an example dataset
 require(metafor)
 dat <- metafor::escalc(measure = "RR", ai = tpos, bi = tneg, ci = cpos,

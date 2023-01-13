@@ -164,7 +164,7 @@ pubbias_meta <- function(yi, # data
                                 var.eff.size = vi,
                                 small = small)
 
-    stats <- metabias::robu_ci(meta_robu)
+    stats <- metabias::robu_ci(meta_robu) |> select(-param)
     fits <- list("robust" = meta_robu)
   } # end robust = TRUE
 
