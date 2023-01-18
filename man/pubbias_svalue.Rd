@@ -180,3 +180,4 @@ pubbias_svalue(yi = dat$yi,
 \references{
 \insertRef{mathur2020}{metabias}
 }
+\keyword{internal}

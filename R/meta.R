@@ -218,7 +218,7 @@ corrected_meta <- function(yi,
                            alpha.select = 0.05,
                            CI.level = 0.95,
                            small = TRUE) {
-  .Deprecated("pubbias_meta")
+  lifecycle::deprecate_warn("2.3.0", "corrected_meta()", "pubbias_meta()")
   pubbias_meta(yi = yi,
                vi = vi,
                cluster = clustervar,

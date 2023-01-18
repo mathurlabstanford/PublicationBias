@@ -280,6 +280,7 @@ find_svalue <- function(param, meta_fun, meta_worst, q, selection_ratio_max,
 #' @param favor.positive (deprecated) see favor_positive
 #' @param CI.level (deprecated) see ci_level
 #' @param return.worst.meta (deprecated) see return_worst_meta
+#' @keywords internal
 #' @export
 svalue <- function(yi,
                    vi,
@@ -292,7 +293,7 @@ svalue <- function(yi,
                    CI.level = 0.95,
                    small = TRUE,
                    return.worst.meta = FALSE) {
-  .Deprecated("pubbias_svalue")
+  lifecycle::deprecate_warn("2.3.0", "svalue()", "pubbias_svalue()")
   pubbias_svalue(yi = yi,
                  vi = vi,
                  cluster = clustervar,
