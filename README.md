@@ -1,10 +1,10 @@
 # PublicationBias
 
 <!-- badges: start -->
-  [![R-CMD-check](https://github.com/mayamathur/PublicationBias/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mayamathur/PublicationBias/actions/workflows/R-CMD-check.yaml)
+[![R-CMD-check](https://github.com/mayamathur/PublicationBias/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/mayamathur/PublicationBias/actions/workflows/R-CMD-check.yaml)
 <!-- badges: end -->
 
-`PublicationBias` provides sensitivity analyses for publication bias in meta-analyses (per [Mathur & VanderWeele, 2020](https://osf.io/s9dp6)).
+`PublicationBias` is an R package that provides bias correction and sensitivity analysis for publication bias in meta-analyses (per [Mathur & VanderWeele, 2020](https://osf.io/s9dp6)).
 
 ## Installation
 

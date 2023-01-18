@@ -1,14 +1,14 @@
 Package: PublicationBias
 Title: Sensitivity Analysis for Publication Bias in Meta-Analyses
-Version: 2.2.0.9000
+Version: 2.3.0
 Author: Maya B. Mathur, Tyler J. VanderWeele, Mika Braginsky
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut")),
     person("Maya", "Mathur", email = "mmathur@stanford.edu", role = c("aut", "cre")),
     person("Tyler J.", "VanderWeele", email = "tvanderw@hsph.harvard.edu", role = c("aut")))
-Maintainer: Maya B. Mathur <mmathur@stanford.edu>
+Maintainer: Mika Braginsky <mika.br@gmail.com>
 Description: Performs sensitivity analysis for publication bias in meta-analyses
-    (per Mathur & VanderWeele, 2020 [<https://osf.io/s9dp6>]). These analyses
+    (per Mathur & VanderWeele, 2020 [<doi:10.31219/osf.io/s9dp6>]). These analyses
     enable statements such as: "For publication bias to shift the observed point
     estimate to the null, 'significant' results would need to be at least
     30-fold more likely to be published than negative or 'nonsignificant'
@@ -38,8 +38,6 @@ Suggests:
     purrr,
     testthat (>= 3.0.0),
     withr
-Remotes:
-    mikabr/metabias
 LazyData: true
 RoxygenNote: 7.2.3
 Roxygen: list(markdown = TRUE)
