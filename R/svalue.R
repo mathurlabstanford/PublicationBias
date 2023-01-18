@@ -144,20 +144,6 @@ pubbias_svalue <- function(yi, # data
   ##### Fixed-Effects Model #####
   if (model_type == "fixed") {
 
-    ### old worst-case meta
-    # # special case worst-case meta for 1 non-affirmative study
-    # if (k_nonaffirmative == 1) {
-    #   est_worst <- dat_naff$yi
-    #   lo_worst <- dat_naff$yi - qnorm(1 - alpha / 2) * sqrt(dat_naff$vi)
-    # }
-    #
-    # # first fit worst-case meta
-    # meta_worst <- metafor::rma.uni(yi = dat_naff$yi, vi = dat_naff$vi,
-    #                                method = "FE", level = ci_level)
-    # est_worst <- as.numeric(meta_worst$b)
-    # lo_worst <- meta_worst$ci.lb
-
-    # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
     strat <- dat |>
       group_by(.data$affirm) |>
       summarise(nu = sum(1 / .data$vi), ybar = sum(.data$yi / .data$vi))
@@ -199,39 +185,7 @@ pubbias_svalue <- function(yi, # data
   ##### Robust Independent and Robust Clustered #####
   if (model_type == "robust") {
 
-    ##### Worst-Case Meta to See if We Should Search at All
-
-    ### old worst-case meta
-    # if (k_nonaffirmative > 1) {
-    #   # first fit worst-case meta to see if we should even attempt grid search
-    #   # initialize a dumb (unclustered and uncorrected) version of tau^2
-    #   # which is only used for constructing weights
-    #   meta_re <- metafor::rma.uni(yi = yi, vi = vi)
-    #   t2hat_naive <- meta_re$tau2
-    #
-    #   # fit model exactly as in pubbias_meta
-    #   meta_worst <- robumeta::robu(yi ~ 1,
-    #                                studynum = cluster,
-    #                                data = dat[!affirm, ],
-    #                                userweights = 1 / (vi + t2hat_naive),
-    #                                var.eff.size = vi,
-    #                                small = small)
-    #
-    #   est_worst <- as.numeric(meta_worst$b.r)
-    #   table_worst <- meta_worst$reg_table
-    #   lo_worst <- est_worst -
-    #     qt(1 - alpha / 2, table_worst$dfs) * table_worst$SE
-    #
-    # }
-    #
-    # # robumeta above can't handle meta-analyzing only 1 nonaffirmative study
-    # if (k_nonaffirmative == 1) {
-    #   est_worst <- dat$yi[!affirm]
-    #   lo_worst <- dat$yi[!affirm] - qnorm(1 - alpha / 2) * sqrt(dat$vi[!affirm])
-    # }
-
     ##### Get S-value for estimate
-    # if (est_worst > q) {
     if (meta_worst$stats$estimate > q) {
       sval_est <- "Not possible"
     } else {
@@ -338,10 +292,6 @@ pubbias_svalue <- function(yi, # data
   )
 
   stats <- tibble(sval_est = sval_est, sval_ci = sval_ci)
-
-  # fit <- list()
-  # meta_worst might not exist, e.g. if there is only 1 nonaffirmative study
-  # if (return_worst_meta && exists("meta_worst")) fit$meta_worst <- meta_worst
 
   metabias::metabias(data = dat, values = values, stats = stats, fits = fits)
 
