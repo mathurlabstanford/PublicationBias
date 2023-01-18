@@ -29,7 +29,7 @@
 #' @details By default (`plot_pooled = TRUE`), also plots the pooled point
 #'   estimate within all studies, supplied by the user as `est_all` (black
 #'   diamond), and within only the nonaffirmative studies, supplied by the user
-#'   as `est_worst` (grey diamond). The user can calculate `est_all` and
+#'   as `est_worst` (gray diamond). The user can calculate `est_all` and
 #'   `est_worst` using their choice of meta-analysis model. If instead these
 #'   are not supplied but `plot_pooled = TRUE`, these pooled estimates will
 #'   be automatically calculated using a fixed-effects (a.k.a. "common-effect")

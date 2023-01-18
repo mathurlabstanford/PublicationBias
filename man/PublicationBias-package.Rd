@@ -21,11 +21,11 @@ Useful links:
 
 }
 \author{
-\strong{Maintainer}: Maya Mathur \email{mmathur@stanford.edu}
+\strong{Maintainer}: Mika Braginsky \email{mika.br@gmail.com}
 
 Authors:
 \itemize{
-  \item Mika Braginsky \email{mika.br@gmail.com}
+  \item Maya Mathur \email{mmathur@stanford.edu}
   \item Tyler J. VanderWeele \email{tvanderw@hsph.harvard.edu}
 }
 

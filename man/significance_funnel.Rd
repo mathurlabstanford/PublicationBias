@@ -75,7 +75,7 @@ carried out for more precise quantitative conclusions.
 By default (\code{plot_pooled = TRUE}), also plots the pooled point
 estimate within all studies, supplied by the user as \code{est_all} (black
 diamond), and within only the nonaffirmative studies, supplied by the user
-as \code{est_worst} (grey diamond). The user can calculate \code{est_all} and
+as \code{est_worst} (gray diamond). The user can calculate \code{est_all} and
 \code{est_worst} using their choice of meta-analysis model. If instead these
 are not supplied but \code{plot_pooled = TRUE}, these pooled estimates will
 be automatically calculated using a fixed-effects (a.k.a. "common-effect")
