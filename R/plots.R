@@ -65,16 +65,6 @@ significance_funnel <- function(yi,
   d <- tibble(yi, vi, sei = sqrt(vi),
               pval = 2 * (1 - pnorm(abs(yi) / sqrt(vi))))
 
-  # which direction of effects are favored?
-  # if we have the pooled point estimate, but not the favored direction,
-  # assume favored direction matches sign of pooled estimate (but issue warning)
-  # if (!is.na(est_all) && is.na(favor_positive)) {
-  #   favor_positive <- est_all > 0
-  #   warning("favor_positive not provided, so assuming publication bias favors estimates whose sign matches pooled estimate")
-  # }
-  # if (is.na(est_all) && is.na(favor_positive)) {
-  #   stop("Need to specify favor_positive")
-  # }
   if (!is.na(est_all) && (est_all > 0) != favor_positive)
     warning("Favored direction is opposite of the pooled estimate.")
 
@@ -144,7 +134,6 @@ significance_funnel <- function(yi,
     theme_classic() +
     theme(legend.title = element_blank())
 
-  # plot(p_funnel)
   return(p_funnel)
 }
 

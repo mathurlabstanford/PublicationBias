@@ -27,7 +27,7 @@ test_that("pubbias_meta no selection agreement", {
 
   ##### Recover Regular Robust Indepenent Model With selection_ratio = 1 #####
   for (.small in c(TRUE, FALSE)) {
-    cluster <- 1:length(dat$yi)
+    cluster <- seq_along(dat$yi)
 
     meta_re <- rma.uni(yi = dat$yi, vi = dat$vi)
     t2hat_naive <- meta_re$tau2

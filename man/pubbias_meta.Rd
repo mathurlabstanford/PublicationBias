@@ -175,7 +175,6 @@ ggplot(estimates, aes(x = selection_ratio, y = estimate)) +
   geom_line(lwd = 1.2) +
   labs(x = bquote(eta), y = bquote(hat(mu)[eta])) +
   theme_classic()
-
 }
 \references{
 \insertRef{mathur2020}{metabias}

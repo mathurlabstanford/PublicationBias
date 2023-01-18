@@ -65,7 +65,7 @@ test_that("pubbias_svalue q inside CI", {
   q_inside_msg <- "naive confidence interval already contains q"
 
   # fixed case
-  # naive: -0.4302852 [-0.5096613, -0.3509091]
+  # calculated naive: -0.4302852 [-0.5096613, -0.3509091]
   # should give message about sval.ci not applying
   expect_message(
     regexp = q_inside_msg,
@@ -91,7 +91,7 @@ test_that("pubbias_svalue q inside CI", {
   )
 
   # robust case and flipped signs
-  # naive: 0.7145323 [0.3241296, 1.104935]
+  # calculated naive: 0.7145323 [0.3241296, 1.104935]
   expect_message(
     regexp = q_inside_msg,
     pubbias_svalue(yi = -dat$yi,

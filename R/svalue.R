@@ -185,89 +185,30 @@ pubbias_svalue <- function(yi, # data
   ##### Robust Independent and Robust Clustered #####
   if (model_type == "robust") {
 
-    ##### Get S-value for estimate
-    if (meta_worst$stats$estimate > q) {
-      sval_est <- "Not possible"
-    } else {
-
-      # define the function we need to minimize
-      # i.e., distance between corrected estimate and the target value of q
-      func <- function(.selection_ratio) {
-        corrected <- suppressWarnings(
-          pubbias_meta(yi = yi,
-                       vi = vi,
-                       sei = sei,
-                       cluster = cluster,
-                       selection_ratio = .selection_ratio,
-                       selection_tails = 1,
-                       model_type = model_type,
-                       favor_positive = TRUE,  # always TRUE because we've already flipped signs if needed
-                       ci_level = ci_level,
-                       small = small))
-        return(abs(corrected$stats$estimate - q))
-      }
-
-      opt <- optimize(f = func,
-                      interval = c(1, selection_ratio_max),
-                      maximum = FALSE)
-      sval_est <- opt$minimum
-
-      # discrepancy between the corrected estimate and the s-value
-      diff <- opt$objective
-
-      # if the optimal value is very close to the upper range of grid search
-      #  AND we're still not very close to the target q,
-      #  that means the optimal value was above selection_ratio_max
-      if (abs(sval_est - selection_ratio_max) < 0.0001 && diff > 0.0001)
-        sval_est <- paste(">", selection_ratio_max)
+    .meta_fun <- function(.selection_ratio) {
+      pubbias_meta(yi = yi,
+                   vi = vi,
+                   sei = sei,
+                   cluster = cluster,
+                   selection_ratio = .selection_ratio,
+                   selection_tails = 1,
+                   model_type = model_type,
+                   favor_positive = TRUE,  # always TRUE because we've already flipped signs if needed
+                   ci_level = ci_level,
+                   small = small)
     }
 
-    # do something similar for CI
-    if (meta_worst$stats$ci_lower > q) {
-      sval_ci <- "Not possible"
-
-    } else {
-      # define the function we need to minimize
-      # i.e., distance between corrected estimate and the target value of q
-      func <- function(.selection_ratio) {
-        corrected <- suppressWarnings(
-          pubbias_meta(yi = yi,
-                       vi = vi,
-                       sei = sei,
-                       cluster = cluster,
-                       selection_ratio = .selection_ratio,
-                       selection_tails = 1,
-                       model_type = model_type,
-                       favor_positive = TRUE, # always TRUE because we've already flipped signs if needed
-                       ci_level = ci_level,
-                       small = small))
-        return(abs(corrected$stats$ci_lower - q))
-      }
-
-      opt <- optimize(f = func,
-                      interval = c(1, selection_ratio_max),
-                      maximum = FALSE)
-      sval_ci <- opt$minimum
-
-      # discrepancy between the corrected estimate and the s-value
-      diff <- opt$objective
-
-      # if the optimal value is very close to the upper range of grid search
-      #  AND we're still not very close to the target q,
-      #  that means the optimal value was above selection_ratio_max
-      if (abs(sval_ci - selection_ratio_max) < 0.0001 && diff > 0.0001)
-        sval_ci <- paste(">", selection_ratio_max)
+    .svalue_fun <- function(.param) {
+      find_svalue(param = .param, meta_fun = .meta_fun,
+                  meta_worst = meta_worst, q = q,
+                  selection_ratio_max = selection_ratio_max)
     }
 
+    sval_est <- .svalue_fun("estimate")
+    sval_ci <- .svalue_fun("ci_lower")
   }
 
-  # s-values less than 1 indicate complete robustness
-  # is.numeric is in case we have a "< XXX" string instead of a number
-  if (is.numeric(sval_est) && !is.na(sval_est) && sval_est < 1)
-    sval_est <- "Not possible"
-  if (is.numeric(sval_ci) && !is.na(sval_ci) && sval_ci < 1)
-    sval_ci <- "Not possible"
-
+  # check if naive confidence interval contains q
   # m0 was fit BEFORE flipping signs
   # but q has now been flipped in the latter case in "or" statement below
   if ((est0 > 0 && m0$stats$ci_lower < q) ||
@@ -295,6 +236,39 @@ pubbias_svalue <- function(yi, # data
 
   metabias::metabias(data = dat, values = values, stats = stats, fits = fits)
 
+}
+
+#' @keywords internal
+find_svalue <- function(param, meta_fun, meta_worst, q, selection_ratio_max,
+                        tol = 0.0001) { # param is estimate or ci_lower
+
+  if (meta_worst$stats[[param]] > q) return("Not possible")
+
+  # define the function we need to minimize
+  # i.e., distance between corrected estimate and the target value of q
+  func <- function(.selection_ratio) {
+    corrected <- suppressWarnings(meta_fun(.selection_ratio))
+    return(abs(corrected$stats[[param]] - q))
+  }
+
+  opt <- optimize(f = func,
+                  interval = c(1, selection_ratio_max),
+                  maximum = FALSE)
+  sval <- opt$minimum
+
+  # discrepancy between the corrected estimate and the s-value
+  diff <- opt$objective
+
+  # s-values less than 1 indicate complete robustness
+  if (!is.na(sval) && sval < 1) return("Not possible")
+
+  # if the optimal value is very close to the upper range of grid search
+  #  AND we're still not very close to the target q,
+  #  that means the optimal value was above selection_ratio_max
+  if (abs(sval - selection_ratio_max) < tol && diff > tol)
+    sval <- paste(">", selection_ratio_max)
+
+  return(sval)
 }
 
 
