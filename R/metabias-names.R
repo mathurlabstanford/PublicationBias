@@ -5,7 +5,7 @@ meta_names <- function(component) {
     values = c("selection_ratio", "selection_tails", "model_type",
                "favor_positive", "alpha_select", "ci_level", "small", "k",
                "k_affirmative", "k_nonaffirmative"),
-    stats = c("estimate", "se", "ci_lower", "ci_upper", "p_value"))
+    stats = c("model", "estimate", "se", "ci_lower", "ci_upper", "p_value"))
   names_list[[component]]
 }
 

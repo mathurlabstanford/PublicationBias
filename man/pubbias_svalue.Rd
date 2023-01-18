@@ -97,7 +97,7 @@ An object of class \code{\link[metabias:metabias-class]{metabias::metabias()}}, 
 \item{data}{A tibble with one row per study and the columns
 \code{yi}, \code{yif}, \code{vi}, \code{affirm}, \code{cluster}.}
 \item{values}{A list with the elements \code{selection_ratio}, \code{selection_tails}, \code{model_type}, \code{favor_positive}, \code{alpha_select}, \code{ci_level}, \code{small}, \code{k}, \code{k_affirmative}, \code{k_nonaffirmative}.}
-\item{stats}{A tibble with the columns \code{estimate}, \code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}.
+\item{stats}{A tibble with the columns \code{model}, \code{estimate}, \code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}.
 \code{sval_est} represents the amount of publication bias required
 to attenuate the pooled point estimate to \code{q}; \code{sval_ci}
 represents the amount of publication bias required to

@@ -16,7 +16,8 @@ pubbias_meta(
   favor_positive = TRUE,
   alpha_select = 0.05,
   ci_level = 0.95,
-  small = TRUE
+  small = TRUE,
+  return_worst_meta = FALSE
 )
 
 corrected_meta(
@@ -71,6 +72,9 @@ estimate will be calculated from \code{ci_level}.)}
 \item{small}{Should inference allow for a small meta-analysis? We recommend
 always using \code{TRUE}.}
 
+\item{return_worst_meta}{Should the worst-case meta-analysis of only the
+nonaffirmative studies be returned?}
+
 \item{eta}{(deprecated) see selection_ratio}
 
 \item{clustervar}{(deprecated) see cluster}
@@ -91,7 +95,7 @@ An object of class \code{\link[metabias:metabias-class]{metabias::metabias()}}, 
 \item{data}{A tibble with one row per study and the columns
 \code{yi}, \code{yif}, \code{vi}, \code{affirm}, \code{cluster}.}
 \item{values}{A list with the elements \code{selection_ratio}, \code{selection_tails}, \code{model_type}, \code{favor_positive}, \code{alpha_select}, \code{ci_level}, \code{small}, \code{k}, \code{k_affirmative}, \code{k_nonaffirmative}.}
-\item{stats}{A tibble with the columns \code{estimate}, \code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}.}
+\item{stats}{A tibble with the columns \code{model}, \code{estimate}, \code{se}, \code{ci_lower}, \code{ci_upper}, \code{p_value}.}
 \item{fit}{A list of fitted models, if any.}
 }
 }
@@ -171,6 +175,7 @@ ggplot(estimates, aes(x = selection_ratio, y = estimate)) +
   geom_line(lwd = 1.2) +
   labs(x = bquote(eta), y = bquote(hat(mu)[eta])) +
   theme_classic()
+
 }
 \references{
 \insertRef{mathur2020}{metabias}

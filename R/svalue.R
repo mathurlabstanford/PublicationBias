@@ -10,8 +10,6 @@
 #' @param selection_ratio_max The largest value of `selection_ratio` that should
 #'   be included in the grid search. This argument is only needed when
 #'   `model_type = "robust"`.
-#' @param return_worst_meta Should the worst-case meta-analysis of only the
-#'   nonaffirmative studies be returned?
 #'
 #' @details To illustrate interpretation of the S-value, if the S-value for the
 #'   point estimate is 30 with `q=0`, this indicates that affirmative studies
@@ -71,7 +69,7 @@ pubbias_svalue <- function(yi, # data
                            selection_ratio_max = 200,
                            return_worst_meta = FALSE) {
 
-  # stop if selection_ratio doesn't make sense
+  # error if selection_ratio_max doesn't make sense
   if (selection_ratio_max < 1) stop("selection_ratio_max must be at least 1.")
 
   # resolve vi and sei
@@ -83,13 +81,14 @@ pubbias_svalue <- function(yi, # data
   }
 
   # number of point estimates
-  k_studies <- length(yi)
+  k <- length(yi)
 
+  # calculate alpha for inference on point estimate
   alpha <- 1 - ci_level
 
-  # warn if clusters but user said fixed
+  # warn if clusters are present but model_type == "fixed"
   nclusters <- length(unique(cluster))
-  if (nclusters < k_studies && model_type == "fixed") {
+  if (nclusters < k && model_type == "fixed") {
     warning("You indicated there are clusters, but these will be ignored due to fixed-effects specification. To accommodate clusters, instead choose model_type = robust.")
   }
 
@@ -105,11 +104,11 @@ pubbias_svalue <- function(yi, # data
                      ci_level = ci_level,
                      small = small)
 
+  # error if q is on wrong side of null
   est0 <- m0$stats$estimate
   q_error <- function(dir) {
     glue("The uncorrected pooled point estimate is {est0}. q must be {dir} than this value (i.e., closer to zero).")
   }
-  # stop if q is on wrong side of null
   if (est0 > 0 && q > est0) stop(q_error("less"))
   if (est0 < 0 && q < est0) stop(q_error("greater"))
 
@@ -126,29 +125,37 @@ pubbias_svalue <- function(yi, # data
   affirm <- (pvals < alpha_select) & (yi > 0)
 
   k_affirmative <- sum(affirm)
-  k_nonaffirmative <- k_studies - k_affirmative
+  k_nonaffirmative <- k - k_affirmative
 
+  # error if there are zero affirmative or zero nonaffirmative studies
   k_zero_msg <- \(dir) glue("There are zero {dir} studies. Model estimation cannot proceed.")
   if (k_affirmative == 0) stop(k_zero_msg("affirmative"))
   if (k_nonaffirmative == 0) stop(k_zero_msg("nonaffirmative"))
 
   dat <- data.frame(yi, vi, affirm, cluster)
-  dat_naff <- dat |> dplyr::filter(!.data$affirm)
+  fits <- list()
+
+  # fit worst-case meta-analysis of only nonaffirmative studies
+  # always need model for svalue search initilization
+  meta_worst <- fit_meta_worst(dat, model_type = model_type,
+                               ci_level = ci_level, small = small)
+  if (return_worst_meta) fits$meta_worst <- meta_worst$meta
 
   ##### Fixed-Effects Model #####
   if (model_type == "fixed") {
 
-    # special case worst-case meta for 1 non-affirmative study
-    if (k_nonaffirmative == 1) {
-      est_worst <- dat_naff$yi
-      lo_worst <- dat_naff$yi - qnorm(1 - alpha / 2) * sqrt(dat_naff$vi)
-    }
-
-    # first fit worst-case meta
-    meta_worst <- metafor::rma.uni(yi = dat_naff$yi, vi = dat_naff$vi,
-                                   method = "FE", level = ci_level)
-    est_worst <- as.numeric(meta_worst$b)
-    lo_worst <- meta_worst$ci.lb
+    ### old worst-case meta
+    # # special case worst-case meta for 1 non-affirmative study
+    # if (k_nonaffirmative == 1) {
+    #   est_worst <- dat_naff$yi
+    #   lo_worst <- dat_naff$yi - qnorm(1 - alpha / 2) * sqrt(dat_naff$vi)
+    # }
+    #
+    # # first fit worst-case meta
+    # meta_worst <- metafor::rma.uni(yi = dat_naff$yi, vi = dat_naff$vi,
+    #                                method = "FE", level = ci_level)
+    # est_worst <- as.numeric(meta_worst$b)
+    # lo_worst <- meta_worst$ci.lb
 
     # FE mean and sum of weights stratified by affirmative vs. nonaffirmative
     strat <- dat |>
@@ -172,12 +179,12 @@ pubbias_svalue <- function(yi, # data
     d <- nu_a
 
     k <- if (!small) qnorm(1 - (alpha / 2)) else qt(1 - (alpha / 2),
-                                                    df = k_studies - 1)
+                                                    df = k - 1)
     term_a <- k ^ 2 * (a ^ 2 * d -
-                       (2 * c * d * q) * (a + b) +
-                       b ^ 2 * c +
-                       q ^ 2 * (c ^ 2 * d + d ^ 2 * c) -
-                       c * d * k ^ 2)
+                         (2 * c * d * q) * (a + b) +
+                         b ^ 2 * c +
+                         q ^ 2 * (c ^ 2 * d + d ^ 2 * c) -
+                         c * d * k ^ 2)
 
     term_b <- -a * b + a * d * q + b * c * q - c * d * q ^ 2
 
@@ -194,35 +201,38 @@ pubbias_svalue <- function(yi, # data
 
     ##### Worst-Case Meta to See if We Should Search at All
 
-    if (k_nonaffirmative > 1) {
-      # first fit worst-case meta to see if we should even attempt grid search
-      # initialize a dumb (unclustered and uncorrected) version of tau^2
-      # which is only used for constructing weights
-      meta_re <- metafor::rma.uni(yi = yi, vi = vi)
-      t2hat_naive <- meta_re$tau2
-
-      # fit model exactly as in pubbias_meta
-      meta_worst <-  robumeta::robu(yi ~ 1,
-                                    studynum = cluster,
-                                    data = dat[!affirm, ],
-                                    userweights = 1 / (vi + t2hat_naive),
-                                    var.eff.size = vi,
-                                    small = small)
-
-      est_worst <- as.numeric(meta_worst$b.r)
-      table_worst <- meta_worst$reg_table
-      lo_worst <- est_worst -
-        qt(1 - alpha / 2, table_worst$dfs) * table_worst$SE
-    }
-
-    # robumeta above can't handle meta-analyzing only 1 nonaffirmative study
-    if (k_nonaffirmative == 1) {
-      est_worst <- dat$yi[!affirm]
-      lo_worst <- dat$yi[!affirm] - qnorm(1 - alpha / 2) * sqrt(dat$vi[!affirm])
-    }
+    ### old worst-case meta
+    # if (k_nonaffirmative > 1) {
+    #   # first fit worst-case meta to see if we should even attempt grid search
+    #   # initialize a dumb (unclustered and uncorrected) version of tau^2
+    #   # which is only used for constructing weights
+    #   meta_re <- metafor::rma.uni(yi = yi, vi = vi)
+    #   t2hat_naive <- meta_re$tau2
+    #
+    #   # fit model exactly as in pubbias_meta
+    #   meta_worst <- robumeta::robu(yi ~ 1,
+    #                                studynum = cluster,
+    #                                data = dat[!affirm, ],
+    #                                userweights = 1 / (vi + t2hat_naive),
+    #                                var.eff.size = vi,
+    #                                small = small)
+    #
+    #   est_worst <- as.numeric(meta_worst$b.r)
+    #   table_worst <- meta_worst$reg_table
+    #   lo_worst <- est_worst -
+    #     qt(1 - alpha / 2, table_worst$dfs) * table_worst$SE
+    #
+    # }
+    #
+    # # robumeta above can't handle meta-analyzing only 1 nonaffirmative study
+    # if (k_nonaffirmative == 1) {
+    #   est_worst <- dat$yi[!affirm]
+    #   lo_worst <- dat$yi[!affirm] - qnorm(1 - alpha / 2) * sqrt(dat$vi[!affirm])
+    # }
 
     ##### Get S-value for estimate
-    if (est_worst > q) {
+    # if (est_worst > q) {
+    if (meta_worst$stats$estimate > q) {
       sval_est <- "Not possible"
     } else {
 
@@ -259,7 +269,7 @@ pubbias_svalue <- function(yi, # data
     }
 
     # do something similar for CI
-    if (lo_worst > q) {
+    if (meta_worst$stats$ci_lower > q) {
       sval_ci <- "Not possible"
 
     } else {
@@ -322,18 +332,18 @@ pubbias_svalue <- function(yi, # data
     ci_level = ci_level,
     small = small,
     selection_ratio_max = selection_ratio_max,
-    k = k_studies,
+    k = k,
     k_affirmative = k_affirmative,
     k_nonaffirmative = k_nonaffirmative
   )
 
   stats <- tibble(sval_est = sval_est, sval_ci = sval_ci)
 
-  fit <- list()
+  # fit <- list()
   # meta_worst might not exist, e.g. if there is only 1 nonaffirmative study
-  if (return_worst_meta && exists("meta_worst")) fit$meta_worst <- meta_worst
+  # if (return_worst_meta && exists("meta_worst")) fit$meta_worst <- meta_worst
 
-  metabias::metabias(data = dat, values = values, stats = stats, fits = fit)
+  metabias::metabias(data = dat, values = values, stats = stats, fits = fits)
 
 }
 

@@ -11,6 +11,8 @@
 #'   conservatism) or 2 (for two-tailed selection).
 #' @param model_type "fixed" for fixed-effects (a.k.a. "common-effect") or
 #'   "robust" for robust random-effects.
+#' @param return_worst_meta Should the worst-case meta-analysis of only the
+#'   nonaffirmative studies be returned?
 #'
 #' @details The `selection_ratio` represents the number of times more likely
 #'   affirmative studies (i.e., those with a "statistically significant" and
@@ -49,7 +51,8 @@ pubbias_meta <- function(yi, # data
                          favor_positive = TRUE,
                          alpha_select = 0.05,
                          ci_level = 0.95,
-                         small = TRUE) {
+                         small = TRUE,
+                         return_worst_meta = FALSE) {
 
   # stop if selection_ratio doesn't make sense
   if (selection_ratio < 1) stop("selection_ratio must be at least 1.")
@@ -97,7 +100,7 @@ pubbias_meta <- function(yi, # data
   if (k_nonaffirmative == 0) stop(k_zero_msg("nonaffirmative"))
 
   dat <- tibble(yi, yif, vi, affirm, cluster)
-
+  fits <- list()
 
   ##### Fixed-Effects Model #####
   if (model_type == "fixed") {
@@ -140,7 +143,7 @@ pubbias_meta <- function(yi, # data
                     ci_lower = lo,
                     ci_upper = hi,
                     p_value = pval_est)
-    fits <- list()
+    # fits <- list()
 
   } # end fixed = TRUE
 
@@ -164,9 +167,21 @@ pubbias_meta <- function(yi, # data
                                 var.eff.size = vi,
                                 small = small)
 
-    stats <- metabias::robu_ci(meta_robu) |> select(-param)
-    fits <- list("robust" = meta_robu)
+    stats <- metabias::robu_ci(meta_robu, ci_level = ci_level) |>
+      select(-.data$param)
+    fits$robust <- meta_robu
+    # fits <- list("robust" = meta_robu)
   } # end robust = TRUE
+
+  stats <- stats |> mutate(model = "pubbias", .before = everything())
+
+  # fit worst-case meta-analysis of only nonaffirmative studies
+  if (return_worst_meta) {
+    meta_worst <- fit_meta_worst(dat, model_type = model_type,
+                                 ci_level = ci_level, small = small)
+    fits$meta_worst <- meta_worst$meta
+    stats <- bind_rows(stats, meta_worst$stats)
+  }
 
   values <- list(selection_ratio = selection_ratio,
                  selection_tails = selection_tails,

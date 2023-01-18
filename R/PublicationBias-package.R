@@ -5,7 +5,7 @@
 
 ## usethis namespace: start
 #' @import ggplot2
-#' @importFrom dplyr filter group_by if_else mutate select summarise tibble
+#' @importFrom dplyr bind_rows everything filter group_by if_else mutate select summarise tibble
 #' @importFrom glue glue
 #' @importFrom Rdpack reprompt
 #' @importFrom rlang .data

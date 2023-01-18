@@ -39,7 +39,6 @@ test_that("pubbias_meta no selection agreement", {
                                 var.eff.size = vi,
                                 small = .small)
 
-
     ri_adj <- pubbias_meta(yi = dat$yi,
                            vi = dat$vi,
                            selection_ratio = 1,

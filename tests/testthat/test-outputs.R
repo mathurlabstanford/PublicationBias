@@ -9,7 +9,7 @@ test_that("correct output structure for pubbias_meta", {
                  alpha_select = 0.01, ci_level = 0.90, small = FALSE)
 
   meta <- rlang::exec(pubbias_meta, yi = dat$yi, vi = dat$vi,
-                      cluster = dat$author, !!!params)
+                      cluster = dat$author, !!!params, return_worst_meta = TRUE)
 
   expect_s3_class(meta, "metabias")
   expect_named(meta, c("data", "values", "stats", "fits"))
@@ -27,14 +27,14 @@ test_that("correct output structure for pubbias_meta", {
   purrr::walk(names(params), \(p) expect_equal(params[[p]], meta$values[[p]]))
 
   expect_s3_class(meta$stats, "data.frame")
-  expect_equal(nrow(meta$stats), 1)
+  expect_equal(nrow(meta$stats), 2)
   expect_named(meta$stats, meta_names("stats"))
   expect_true(all(meta$stats$se < 1))
   expect_true(all(meta$stats$ci_lower < meta$stats$estimate))
   expect_true(all(meta$stats$ci_upper > meta$stats$estimate))
   expect_true(all(meta$stats$p_value < 1))
 
-  expect_length(meta$fit, 1)
+  expect_length(meta$fits, 2)
 
 })
 
