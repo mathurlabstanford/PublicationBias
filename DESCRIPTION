@@ -1,7 +1,6 @@
 Package: PublicationBias
 Title: Sensitivity Analysis for Publication Bias in Meta-Analyses
 Version: 2.2.1
-Author: Maya B. Mathur, Tyler J. VanderWeele, Mika Braginsky
 Authors@R: c(
     person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
     person("Maya", "Mathur", email = "mmathur@stanford.edu", role = c("aut")),
@@ -27,6 +26,7 @@ Imports:
     dplyr,
     ggplot2,
     glue,
+    lifecycle,
     metabias,
     metafor,
     stats,
