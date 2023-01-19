@@ -20,7 +20,7 @@ clustered specifications.'><!-- mathjax --><script src="https://cdnjs.cloudflare
     
     <a class="navbar-brand me-2" href="../index.html">PublicationBias</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.0.9000</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.2.1</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -30,6 +30,9 @@ clustered specifications.'><!-- mathjax --><script src="https://cdnjs.cloudflare
     <div id="navbar" class="collapse navbar-collapse ms-3">
       <ul class="navbar-nav me-auto"><li class="active nav-item">
   <a class="nav-link" href="../reference/index.html">Reference</a>
+</li>
+<li class="nav-item">
+  <a class="nav-link" href="../news/index.html">Changelog</a>
 </li>
       </ul><form class="form-inline my-2 my-lg-0" role="search">
         <input type="search" class="form-control me-sm-2" aria-label="Toggle navigation" name="search-input" data-search-index="../search.json" id="search-input" placeholder="Search for" autocomplete="off"></form>
@@ -74,7 +77,8 @@ clustered specifications.</p>
 <span>  favor_positive <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  alpha_select <span class="op">=</span> <span class="fl">0.05</span>,</span>
 <span>  ci_level <span class="op">=</span> <span class="fl">0.95</span>,</span>
-<span>  small <span class="op">=</span> <span class="cn">TRUE</span></span>
+<span>  small <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  return_worst_meta <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu">corrected_meta</span><span class="op">(</span></span>
@@ -153,6 +157,11 @@ estimate will be calculated from <code>ci_level</code>.)</p></dd>
 always using <code>TRUE</code>.</p></dd>
 
 
+<dt>return_worst_meta</dt>
+<dd><p>Should the worst-case meta-analysis of only the
+nonaffirmative studies be returned?</p></dd>
+
+
 <dt>eta</dt>
 <dd><p>(deprecated) see selection_ratio</p></dd>
 
@@ -193,7 +202,7 @@ always using <code>TRUE</code>.</p></dd>
 <dd><p>A list with the elements <code>selection_ratio</code>, <code>selection_tails</code>, <code>model_type</code>, <code>favor_positive</code>, <code>alpha_select</code>, <code>ci_level</code>, <code>small</code>, <code>k</code>, <code>k_affirmative</code>, <code>k_nonaffirmative</code>.</p></dd>
 
 <dt>stats</dt>
-<dd><p>A tibble with the columns <code>estimate</code>, <code>se</code>, <code>ci_lower</code>, <code>ci_upper</code>, <code>p_value</code>.</p></dd>
+<dd><p>A tibble with the columns <code>model</code>, <code>estimate</code>, <code>se</code>, <code>ci_lower</code>, <code>ci_upper</code>, <code>p_value</code>.</p></dd>
 
 <dt>fit</dt>
 <dd><p>A list of fitted models, if any.</p></dd>
@@ -313,10 +322,10 @@ convention.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stats</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   estimate     se ci_lower ci_upper     p_value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>   -<span style="color: #BB0000;">0.430</span> 0.040<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.519</span>   -<span style="color: #BB0000;">0.342</span> 0.000<span style="text-decoration: underline;">000</span>185</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   model   estimate     se ci_lower ci_upper     p_value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> pubbias   -<span style="color: #BB0000;">0.430</span> 0.040<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.519</span>   -<span style="color: #BB0000;">0.342</span> 0.000<span style="text-decoration: underline;">000</span>185</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fits</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
@@ -383,10 +392,10 @@ convention.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stats</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   estimate     se ci_lower ci_upper p_value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span>   -<span style="color: #BB0000;">0.156</span> 0.049<span style="text-decoration: underline;">1</span>   -<span style="color: #BB0000;">0.263</span>  -<span style="color: #BB0000;">0.048</span><span style="color: #BB0000; text-decoration: underline;">5</span> 0.008<span style="text-decoration: underline;">14</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   model   estimate     se ci_lower ci_upper p_value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> pubbias   -<span style="color: #BB0000;">0.156</span> 0.049<span style="text-decoration: underline;">1</span>   -<span style="color: #BB0000;">0.263</span>  -<span style="color: #BB0000;">0.048</span><span style="color: #BB0000; text-decoration: underline;">5</span> 0.008<span style="text-decoration: underline;">14</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fits</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
@@ -453,8 +462,8 @@ convention.</p>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $stats</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>     estimate        se   ci_lower   ci_upper    p_value</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 -0.3686171 0.1452243 -0.7849406 0.04770646 0.06905043</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     model   estimate        se   ci_lower   ci_upper    p_value</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 pubbias -0.3686171 0.1452243 -0.7849406 0.04770646 0.06905043</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> </span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fits</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> $fits$robust</span>
