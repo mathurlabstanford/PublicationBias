@@ -1,8 +1,9 @@
 ## Test environments
-- macOS 12.2.1, R 4.2.1
-- Windows Server 2022, R-devel (on R-hub)
-- Ubuntu Linux 20.04.1 LTS, R-release (on R-hub)
-- Fedora Linux, R-devel (on R-hub)
+- macos-latest (release)
+- windows-latest (release)
+- ubuntu-latest (devel)
+- ubuntu-latest (release)
+- ubuntu-latest (old-release)
 
 
 ## R CMD check results
