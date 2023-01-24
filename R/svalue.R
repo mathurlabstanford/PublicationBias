@@ -208,6 +208,12 @@ pubbias_svalue <- function(yi, # data
     sval_ci <- .svalue_fun("ci_lower")
   }
 
+  # s-values less than 1 indicate complete robustness
+  # is.numeric is in case we have a "< XXX" string instead of a number
+  .pos_sval <- \(sval) if (is.numeric(sval) & sval < 1) "Not possible" else sval
+  sval_est <- .pos_sval(sval_est)
+  sval_ci <- .pos_sval(sval_ci)
+
   # check if naive confidence interval contains q
   # m0 was fit BEFORE flipping signs
   # but q has now been flipped in the latter case in "or" statement below
@@ -258,9 +264,6 @@ find_svalue <- function(param, meta_fun, meta_worst, q, selection_ratio_max,
 
   # discrepancy between the corrected estimate and the s-value
   diff <- opt$objective
-
-  # s-values less than 1 indicate complete robustness
-  if (!is.na(sval) && sval < 1) return("Not possible")
 
   # if the optimal value is very close to the upper range of grid search
   #  AND we're still not very close to the target q,

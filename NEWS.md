@@ -1,5 +1,7 @@
 # PublicationBias (development version)
 
+* Check for negative (impossible svalues)
+
 # PublicationBias 2.3.0
 
 * Function and argument names are consistent with related packages.

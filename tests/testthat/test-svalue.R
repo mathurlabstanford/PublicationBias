@@ -132,3 +132,21 @@ test_that("pubbias_svalue s-value outside grid", {
                           favor_positive = FALSE)
   expect_equal(svals$stats$sval_ci, "> 2")
 })
+
+# does pubbias_svalue give correct results when there is no value sval_est
+test_that("pubbias_svalue not possible", {
+
+  svals_fixed <- pubbias_svalue(yi = dat$yi,
+                                vi = dat$vi,
+                                q = 0,
+                                model = "fixed",
+                                favor_positive = FALSE)
+  expect_equal(svals_fixed$stats$sval_est, "Not possible")
+
+  svals_robust <- pubbias_svalue(yi = dat$yi,
+                                 vi = dat$vi,
+                                 q = 0,
+                                 model = "robust",
+                                 favor_positive = FALSE)
+  expect_equal(svals_robust$stats$sval_est, "Not possible")
+})
