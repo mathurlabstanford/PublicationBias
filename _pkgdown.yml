@@ -1,4 +1,4 @@
 url: https://mayamathur.github.io/PublicationBias/
 template:
   bootstrap: 5
-
+  bootswatch: flatly
