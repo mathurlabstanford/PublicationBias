@@ -66,7 +66,7 @@
 
       <ul class="navbar-nav">
 <li class="nav-item">
-  <a class="external-link nav-link" href="https://github.com/mayamathur/PublicationBias/" aria-label="github">
+  <a class="external-link nav-link" href="https://github.com/mathurlabstanford/PublicationBias/" aria-label="github">
     <span class="fab fa fab fa-github fa-lg"></span>
      
   </a>
@@ -92,14 +92,14 @@
 <p>You can install the development version of PublicationBias from <a href="https://github.com/" class="external-link">GitHub</a> with:</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># install.packages("devtools")</span></span>
-<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mayamathur/PublicationBias"</span><span class="op">)</span></span></code></pre></div>
+<span><span class="fu">devtools</span><span class="fu">::</span><span class="fu">install_github</span><span class="op">(</span><span class="st">"mathurlabstanford/PublicationBias"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="example">Example<a class="anchor" aria-label="anchor" href="#example"></a>
 </h2>
 <p>Start by generating some example data from the <code>metafor</code> package.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mayamathur/PublicationBias" class="external-link">PublicationBias</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mathurlabstanford/PublicationBias" class="external-link">PublicationBias</a></span><span class="op">)</span></span>
 <span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">metafor</span><span class="fu">::</span><span class="fu"><a href="https://wviechtb.github.io/metafor/reference/escalc.html" class="external-link">escalc</a></span><span class="op">(</span>measure <span class="op">=</span> <span class="st">"RR"</span>, ai <span class="op">=</span> <span class="va">tpos</span>, bi <span class="op">=</span> <span class="va">tneg</span>, ci <span class="op">=</span> <span class="va">cpos</span>,</span>
 <span>                       di <span class="op">=</span> <span class="va">cneg</span>, data <span class="op">=</span> <span class="va">dat.bcg</span><span class="op">)</span></span></code></pre></div>
 <p>Calculate the meta-analytic effect size estimate, correcting for an assumed selection ratio of 5 (i.e., affirmative results are 5x more likely to be published than nonaffirmative ones).</p>
@@ -116,8 +116,8 @@
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">
 <li><a href="https://cloud.r-project.org/package=PublicationBias" class="external-link">View on CRAN</a></li>
-<li><a href="https://github.com/mayamathur/PublicationBias/" class="external-link">Browse source code</a></li>
-<li><a href="https://github.com/mayamathur/PublicationBias/issues" class="external-link">Report a bug</a></li>
+<li><a href="https://github.com/mathurlabstanford/PublicationBias/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/mathurlabstanford/PublicationBias/issues" class="external-link">Report a bug</a></li>
 </ul>
 </div>
 
@@ -148,7 +148,7 @@
 <div class="dev-status">
 <h2 data-toc-skip>Dev status</h2>
 <ul class="list-unstyled">
-<li><a href="https://github.com/mayamathur/PublicationBias/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/mayamathur/PublicationBias/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
+<li><a href="https://github.com/mathurlabstanford/PublicationBias/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/mathurlabstanford/PublicationBias/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R-CMD-check"></a></li>
 </ul>
 </div>
 
