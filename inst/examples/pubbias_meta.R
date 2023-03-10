@@ -11,29 +11,32 @@ metafor::rma(yi, vi, data = dat, method = "FE")
 # warmup
 # note that passing selection_ratio = 1 (no publication bias) yields the naive
 # point estimate from rma above, which makes sense
-pubbias_meta(yi = dat$yi,
-             vi = dat$vi,
-             selection_ratio = 1,
-             model_type = "fixed",
-             favor_positive = FALSE)
+meta <- pubbias_meta(yi = dat$yi,
+                     vi = dat$vi,
+                     selection_ratio = 1,
+                     model_type = "fixed",
+                     favor_positive = FALSE)
+summary(meta)
 
 # assume a known selection ratio of 5
 # i.e., affirmative results are 5x more likely to be published than
 # nonaffirmative ones
-pubbias_meta(yi = dat$yi,
-             vi = dat$vi,
-             selection_ratio = 5,
-             model_type = "fixed",
-             favor_positive = FALSE)
+meta <- pubbias_meta(yi = dat$yi,
+                     vi = dat$vi,
+                     selection_ratio = 5,
+                     model_type = "fixed",
+                     favor_positive = FALSE)
+summary(meta)
 
 # same selection ratio, but now account for heterogeneity and clustering via
 # robust specification
-pubbias_meta(yi = dat$yi,
-             vi = dat$vi,
-             cluster = dat$author,
-             selection_ratio = 5,
-             model_type = "robust",
-             favor_positive = FALSE)
+meta <- pubbias_meta(yi = dat$yi,
+                     vi = dat$vi,
+                     cluster = dat$author,
+                     selection_ratio = 5,
+                     model_type = "robust",
+                     favor_positive = FALSE)
+summary(meta)
 
 ##### Make sensitivity plot as in Mathur & VanderWeele (2020) #####
 # range of parameters to try (more dense at the very small ones)
