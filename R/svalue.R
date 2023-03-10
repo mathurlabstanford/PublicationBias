@@ -210,7 +210,7 @@ pubbias_svalue <- function(yi, # data
 
   # s-values less than 1 indicate complete robustness
   # is.numeric is in case we have a "< XXX" string instead of a number
-  .pos_sval <- \(sval) if (is.numeric(sval) & sval < 1) "Not possible" else sval
+  .pos_sval <- \(sval) if (is.numeric(sval) & sval <= 1) "Not possible" else sval
   sval_est <- .pos_sval(sval_est)
   sval_ci <- .pos_sval(sval_ci)
 
