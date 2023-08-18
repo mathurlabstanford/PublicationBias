@@ -1,9 +1,10 @@
+devtools::document()
+
 devtools::spell_check()
 spelling::update_wordlist()
 
 urlchecker::url_check()
 
-devtools::document()
 devtools::check()
 
 library(rhub)

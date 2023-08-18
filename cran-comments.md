@@ -1,23 +1,23 @@
 ## Test environments
-- macos-latest (release)
-- windows-latest (release)
-- ubuntu-latest (devel)
-- ubuntu-latest (release)
-- ubuntu-latest (old-release)
 
+The package was tested with `R CMD check --as-cran` on the following platforms:
+
+* Ubuntu Linux GCC (oldrel, release, devel),
+* Windows x86_64  (oldrel, release, devel),
+* MacOS (release).
 
 ## R CMD check results
 
-0 errors | 0 warnings | 1 note
+
+There were no ERRORs or WARNINGs. The following NOTE was displayed:
 
 ```
-* checking CRAN incoming feasibility ... NOTE
-Maintainer: 'Mika Braginsky <mika.br@gmail.com>'
+Maintainer: ‘Peter Solymos <peter@analythium.io>’
 
 New maintainer:
-  Mika Braginsky <mika.br@gmail.com>
+  Peter Solymos <peter@analythium.io>
 Old maintainer(s):
-  Maya B. Mathur <mmathur@stanford.edu>
+  Mika Braginsky <mika.br@gmail.com>
 ```
 
-The package has changed maintainers.
+The package has new maintainer: Peter Solymos.

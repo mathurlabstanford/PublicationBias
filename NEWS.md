@@ -1,6 +1,7 @@
-# PublicationBias (development version)
+# PublicationBias 2.4.0
 
-* Check for negative (impossible svalues)
+* Check for negative (impossible svalues).
+* New package maintainer: Peter Solymos.
 
 # PublicationBias 2.3.0
 
