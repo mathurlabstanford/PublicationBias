@@ -20,7 +20,7 @@ clustered specifications.'><!-- mathjax --><script src="https://cdnjs.cloudflare
     
     <a class="navbar-brand me-2" href="../index.html">PublicationBias</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.3.0.9001</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">2.4.0</small>
 
     
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -235,8 +235,9 @@ convention.</p>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: metafor</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: Matrix</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: metadat</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading required package: numDeriv</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading the 'metafor' package (version 3.8-1). For an</span>
+<span class="r-msg co"><span class="r-pr">#&gt;</span> Loading the 'metafor' package (version 4.2-0). For an</span>
 <span class="r-msg co"><span class="r-pr">#&gt;</span> introduction to the package please type: help(metafor)</span>
 <span class="r-in"><span><span class="va">dat</span> <span class="op">&lt;-</span> <span class="fu">metafor</span><span class="fu">::</span><span class="fu"><a href="https://wviechtb.github.io/metafor/reference/escalc.html" class="external-link">escalc</a></span><span class="op">(</span>measure <span class="op">=</span> <span class="st">"RR"</span>, ai <span class="op">=</span> <span class="va">tpos</span>, bi <span class="op">=</span> <span class="va">tneg</span>, ci <span class="op">=</span> <span class="va">cpos</span>,</span></span>
 <span class="r-in"><span>                       di <span class="op">=</span> <span class="va">cneg</span>, data <span class="op">=</span> <span class="va">dat.bcg</span><span class="op">)</span></span></span>
@@ -266,222 +267,42 @@ convention.</p>
 <span class="r-in"><span><span class="co"># warmup</span></span></span>
 <span class="r-in"><span><span class="co"># note that passing selection_ratio = 1 (no publication bias) yields the naive</span></span></span>
 <span class="r-in"><span><span class="co"># point estimate from rma above, which makes sense</span></span></span>
-<span class="r-in"><span><span class="fu">pubbias_meta</span><span class="op">(</span>yi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">yi</span>,</span></span>
-<span class="r-in"><span>             vi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">vi</span>,</span></span>
-<span class="r-in"><span>             selection_ratio <span class="op">=</span> <span class="fl">1</span>,</span></span>
-<span class="r-in"><span>             model_type <span class="op">=</span> <span class="st">"fixed"</span>,</span></span>
-<span class="r-in"><span>             favor_positive <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 13 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         yi     yif      vi affirm cluster</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> -<span style="color: #BB0000;">0.889</span>   0.889  0.326   FALSE        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> -<span style="color: #BB0000;">1.59</span>    1.59   0.195   TRUE         2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> -<span style="color: #BB0000;">1.35</span>    1.35   0.415   TRUE         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">1.44</span>    1.44   0.020<span style="text-decoration: underline;">0</span>  TRUE         4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> -<span style="color: #BB0000;">0.218</span>   0.218  0.051<span style="text-decoration: underline;">2</span>  FALSE        5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.786</span>   0.786  0.006<span style="text-decoration: underline;">91</span> TRUE         6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> -<span style="color: #BB0000;">1.62</span>    1.62   0.223   TRUE         7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>  0.012<span style="text-decoration: underline;">0</span> -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span> 0.003<span style="text-decoration: underline;">96</span> FALSE        8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> -<span style="color: #BB0000;">0.469</span>   0.469  0.056<span style="text-decoration: underline;">4</span>  TRUE         9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">1.37</span>    1.37   0.073<span style="text-decoration: underline;">0</span>  TRUE        10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> -<span style="color: #BB0000;">0.339</span>   0.339  0.012<span style="text-decoration: underline;">4</span>  TRUE        11</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>  0.446  -<span style="color: #BB0000;">0.446</span>  0.533   FALSE       12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> -<span style="color: #BB0000;">0.017</span><span style="color: #BB0000; text-decoration: underline;">3</span>  0.017<span style="text-decoration: underline;">3</span> 0.071<span style="text-decoration: underline;">4</span>  FALSE       13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$selection_ratio</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$selection_tails</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$model_type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "fixed"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$favor_positive</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$alpha_select</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$ci_level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$small</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k_affirmative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k_nonaffirmative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $stats</span>
+<span class="r-in"><span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu">pubbias_meta</span><span class="op">(</span>yi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">yi</span>,</span></span>
+<span class="r-in"><span>                     vi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">vi</span>,</span></span>
+<span class="r-in"><span>                     selection_ratio <span class="op">=</span> <span class="fl">1</span>,</span></span>
+<span class="r-in"><span>                     model_type <span class="op">=</span> <span class="st">"fixed"</span>,</span></span>
+<span class="r-in"><span>                     favor_positive <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">meta</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   model   estimate     se ci_lower ci_upper     p_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>       <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> pubbias   -<span style="color: #BB0000;">0.430</span> 0.040<span style="text-decoration: underline;">5</span>   -<span style="color: #BB0000;">0.519</span>   -<span style="color: #BB0000;">0.342</span> 0.000<span style="text-decoration: underline;">000</span>185</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $fits</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "metabias" "list"    </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># assume a known selection ratio of 5</span></span></span>
 <span class="r-in"><span><span class="co"># i.e., affirmative results are 5x more likely to be published than</span></span></span>
 <span class="r-in"><span><span class="co"># nonaffirmative ones</span></span></span>
-<span class="r-in"><span><span class="fu">pubbias_meta</span><span class="op">(</span>yi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">yi</span>,</span></span>
-<span class="r-in"><span>             vi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">vi</span>,</span></span>
-<span class="r-in"><span>             selection_ratio <span class="op">=</span> <span class="fl">5</span>,</span></span>
-<span class="r-in"><span>             model_type <span class="op">=</span> <span class="st">"fixed"</span>,</span></span>
-<span class="r-in"><span>             favor_positive <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 13 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         yi     yif      vi affirm cluster</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;int&gt;</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> -<span style="color: #BB0000;">0.889</span>   0.889  0.326   FALSE        1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> -<span style="color: #BB0000;">1.59</span>    1.59   0.195   TRUE         2</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> -<span style="color: #BB0000;">1.35</span>    1.35   0.415   TRUE         3</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">1.44</span>    1.44   0.020<span style="text-decoration: underline;">0</span>  TRUE         4</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> -<span style="color: #BB0000;">0.218</span>   0.218  0.051<span style="text-decoration: underline;">2</span>  FALSE        5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.786</span>   0.786  0.006<span style="text-decoration: underline;">91</span> TRUE         6</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> -<span style="color: #BB0000;">1.62</span>    1.62   0.223   TRUE         7</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>  0.012<span style="text-decoration: underline;">0</span> -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span> 0.003<span style="text-decoration: underline;">96</span> FALSE        8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> -<span style="color: #BB0000;">0.469</span>   0.469  0.056<span style="text-decoration: underline;">4</span>  TRUE         9</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">1.37</span>    1.37   0.073<span style="text-decoration: underline;">0</span>  TRUE        10</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> -<span style="color: #BB0000;">0.339</span>   0.339  0.012<span style="text-decoration: underline;">4</span>  TRUE        11</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>  0.446  -<span style="color: #BB0000;">0.446</span>  0.533   FALSE       12</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> -<span style="color: #BB0000;">0.017</span><span style="color: #BB0000; text-decoration: underline;">3</span>  0.017<span style="text-decoration: underline;">3</span> 0.071<span style="text-decoration: underline;">4</span>  FALSE       13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$selection_ratio</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$selection_tails</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$model_type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "fixed"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$favor_positive</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$alpha_select</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$ci_level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$small</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k_affirmative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k_nonaffirmative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $stats</span>
+<span class="r-in"><span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu">pubbias_meta</span><span class="op">(</span>yi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">yi</span>,</span></span>
+<span class="r-in"><span>                     vi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">vi</span>,</span></span>
+<span class="r-in"><span>                     selection_ratio <span class="op">=</span> <span class="fl">5</span>,</span></span>
+<span class="r-in"><span>                     model_type <span class="op">=</span> <span class="st">"fixed"</span>,</span></span>
+<span class="r-in"><span>                     favor_positive <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">meta</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 1 × 6</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   model   estimate     se ci_lower ci_upper p_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">1</span> pubbias   -<span style="color: #BB0000;">0.156</span> 0.049<span style="text-decoration: underline;">1</span>   -<span style="color: #BB0000;">0.263</span>  -<span style="color: #BB0000;">0.048</span><span style="color: #BB0000; text-decoration: underline;">5</span> 0.008<span style="text-decoration: underline;">14</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $fits</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> list()</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "metabias" "list"    </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co"># same selection ratio, but now account for heterogeneity and clustering via</span></span></span>
 <span class="r-in"><span><span class="co"># robust specification</span></span></span>
-<span class="r-in"><span><span class="fu">pubbias_meta</span><span class="op">(</span>yi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">yi</span>,</span></span>
-<span class="r-in"><span>             vi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">vi</span>,</span></span>
-<span class="r-in"><span>             cluster <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">author</span>,</span></span>
-<span class="r-in"><span>             selection_ratio <span class="op">=</span> <span class="fl">5</span>,</span></span>
-<span class="r-in"><span>             model_type <span class="op">=</span> <span class="st">"robust"</span>,</span></span>
-<span class="r-in"><span>             favor_positive <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $data</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #949494;"># A tibble: 13 × 5</span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>         yi     yif      vi affirm cluster             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>      <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;lgl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 1</span> -<span style="color: #BB0000;">0.889</span>   0.889  0.326   FALSE  Aronson             </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 2</span> -<span style="color: #BB0000;">1.59</span>    1.59   0.195   TRUE   Ferguson &amp; Simes    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 3</span> -<span style="color: #BB0000;">1.35</span>    1.35   0.415   TRUE   Rosenthal et al     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 4</span> -<span style="color: #BB0000;">1.44</span>    1.44   0.020<span style="text-decoration: underline;">0</span>  TRUE   Hart &amp; Sutherland   </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 5</span> -<span style="color: #BB0000;">0.218</span>   0.218  0.051<span style="text-decoration: underline;">2</span>  FALSE  Frimodt-Moller et al</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 6</span> -<span style="color: #BB0000;">0.786</span>   0.786  0.006<span style="text-decoration: underline;">91</span> TRUE   Stein &amp; Aronson     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 7</span> -<span style="color: #BB0000;">1.62</span>    1.62   0.223   TRUE   Vandiviere et al    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 8</span>  0.012<span style="text-decoration: underline;">0</span> -<span style="color: #BB0000;">0.012</span><span style="color: #BB0000; text-decoration: underline;">0</span> 0.003<span style="text-decoration: underline;">96</span> FALSE  TPT Madras          </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;"> 9</span> -<span style="color: #BB0000;">0.469</span>   0.469  0.056<span style="text-decoration: underline;">4</span>  TRUE   Coetzee &amp; Berjak    </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">10</span> -<span style="color: #BB0000;">1.37</span>    1.37   0.073<span style="text-decoration: underline;">0</span>  TRUE   Rosenthal et al     </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">11</span> -<span style="color: #BB0000;">0.339</span>   0.339  0.012<span style="text-decoration: underline;">4</span>  TRUE   Comstock et al      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">12</span>  0.446  -<span style="color: #BB0000;">0.446</span>  0.533   FALSE  Comstock &amp; Webster  </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> <span style="color: #BCBCBC;">13</span> -<span style="color: #BB0000;">0.017</span><span style="color: #BB0000; text-decoration: underline;">3</span>  0.017<span style="text-decoration: underline;">3</span> 0.071<span style="text-decoration: underline;">4</span>  FALSE  Comstock et al      </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$selection_ratio</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$selection_tails</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 1</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$model_type</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "robust"</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$favor_positive</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$alpha_select</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.05</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$ci_level</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 0.95</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$small</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 13</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k_affirmative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 8</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $values$k_nonaffirmative</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] 5</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $stats</span>
+<span class="r-in"><span><span class="va">meta</span> <span class="op">&lt;-</span> <span class="fu">pubbias_meta</span><span class="op">(</span>yi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">yi</span>,</span></span>
+<span class="r-in"><span>                     vi <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">vi</span>,</span></span>
+<span class="r-in"><span>                     cluster <span class="op">=</span> <span class="va">dat</span><span class="op">$</span><span class="va">author</span>,</span></span>
+<span class="r-in"><span>                     selection_ratio <span class="op">=</span> <span class="fl">5</span>,</span></span>
+<span class="r-in"><span>                     model_type <span class="op">=</span> <span class="st">"robust"</span>,</span></span>
+<span class="r-in"><span>                     favor_positive <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="fu"><a href="https://rdrr.io/r/base/summary.html" class="external-link">summary</a></span><span class="op">(</span><span class="va">meta</span><span class="op">)</span></span></span>
 <span class="r-out co"><span class="r-pr">#&gt;</span>     model   estimate        se   ci_lower   ci_upper    p_value</span>
 <span class="r-out co"><span class="r-pr">#&gt;</span> 1 pubbias -0.3686171 0.1452243 -0.7849406 0.04770646 0.06905043</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $fits</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> $fits$robust</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> RVE: User Specified Weights with Small-Sample Corrections </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Model: yi ~ 1 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Number of studies = 11 </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Number of outcomes = 13 (min = 1 , mean = 1.18 , median = 1 , max = 2 )</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>                Estimate StdErr t-value dfs P(|t|&gt;) 95% CI.L 95% CI.U Sig</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1 X.Intercept.   -0.369  0.145   -2.54 3.7  0.0691   -0.785   0.0477   *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Signif. codes: &lt; .01 *** &lt; .05 ** &lt; .10 *</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> ---</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> Note: If df &lt; 4, do not trust the results</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> </span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> attr(,"class")</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> [1] "metabias" "list"    </span>
 <span class="r-in"><span></span></span>
 <span class="r-in"><span><span class="co">##### Make sensitivity plot as in Mathur &amp; VanderWeele (2020) #####</span></span></span>
 <span class="r-in"><span><span class="co"># range of parameters to try (more dense at the very small ones)</span></span></span>
@@ -511,7 +332,7 @@ convention.</p>
 
 
     <footer><div class="pkgdown-footer-left">
-  <p></p><p>Developed by Mika Braginsky, Maya Mathur, Tyler J. VanderWeele.</p>
+  <p></p><p>Developed by Mika Braginsky, Maya Mathur, Tyler J. VanderWeele, Peter Solymos.</p>
 </div>
 
 <div class="pkgdown-footer-right">
