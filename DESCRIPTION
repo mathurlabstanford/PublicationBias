@@ -1,10 +1,12 @@
 Package: PublicationBias
 Title: Sensitivity Analysis for Publication Bias in Meta-Analyses
-Version: 2.3.0.9001
+Version: 2.4.0
 Authors@R: c(
-    person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut", "cre")),
+    person("Mika", "Braginsky", email = "mika.br@gmail.com", role = c("aut")),
     person("Maya", "Mathur", email = "mmathur@stanford.edu", role = c("aut")),
-    person("Tyler J.", "VanderWeele", email = "tvanderw@hsph.harvard.edu", role = c("aut")))
+    person("Tyler J.", "VanderWeele", email = "tvanderw@hsph.harvard.edu", role = c("aut")),
+    person("Peter", "Solymos", email = "peter@analythium.io", role = c("cre", "ctb"), comment = c(ORCID = "0000-0001-7337-1740"))
+    )
 Description: Performs sensitivity analysis for publication bias in meta-analyses
     (per Mathur & VanderWeele, 2020 [<doi:10.31219/osf.io/s9dp6>]). These analyses
     enable statements such as: "For publication bias to shift the observed point
