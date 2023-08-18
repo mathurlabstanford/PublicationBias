@@ -171,11 +171,12 @@ svals_fixed_q$stats$sval_est
 svals_fixed_q$stats$sval_ci
 
 ##### Robust Clustered Specification #####
-pubbias_svalue(yi = dat$yi,
-               vi = dat$vi,
-               q = 0,
-               model_type = "robust",
-               favor_positive = FALSE)
+svals <- pubbias_svalue(yi = dat$yi,
+                        vi = dat$vi,
+                        q = 0,
+                        model_type = "robust",
+                        favor_positive = FALSE)
+summary(svals)
 }
 \references{
 \insertRef{mathur2020}{metabias}
